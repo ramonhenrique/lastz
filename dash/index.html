@@ -1,0 +1,589 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Acompanhamento DEDZ</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: mesma linguagem do painel de migração — faixa de resumo, abas, tabela densa com rolagem própria */
+  :root {
+    --bg: #f3f4ef; --panel: #ffffff; --fg: #1d211a; --muted: #5d6656; --line: #d9dcd0; --soft: #e8eadf;
+    --accent: #4f6b2c; --accent-fg: #ffffff;
+    --go: #2f7a3b; --go-bg: #e2f1e2; --no: #a33a2c; --no-bg: #f6e1dd; --wait: #8a6d1b; --wait-bg: #f4ecd2;
+    --gold: #9a7414; --gold-bg: #f6ecc9;
+    --bar: #4f6b2c; --bar-soft: #c9d4b4;
+    --f-display: "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
+    --f-body: "Barlow", "Segoe UI", Arial, sans-serif;
+    --f-mono: "JetBrains Mono", Consolas, monospace;
+    --r: 6px;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg: #151813; --panel: #1d211a; --fg: #e7eadf; --muted: #9aa392; --line: #343a2f; --soft: #262b22;
+    --accent: #9cbf5f; --accent-fg: #151813;
+    --go: #7fcf86; --go-bg: #1f3522; --no: #ee8c7d; --no-bg: #3c211d; --wait: #e2c26a; --wait-bg: #3a321a;
+    --gold: #e2c26a; --gold-bg: #3a321a; --bar: #9cbf5f; --bar-soft: #3a4630; color-scheme: dark } }
+  :root[data-theme="dark"] {
+    --bg: #151813; --panel: #1d211a; --fg: #e7eadf; --muted: #9aa392; --line: #343a2f; --soft: #262b22;
+    --accent: #9cbf5f; --accent-fg: #151813;
+    --go: #7fcf86; --go-bg: #1f3522; --no: #ee8c7d; --no-bg: #3c211d; --wait: #e2c26a; --wait-bg: #3a321a;
+    --gold: #e2c26a; --gold-bg: #3a321a; --bar: #9cbf5f; --bar-soft: #3a4630; color-scheme: dark }
+  body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 15px; line-height: 1.45; }
+  .wrap { max-width: 1280px; margin: 0 auto; padding-block: 24px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 18px; }
+  header { display: grid; gap: 4px; }
+  .eyebrow { font-family: var(--f-mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  h1 { font-family: var(--f-display); font-weight: 700; font-size: clamp(28px, 4vw, 40px); line-height: 1.05; margin: 0; text-wrap: balance; }
+  .lede { margin: 0; color: var(--muted); max-width: 75ch; }
+  .notice { padding: 10px 14px; border-radius: var(--r); background: var(--wait-bg); border: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+
+  .weekbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .weekbar .label { font-family: var(--f-display); font-weight: 600; font-size: 20px; font-variant-numeric: tabular-nums; }
+  .btn { font: inherit; font-size: 14px; font-weight: 500; padding: 7px 14px; border-radius: var(--r); border: 1px solid var(--line); background: var(--panel); color: var(--fg); cursor: pointer; }
+  .btn.icon { padding: 7px 11px; }
+  .btn.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+  .btn[aria-expanded="true"] { background: var(--soft); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .spacer { flex: 1 1 auto; }
+  button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 12px; }
+  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px; display: grid; gap: 6px; min-width: 0; align-content: start; }
+  .stat h2 { margin: 0; font-family: var(--f-display); font-weight: 600; font-size: 15px; letter-spacing: .04em; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; background: var(--muted); }
+  .stat.go .dot { background: var(--go); } .stat.no .dot { background: var(--no); } .stat.wait .dot { background: var(--wait); } .stat.gold .dot { background: var(--gold); }
+  .big { font-family: var(--f-display); font-weight: 600; font-size: 36px; line-height: 1; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  .sub { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+  .tabs button { font: inherit; font-family: var(--f-display); font-weight: 600; font-size: 17px; padding: 8px 16px; border: 0; border-bottom: 3px solid transparent; background: transparent; color: var(--muted); cursor: pointer; margin-bottom: -1px; white-space: nowrap; }
+  .tabs button[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent); }
+  .view { display: grid; gap: 14px; }
+
+  .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; background: var(--panel); }
+  .seg button { font: inherit; font-size: 14px; border: 0; background: transparent; color: var(--fg); padding: 7px 12px; cursor: pointer; border-right: 1px solid var(--line); }
+  .seg button:last-child { border-right: 0; }
+  .seg button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+  input[type="search"], select, textarea { font: inherit; font-size: 14px; padding: 7px 10px; border: 1px solid var(--line); border-radius: var(--r); background: var(--panel); color: var(--fg); min-width: 0; }
+  input[type="search"] { flex: 1 1 180px; max-width: 280px; }
+
+  .two { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); align-items: start; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px; display: grid; gap: 10px; min-width: 0; }
+  .panel h3 { margin: 0; font-family: var(--f-display); font-weight: 600; font-size: 18px; }
+  .msg { font-size: 13px; color: var(--muted); margin: 0; }
+  .msg.err { color: var(--no); } .msg.ok { color: var(--go); }
+
+  .bars { display: grid; grid-template-columns: max-content 1fr; gap: 8px 12px; align-items: center; font-size: 14px; }
+  .bar { display: flex; align-items: center; gap: 8px; min-width: 0; font-variant-numeric: tabular-nums; }
+  .bar i { display: block; height: 20px; border-radius: 3px; min-width: 2px; }
+  .b-ok { background: var(--go); } .b-mid { background: var(--wait); } .b-low { background: var(--no); } .b-zero { background: var(--line); }
+
+  .tablebox { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); overflow: auto; max-height: 72vh; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+  th, td { padding: 6px 10px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+  th { position: sticky; top: 0; z-index: 2; background: var(--panel); font-family: var(--f-display); font-weight: 600; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+  th button { all: unset; cursor: pointer; }
+  th button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  th[aria-sort="ascending"] button::after { content: " ↑"; } th[aria-sort="descending"] button::after { content: " ↓"; }
+  .l { text-align: left; }
+  td.nome { font-weight: 600; }
+  td.muted { color: var(--muted); }
+  .rank { font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+  .rank.top { display: inline-block; min-width: 22px; text-align: center; padding: 1px 6px; border-radius: 4px; background: var(--gold-bg); color: var(--gold); font-weight: 500; }
+  .pill { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 4px; }
+  .pill.ok { background: var(--go-bg); color: var(--go); } .pill.mid { background: var(--wait-bg); color: var(--wait); }
+  .pill.low { background: var(--no-bg); color: var(--no); } .pill.zero { background: var(--soft); color: var(--muted); }
+  .meter { display: inline-block; width: 70px; height: 6px; background: var(--soft); border-radius: 3px; overflow: hidden; vertical-align: middle; margin-right: 6px; }
+  .meter i { display: block; height: 100%; background: var(--bar); }
+  td input.num { font: inherit; font-size: 14px; text-align: right; width: 7.5rem; border: 1px solid transparent; background: transparent; color: var(--fg); padding: 3px 6px; border-radius: 4px; font-variant-numeric: tabular-nums; }
+  td input.num.sm { width: 5.6rem; }
+  td input.num:hover { border-color: var(--line); }
+  td input.num:focus { border-color: var(--accent); background: var(--panel); }
+  td input.num:disabled { color: var(--fg); }
+  td input.num::placeholder { color: var(--muted); opacity: .6; }
+  td.hit input.num { background: var(--go-bg); color: var(--go); font-weight: 600; }
+  td.miss input.num { background: var(--no-bg); color: var(--no); }
+  th .meta { display: block; font-family: var(--f-mono); font-size: 10.5px; font-weight: 400; letter-spacing: 0; text-transform: none; }
+  tr.saving td { background: var(--wait-bg); }
+  .empty { padding: 32px 16px; text-align: center; color: var(--muted); }
+  .delta { font-size: 12px; margin-left: 4px; }
+  .delta.up { color: var(--go); } .delta.down { color: var(--no); }
+
+  textarea { width: 100%; box-sizing: border-box; min-height: 160px; font-family: var(--f-mono); font-size: 13px; resize: vertical; }
+  .form-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }
+  .field { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font-family: var(--f-mono); font-size: 12px; padding: 2px 7px; border-radius: 4px; background: var(--no-bg); color: var(--no); }
+  code { font-family: var(--f-mono); font-size: 12.5px; background: var(--soft); padding: 1px 5px; border-radius: 3px; }
+  footer { display: grid; gap: 6px; }
+  footer p { margin: 0; font-size: 13px; color: var(--muted); max-width: 95ch; }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">New Deadz [DEDZ] · Zona de guerra #614</span>
+    <h1>Acompanhamento de membros</h1>
+    <p class="lede">Doações da semana contra a meta de 20 mil por dia e o ranking de pontos do VS, dia a dia. Os valores são lidos no jogo e ficam salvos para todos que abrirem esta página.</p>
+  </header>
+
+  <div class="notice" id="notice" hidden></div>
+
+  <div class="weekbar">
+    <button type="button" class="btn icon" id="wk-prev" aria-label="Semana anterior">‹</button>
+    <span class="label" id="wk-label">—</span>
+    <button type="button" class="btn icon" id="wk-next" aria-label="Próxima semana">›</button>
+    <button type="button" class="btn" id="wk-now">Semana atual</button>
+    <span class="spacer"></span>
+    <span class="msg" id="sync">Conectando…</span>
+  </div>
+
+  <section class="strip" aria-label="Resumo da semana">
+    <div class="stat"><h2><span class="dot"></span>Doações da aliança</h2><div class="big" id="k-doa">—</div><div class="sub" id="k-doa-s">—</div></div>
+    <div class="stat go"><h2><span class="dot"></span>Na meta</h2><div class="big" id="k-meta">—</div><div class="sub" id="k-meta-s">—</div></div>
+    <div class="stat no"><h2><span class="dot"></span>Abaixo da meta</h2><div class="big" id="k-abaixo">—</div><div class="sub" id="k-abaixo-s">—</div></div>
+    <div class="stat gold"><h2><span class="dot"></span>Pontos VS</h2><div class="big" id="k-vs">—</div><div class="sub" id="k-vs-s">—</div></div>
+  </section>
+
+  <nav class="tabs" role="tablist" aria-label="Seções">
+    <button type="button" role="tab" id="tab-doacoes" data-view="doacoes" aria-selected="true" aria-controls="v-doacoes">Doações</button>
+    <button type="button" role="tab" id="tab-vs" data-view="vs" aria-selected="false" aria-controls="v-vs">Ranking VS</button>
+    <button type="button" role="tab" id="tab-importar" data-view="importar" aria-selected="false" aria-controls="v-importar">Lançar dados</button>
+  </nav>
+
+  <!-- DOAÇÕES -->
+  <div class="view" id="v-doacoes" role="tabpanel" aria-labelledby="tab-doacoes">
+    <div class="two">
+      <section class="panel">
+        <h3>Faixas da meta</h3>
+        <p class="msg">Média diária de cada membro comparada aos 20 mil (140 mil na semana).</p>
+        <div class="bars" id="faixas"></div>
+      </section>
+      <section class="panel">
+        <h3>Últimas semanas</h3>
+        <p class="msg">Total doado pela aliança e quantos bateram a meta.</p>
+        <div class="bars" id="hist"></div>
+      </section>
+    </div>
+    <div class="toolbar">
+      <div class="seg" role="group" aria-label="Filtrar por faixa" id="f-doa">
+        <button type="button" data-f="" aria-pressed="true">Todos</button>
+        <button type="button" data-f="ok" aria-pressed="false">Na meta</button>
+        <button type="button" data-f="abaixo" aria-pressed="false">Abaixo</button>
+        <button type="button" data-f="zero" aria-pressed="false">Sem doação</button>
+      </div>
+      <input type="search" id="busca-doa" placeholder="Buscar jogador" aria-label="Buscar jogador">
+    </div>
+    <div class="tablebox">
+      <table>
+        <thead><tr id="h-doa"></tr></thead>
+        <tbody id="b-doa"><tr><td class="empty" colspan="9">Carregando membros…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- VS -->
+  <div class="view" id="v-vs" role="tabpanel" aria-labelledby="tab-vs" hidden>
+    <div class="two">
+      <section class="panel">
+        <h3>Meta batida por dia</h3>
+        <p class="msg">Quantos dos membros lançados bateram a meta de cada dia, e a soma de pontos da aliança.</p>
+        <div class="bars" id="vs-dias"></div>
+      </section>
+      <section class="panel">
+        <h3>Top 10 da semana</h3>
+        <p class="msg">Total acumulado nos 6 dias.</p>
+        <div class="bars" id="vs-top"></div>
+      </section>
+    </div>
+    <div class="toolbar">
+      <input type="search" id="busca-vs" placeholder="Buscar jogador" aria-label="Buscar jogador">
+      <span class="msg">Verde: bateu a meta do dia. Vermelho: ficou abaixo. Clique no cabeçalho de um dia para ordenar por ele.</span>
+    </div>
+    <div class="tablebox">
+      <table>
+        <thead><tr id="h-vs"></tr></thead>
+        <tbody id="b-vs"><tr><td class="empty" colspan="13">Carregando membros…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- IMPORTAR -->
+  <div class="view" id="v-importar" role="tabpanel" aria-labelledby="tab-importar" hidden>
+    <section class="panel">
+      <h3>Colar lista do jogo</h3>
+      <p class="msg">Uma linha por jogador: nome e valor, separados por tab, ponto e vírgula ou espaço. Aceita <code>152.300</code>, <code>152,3k</code> e <code>1,2M</code>. Os valores vão para a semana selecionada acima e substituem o que já estava lançado para esse jogador.</p>
+      <div class="form-row">
+        <label class="field">Lançar em
+          <select id="imp-alvo">
+            <option value="doacao">Doação da semana</option>
+            <option value="0">VS · Segunda</option>
+            <option value="1">VS · Terça</option>
+            <option value="2">VS · Quarta</option>
+            <option value="3">VS · Quinta</option>
+            <option value="4">VS · Sexta</option>
+            <option value="5">VS · Sábado</option>
+          </select>
+        </label>
+      </div>
+      <textarea id="imp-txt" spellcheck="false" placeholder="Marcelo QAF	182.400&#10;Mané 07	140.000&#10;Vini²²; 95,5k"></textarea>
+      <div class="form-row">
+        <button type="button" class="btn" id="imp-prev">Conferir</button>
+        <button type="button" class="btn primary" id="imp-go" disabled>Lançar valores</button>
+        <span class="msg" id="imp-msg"></span>
+      </div>
+      <div id="imp-res" hidden class="panel" style="padding:10px 12px"></div>
+    </section>
+    <section class="panel">
+      <h3>Membros</h3>
+      <p class="msg" id="mem-info">—</p>
+      <div class="form-row">
+        <label class="field">Novo membro<input type="search" id="mem-nome" placeholder="Nome no jogo" autocomplete="off"></label>
+        <button type="button" class="btn" id="mem-add">Adicionar</button>
+        <span class="msg" id="mem-msg"></span>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <p>Poder total e poder de arena vêm da lista de membros do jogo (o poder de arena aparece ao trocar a lista para "Combate Pessoal"). Última leitura: 02/11/2026.</p>
+    <p>Meta de doação: 20.000 por dia, 140.000 por semana. O jogo mostra só o total da semana, então a média diária é o total dividido por 7. Faixas: na meta a partir de 100%, quase entre 50% e 99%, abaixo de 50%.</p>
+    <p>Metas do VS por dia, iguais às mensagens da aliança: segunda 4,5M (Radar + Veículo), terça 5M (Construção), quarta 3,3M (Pesquisa), quinta 6M (Heróis), sexta 7M (Exército) e sábado 6M (Combate). Soma da semana: 31,8M. Domingo não tem VS. A lista de membros veio do levantamento de migração de 28/10/2026.</p>
+  </footer>
+</div>
+
+<script>
+(() => {
+  const META_DIA = 20000, META_SEM = META_DIA * 7;
+  const DIAS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+  const TEMAS = ["Radar + Veículo", "Construção", "Pesquisa", "Heróis", "Exército", "Combate"];
+  const METAS_VS = [4.5e6, 5e6, 3.3e6, 6e6, 7e6, 6e6];
+  const $ = (id) => document.getElementById(id);
+  const fmt = (n) => n == null ? "—" : Math.round(n).toLocaleString("pt-BR");
+  const fmtK = (n) => {
+    if (n == null) return "—";
+    const a = Math.abs(n);
+    if (a >= 1e9) return (n / 1e9).toLocaleString("pt-BR", { maximumFractionDigits: 2 }) + "B";
+    if (a >= 1e6) return (n / 1e6).toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + "M";
+    if (a >= 1e3) return (n / 1e3).toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + "k";
+    return String(Math.round(n));
+  };
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const norm = (s) => String(s || "").normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+
+  // ---- semanas (id = data da segunda-feira, AAAA-MM-DD) ----
+  const pad = (n) => String(n).padStart(2, "0");
+  const iso = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const monday = (d) => { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); const wd = (x.getDay() + 6) % 7; x.setDate(x.getDate() - wd); return x; };
+  const parseISO = (s) => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+  const addWeeks = (s, k) => { const d = parseISO(s); d.setDate(d.getDate() + 7 * k); return iso(d); };
+  const semanaAtual = iso(monday(new Date()));
+  const labelSemana = (s) => { const a = parseISO(s), b = parseISO(s); b.setDate(b.getDate() + 6); return `Semana de ${pad(a.getDate())}/${pad(a.getMonth() + 1)} a ${pad(b.getDate())}/${pad(b.getMonth() + 1)}`; };
+
+  // ---- parse de números do jogo ----
+  function parseNum(raw) {
+    if (raw == null) return null;
+    let s = String(raw).trim().toLowerCase().replace(/\s/g, "");
+    if (!s) return null;
+    let mult = 1;
+    const suf = s.match(/([kmb])$/);
+    if (suf) { mult = { k: 1e3, m: 1e6, b: 1e9 }[suf[1]]; s = s.slice(0, -1); }
+    if (/^\d{1,3}([.,]\d{3})+$/.test(s)) s = s.replace(/[.,]/g, ""); // 152.300 / 1,234,567
+    else s = s.replace(",", "."); // 1,2M · 152,3k
+    const v = Number(s);
+    return Number.isFinite(v) && v >= 0 ? Math.round(v * mult) : null;
+  }
+
+  // ---- estado ----
+  const st = {
+    semana: semanaAtual, view: "doacoes",
+    membros: new Map(), regs: new Map(), // regs: "semana__id" -> {semana, membro, doacao, vs:[6]}
+    loaded: { m: false, r: false }, db: null, canWrite: true,
+    fDoa: "", qDoa: "", qVs: "",
+    sDoa: { k: "doacao", dir: -1 }, sVs: { k: "total", dir: -1 },
+    pending: null,
+  };
+  try { const t = localStorage.getItem("dedz-acomp-tab"); if (t) st.view = t; } catch (e) {}
+
+  const regKey = (sem, id) => `${sem}__${id}`;
+  const reg = (sem, id) => st.regs.get(regKey(sem, id));
+  const vsTotal = (r) => r && Array.isArray(r.vs) ? r.vs.reduce((a, b) => a + (Number(b) || 0), 0) : 0;
+  const vsHas = (r) => r && Array.isArray(r.vs) && r.vs.some((v) => v != null);
+  const faixa = (d) => d == null || d === 0 ? "zero" : d >= META_SEM ? "ok" : d >= META_SEM / 2 ? "mid" : "low";
+  const FAIXA_TXT = { ok: "Na meta", mid: "Quase", low: "Abaixo", zero: "Sem doação" };
+  const membrosOrd = (sem = st.semana) => [...st.membros.values()].filter((m) => !m.saiu || m.saiu >= addWeeks(sem, 1) || st.regs.has(regKey(sem, m.id))) // quem saiu some a partir da semana da saída, salvo se tiver dados lançados nela.sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+
+  // ---- cabeçalhos ----
+  function head(el, cols, sort, onSort) {
+    el.innerHTML = cols.map((c) => {
+      const s = sort.k === c.k ? (sort.dir > 0 ? "ascending" : "descending") : "none";
+      return c.sort === false ? `<th class="${c.l ? "l" : ""}">${c.t}</th>` : `<th class="${c.l ? "l" : ""}" aria-sort="${s}"><button type="button" data-k="${c.k}">${c.t}</button></th>`;
+    }).join("");
+    el.querySelectorAll("button[data-k]").forEach((b) => b.onclick = () => {
+      const k = b.dataset.k; if (sort.k === k) sort.dir *= -1; else { sort.k = k; sort.dir = k === "nome" ? 1 : -1; }
+      onSort();
+    });
+  }
+  const cmp = (a, b, k, dir) => {
+    const va = a[k], vb = b[k];
+    if (typeof va === "string" || typeof vb === "string") return dir * String(va ?? "").localeCompare(String(vb ?? ""), "pt-BR");
+    return dir * ((va ?? -1) - (vb ?? -1));
+  };
+
+  // ---- render ----
+  function renderAll() {
+    $("wk-label").textContent = labelSemana(st.semana) + (st.semana === semanaAtual ? " · atual" : "");
+    $("wk-next").disabled = st.semana >= semanaAtual;
+    renderKpis(); renderDoacoes(); renderVs(); renderMembrosInfo();
+  }
+
+  function linhasSemana(sem) {
+    return membrosOrd(sem).map((m) => {
+      const r = reg(sem, m.id), rp = reg(addWeeks(sem, -1), m.id);
+      const doacao = r && r.doacao != null ? r.doacao : null;
+      return { id: m.id, nome: m.nome, cargo: m.cargo || "", poder: m.poder ?? null, arena: m.poderArena ?? null, doacao, media: doacao == null ? null : doacao / 7,
+        pct: doacao == null ? null : doacao / META_SEM, faixa: faixa(doacao), ant: rp && rp.doacao != null ? rp.doacao : null,
+        vs: r && Array.isArray(r.vs) ? r.vs : [null, null, null, null, null, null], total: vsTotal(r), temVs: vsHas(r),
+        totalAnt: vsHas(rp) ? vsTotal(rp) : null };
+    }).filter(Boolean);
+  }
+
+  function renderKpis() {
+    const L = linhasSemana(st.semana), n = L.length;
+    const comDoa = L.filter((x) => x.doacao != null);
+    const tot = comDoa.reduce((a, x) => a + x.doacao, 0);
+    const ok = L.filter((x) => x.faixa === "ok").length;
+    const abaixo = L.filter((x) => x.faixa === "mid" || x.faixa === "low").length;
+    const zero = L.filter((x) => x.faixa === "zero").length;
+    $("k-doa").textContent = comDoa.length ? fmtK(tot) : "—";
+    $("k-doa-s").textContent = comDoa.length ? `${comDoa.length} de ${n} lançados · média ${fmtK(tot / comDoa.length / 7)}/dia` : "Nenhuma doação lançada nesta semana";
+    $("k-meta").textContent = comDoa.length ? ok : "—";
+    $("k-meta-s").textContent = comDoa.length ? `${Math.round(ok / n * 100)}% dos ${n} membros` : "Meta: 140 mil na semana";
+    $("k-abaixo").textContent = comDoa.length ? abaixo : "—";
+    $("k-abaixo-s").textContent = comDoa.length ? `+ ${zero} sem doação` : "—";
+    const vsL = L.filter((x) => x.temVs).sort((a, b) => b.total - a.total);
+    const vsTot = vsL.reduce((a, x) => a + x.total, 0);
+    $("k-vs").textContent = vsL.length ? fmtK(vsTot) : "—";
+    const META_VS_SEM = METAS_VS.reduce((a, b) => a + b, 0);
+    const vsOk = vsL.filter((x) => x.total >= META_VS_SEM).length;
+    $("k-vs-s").textContent = vsL.length ? `Líder: ${vsL[0].nome} · ${fmtK(vsL[0].total)} · ${vsOk} com 31,8M ou mais na semana` : "Meta da semana: 31,8M por jogador";
+  }
+
+  function renderDoacoes() {
+    let L = linhasSemana(st.semana);
+    // faixas
+    const cont = { ok: 0, mid: 0, low: 0, zero: 0 }; L.forEach((x) => cont[x.faixa]++);
+    const max = Math.max(1, ...Object.values(cont));
+    const cls = { ok: "b-ok", mid: "b-mid", low: "b-low", zero: "b-zero" };
+    const txt = { ok: "Na meta (≥ 20k/dia)", mid: "Quase (10k–20k)", low: "Abaixo (< 10k)", zero: "Sem doação" };
+    $("faixas").innerHTML = ["ok", "mid", "low", "zero"].map((k) => `<span>${txt[k]}</span><span class="bar"><i class="${cls[k]}" style="width:${cont[k] / max * 100}%"></i>${cont[k]}</span>`).join("");
+    // histórico 6 semanas
+    const sems = []; for (let i = 5; i >= 0; i--) sems.push(addWeeks(st.semana, -i));
+    const hs = sems.map((s) => { const l = linhasSemana(s); const c = l.filter((x) => x.doacao != null); return { s, tot: c.reduce((a, x) => a + x.doacao, 0), ok: l.filter((x) => x.faixa === "ok").length, n: c.length }; });
+    const hmax = Math.max(1, ...hs.map((h) => h.tot));
+    $("hist").innerHTML = hs.map((h) => { const d = parseISO(h.s); return `<span class="${h.s === st.semana ? "" : "msg"}">${pad(d.getDate())}/${pad(d.getMonth() + 1)}</span><span class="bar"><i class="${h.s === st.semana ? "b-ok" : "b-zero"}" style="width:${h.tot / hmax * 100}%"></i>${h.n ? `${fmtK(h.tot)} · ${h.ok} na meta` : "sem dados"}</span>`; }).join("");
+    // tabela
+    const cols = [{ k: "nome", t: "Jogador", l: 1 }, { k: "cargo", t: "Cargo", l: 1 }, { k: "poder", t: "Poder total" }, { k: "arena", t: "Poder arena" }, { k: "doacao", t: "Doação semana" }, { k: "media", t: "Média/dia" }, { k: "pct", t: "% da meta" }, { k: "faixa", t: "Situação", sort: false }, { k: "ant", t: "Sem. anterior" }];
+    head($("h-doa"), cols, st.sDoa, renderDoacoes);
+    if (st.fDoa === "ok") L = L.filter((x) => x.faixa === "ok");
+    if (st.fDoa === "abaixo") L = L.filter((x) => x.faixa === "mid" || x.faixa === "low");
+    if (st.fDoa === "zero") L = L.filter((x) => x.faixa === "zero");
+    if (st.qDoa) L = L.filter((x) => norm(x.nome).includes(norm(st.qDoa)));
+    L.sort((a, b) => cmp(a, b, st.sDoa.k, st.sDoa.dir) || a.nome.localeCompare(b.nome, "pt-BR"));
+    const body = $("b-doa");
+    if (!st.loaded.m) return;
+    if (!L.length) { body.innerHTML = `<tr><td class="empty" colspan="9">${st.membros.size ? "Ninguém nesse filtro." : "Nenhum membro cadastrado ainda. Adicione em Lançar dados."}</td></tr>`; return; }
+    body.innerHTML = L.map((x) => {
+      const delta = x.doacao != null && x.ant != null && x.ant > 0 ? (x.doacao - x.ant) / x.ant : null;
+      return `<tr data-id="${x.id}">
+        <td class="l nome">${esc(x.nome)}</td><td class="l muted">${esc(x.cargo)}</td>
+        <td>${fmtK(x.poder)}</td><td>${fmtK(x.arena)}</td>
+        <td><input class="num" id="d-${x.id}" inputmode="numeric" value="${x.doacao == null ? "" : fmt(x.doacao)}" placeholder="—" aria-label="Doação de ${esc(x.nome)}" ${st.canWrite ? "" : "disabled"}></td>
+        <td>${x.media == null ? "—" : fmtK(x.media)}</td>
+        <td>${x.pct == null ? "—" : `<span class="meter"><i style="width:${Math.min(100, x.pct * 100)}%"></i></span>${Math.round(x.pct * 100)}%`}</td>
+        <td><span class="pill ${x.faixa}">${FAIXA_TXT[x.faixa]}</span></td>
+        <td class="muted">${x.ant == null ? "—" : fmtK(x.ant)}${delta == null ? "" : `<span class="delta ${delta >= 0 ? "up" : "down"}">${delta >= 0 ? "▲" : "▼"}${Math.abs(Math.round(delta * 100))}%</span>`}</td>
+      </tr>`;
+    }).join("");
+    body.querySelectorAll("input.num").forEach((inp) => bindInput(inp, (v) => salvar(inp.closest("tr").dataset.id, { doacao: v })));
+  }
+
+  function renderVs() {
+    let L = linhasSemana(st.semana);
+    const ranked = L.filter((x) => x.temVs).sort((a, b) => b.total - a.total);
+    const pos = new Map(ranked.map((x, i) => [x.id, i + 1]));
+    // por dia
+    const porDia = DIAS.map((_, i) => { const c = L.filter((x) => x.vs[i] != null); return { soma: c.reduce((a, x) => a + (Number(x.vs[i]) || 0), 0), n: c.length, hit: c.filter((x) => x.vs[i] >= METAS_VS[i]).length }; });
+    $("vs-dias").innerHTML = DIAS.map((d, i) => { const p = porDia[i]; return `<span>${d} <span class="msg" style="display:inline">${fmtK(METAS_VS[i])}</span></span><span class="bar"><i class="b-ok" style="width:${p.n ? p.hit / p.n * 100 : 0}%"></i>${p.n ? `${p.hit} de ${p.n} · ${fmtK(p.soma)}` : "—"}</span>`; }).join("");
+    const top = ranked.slice(0, 10), tmax = Math.max(1, ...top.map((x) => x.total));
+    $("vs-top").innerHTML = top.length ? top.map((x, i) => `<span>${i + 1}. ${esc(x.nome)}</span><span class="bar"><i class="b-ok" style="width:${x.total / tmax * 100}%"></i>${fmtK(x.total)}</span>`).join("") : `<span class="msg">Sem pontos lançados</span><span></span>`;
+    // tabela
+    L.forEach((x) => { x.pos = pos.get(x.id) ?? null; DIAS.forEach((_, i) => x["d" + i] = x.vs[i] ?? null); x.totalV = x.temVs ? x.total : null; x.hits = x.temVs ? x.vs.filter((v, i) => v != null && v >= METAS_VS[i]).length : null; x.lanc = x.vs.filter((v) => v != null).length; });
+    const cols = [{ k: "pos", t: "#" }, { k: "nome", t: "Jogador", l: 1 }, { k: "poder", t: "Poder total" }, { k: "arena", t: "Poder arena" }, ...DIAS.map((d, i) => ({ k: "d" + i, t: `${d}<span class="meta" title="${TEMAS[i]}">meta ${fmtK(METAS_VS[i])}</span>` })), { k: "hits", t: "Dias na meta" }, { k: "totalV", t: "Total" }, { k: "totalAnt", t: "Sem. anterior" }];
+    const sort = st.sVs.k === "total" ? { k: "totalV", dir: st.sVs.dir } : st.sVs;
+    st.sVs = sort;
+    head($("h-vs"), cols, st.sVs, renderVs);
+    if (st.qVs) L = L.filter((x) => norm(x.nome).includes(norm(st.qVs)));
+    const k = st.sVs.k === "pos" ? "pos" : st.sVs.k;
+    L.sort((a, b) => {
+      if (k === "pos") { const pa = a.pos ?? 1e9, pb = b.pos ?? 1e9; return st.sVs.dir < 0 ? pa - pb : pb - pa; }
+      return cmp(a, b, k, st.sVs.dir) || a.nome.localeCompare(b.nome, "pt-BR");
+    });
+    const body = $("b-vs");
+    if (!st.loaded.m) return;
+    if (!L.length) { body.innerHTML = `<tr><td class="empty" colspan="13">Ninguém encontrado.</td></tr>`; return; }
+    body.innerHTML = L.map((x) => `<tr data-id="${x.id}">
+        <td>${x.pos ? `<span class="rank ${x.pos <= 3 ? "top" : ""}">${x.pos}</span>` : `<span class="rank">—</span>`}</td>
+        <td class="l nome">${esc(x.nome)}</td>
+        <td class="muted">${fmtK(x.poder)}</td><td class="muted">${fmtK(x.arena)}</td>
+        ${DIAS.map((d, i) => `<td class="${x.vs[i] == null ? "" : x.vs[i] >= METAS_VS[i] ? "hit" : "miss"}"><input class="num sm" id="v-${x.id}-${i}" data-i="${i}" inputmode="numeric" value="${x.vs[i] == null ? "" : fmtK(x.vs[i])}" placeholder="—" aria-label="${d} de ${esc(x.nome)}" ${st.canWrite ? "" : "disabled"}></td>`).join("")}
+        <td>${x.hits == null ? "—" : `<span class="pill ${x.hits === x.lanc ? "ok" : x.hits === 0 ? "low" : "mid"}">${x.hits}/${x.lanc}</span>`}</td>
+        <td><b>${x.temVs ? fmtK(x.total) : "—"}</b></td>
+        <td class="muted">${x.totalAnt == null ? "—" : fmtK(x.totalAnt)}</td>
+      </tr>`).join("");
+    body.querySelectorAll("input.num").forEach((inp) => bindInput(inp, (v) => {
+      const id = inp.closest("tr").dataset.id, r = reg(st.semana, id);
+      const vs = (r && Array.isArray(r.vs) ? r.vs.slice() : [null, null, null, null, null, null]);
+      vs[Number(inp.dataset.i)] = v; return salvar(id, { vs });
+    }));
+  }
+
+  function renderMembrosInfo() {
+    const n = [...st.membros.values()].filter((m) => !m.saiu).length;
+    $("mem-info").textContent = n ? `${n} membros cadastrados. Quem sair da aliança pode continuar na lista; quem entrar, adicione aqui ou pela importação.` : "Nenhum membro cadastrado.";
+  }
+
+  // ---- edição ----
+  function bindInput(inp, save) {
+    const commit = async () => {
+      const raw = inp.value.trim(); const v = raw === "" ? null : parseNum(raw);
+      if (raw !== "" && v == null) { inp.setCustomValidity("Valor inválido"); inp.reportValidity(); return; }
+      inp.setCustomValidity("");
+      if (inp.dataset.last === raw) return; inp.dataset.last = raw;
+      const tr = inp.closest("tr"); tr.classList.add("saving");
+      try { await save(v); } catch (e) { notice("Não foi possível salvar: " + (e && e.message || "erro"), true); } finally { tr.classList.remove("saving"); }
+    };
+    inp.dataset.last = inp.value.trim();
+    inp.addEventListener("change", commit);
+    inp.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); inp.blur(); } });
+  }
+
+  const fila = new Map(); // uma escrita por vez por documento
+  async function salvar(id, patch, sem = st.semana) {
+    if (!st.db) throw new Error("sem conexão com o banco");
+    const key = regKey(sem, id);
+    const prev = st.regs.get(key) || { semana: sem, membro: id, doacao: null, vs: [null, null, null, null, null, null] };
+    const next = { ...prev, ...patch, semana: sem, membro: id, at: new Date().toISOString() };
+    st.regs.set(key, next);
+    const run = (fila.get(key) || Promise.resolve()).then(() => st.db.collection("registros").doc(key).set(next));
+    fila.set(key, run.catch(() => {}));
+    await run;
+    renderKpis(); if (st.view === "doacoes") renderFaixasOnly(); else renderVsSide();
+  }
+  function renderFaixasOnly() { const a = document.activeElement?.id; renderDoacoes(); if (a && $(a)) $(a).focus(); }
+  function renderVsSide() { const a = document.activeElement?.id; renderVs(); if (a && $(a)) $(a).focus(); }
+
+  // ---- importação ----
+  function analisar() {
+    const linhas = $("imp-txt").value.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    const byName = new Map(membrosOrd().map((m) => [norm(m.nome), m]));
+    const ok = [], semMembro = [], invalidas = [];
+    for (const l of linhas) {
+      let nome, val;
+      const sep = l.includes("\t") ? "\t" : l.includes(";") ? ";" : null;
+      if (sep) { const p = l.split(sep).map((s) => s.trim()).filter(Boolean); val = p.pop(); nome = p.join(" "); }
+      else { const m = l.match(/^(.*\S)\s+([\d.,]+\s*[kmbKMB]?)$/); if (m) { nome = m[1]; val = m[2]; } }
+      const v = parseNum(val);
+      if (!nome || v == null) { invalidas.push(l); continue; }
+      const mem = byName.get(norm(nome));
+      if (mem) ok.push({ id: mem.id, nome: mem.nome, v }); else semMembro.push({ nome, v });
+    }
+    return { ok, semMembro, invalidas };
+  }
+  $("imp-prev").onclick = () => {
+    const a = analisar(); st.pending = a;
+    const alvo = $("imp-alvo").selectedOptions[0].textContent;
+    let h = `<p class="msg">${a.ok.length} valores prontos para <b>${esc(alvo)}</b> em ${esc(labelSemana(st.semana).toLowerCase())}.</p>`;
+    if (a.semMembro.length) h += `<p class="msg">Nomes que não estão na lista de membros (${a.semMembro.length}) — serão adicionados como membros novos:</p><div class="chips">${a.semMembro.map((x) => `<span class="chip">${esc(x.nome)}</span>`).join("")}</div>`;
+    if (a.invalidas.length) h += `<p class="msg err">Linhas ignoradas por não terem nome e valor (${a.invalidas.length}): ${a.invalidas.slice(0, 5).map(esc).join(" · ")}${a.invalidas.length > 5 ? "…" : ""}</p>`;
+    $("imp-res").innerHTML = h; $("imp-res").hidden = false;
+    $("imp-go").disabled = !(a.ok.length + a.semMembro.length) || !st.canWrite;
+    $("imp-msg").textContent = ""; $("imp-msg").className = "msg";
+  };
+  $("imp-txt").addEventListener("input", () => { $("imp-go").disabled = true; st.pending = null; });
+  $("imp-go").onclick = async () => {
+    const a = st.pending; if (!a) return;
+    const alvo = $("imp-alvo").value; const sem = st.semana;
+    $("imp-go").disabled = true; $("imp-msg").className = "msg"; $("imp-msg").textContent = "Lançando…";
+    try {
+      for (const x of a.semMembro) { const id = await novoMembro(x.nome); a.ok.push({ id, nome: x.nome, v: x.v }); }
+      let n = 0;
+      for (const x of a.ok) {
+        const r = reg(sem, x.id);
+        if (alvo === "doacao") await salvar(x.id, { doacao: x.v }, sem);
+        else { const vs = r && Array.isArray(r.vs) ? r.vs.slice() : [null, null, null, null, null, null]; vs[Number(alvo)] = x.v; await salvar(x.id, { vs }, sem); }
+        n++; $("imp-msg").textContent = `Lançando… ${n}/${a.ok.length}`;
+      }
+      $("imp-msg").className = "msg ok"; $("imp-msg").textContent = `${n} valores lançados.`;
+      $("imp-txt").value = ""; st.pending = null; renderAll();
+    } catch (e) { $("imp-msg").className = "msg err"; $("imp-msg").textContent = "Parou no meio: " + (e && e.message || "erro ao salvar") + ". Confira a tabela e tente de novo."; }
+  };
+
+  async function novoMembro(nome) {
+    const base = "n" + norm(nome).replace(/[^a-z0-9]/g, "").slice(0, 16) || "n";
+    let id = base, i = 2; while (st.membros.has(id)) id = base + i++;
+    const m = { nome: nome.trim(), cargo: "", criado: new Date().toISOString() };
+    await st.db.collection("membros").doc(id).set(m);
+    st.membros.set(id, { id, ...m });
+    return id;
+  }
+  $("mem-add").onclick = async () => {
+    const nome = $("mem-nome").value.trim(); const msg = $("mem-msg");
+    if (!nome) { msg.className = "msg err"; msg.textContent = "Escreva o nome como aparece no jogo."; return; }
+    if ([...st.membros.values()].some((m) => norm(m.nome) === norm(nome))) { msg.className = "msg err"; msg.textContent = "Esse nome já está na lista."; return; }
+    try { await novoMembro(nome); $("mem-nome").value = ""; msg.className = "msg ok"; msg.textContent = `${nome} adicionado.`; renderAll(); }
+    catch (e) { msg.className = "msg err"; msg.textContent = "Não foi possível adicionar: " + (e && e.message || "erro"); }
+  };
+
+  // ---- navegação ----
+  function setView(v) {
+    st.view = v; try { localStorage.setItem("dedz-acomp-tab", v); } catch (e) {}
+    document.querySelectorAll(".tabs button").forEach((b) => b.setAttribute("aria-selected", b.dataset.view === v ? "true" : "false"));
+    ["doacoes", "vs", "importar"].forEach((k) => $("v-" + k).hidden = k !== v);
+  }
+  document.querySelectorAll(".tabs button").forEach((b) => b.onclick = () => setView(b.dataset.view));
+  $("wk-prev").onclick = () => { st.semana = addWeeks(st.semana, -1); renderAll(); };
+  $("wk-next").onclick = () => { if (st.semana < semanaAtual) { st.semana = addWeeks(st.semana, 1); renderAll(); } };
+  $("wk-now").onclick = () => { st.semana = semanaAtual; renderAll(); };
+  $("f-doa").querySelectorAll("button").forEach((b) => b.onclick = () => { st.fDoa = b.dataset.f; $("f-doa").querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x === b ? "true" : "false")); renderDoacoes(); });
+  $("busca-doa").addEventListener("input", (e) => { st.qDoa = e.target.value; renderDoacoes(); });
+  $("busca-vs").addEventListener("input", (e) => { st.qVs = e.target.value; renderVs(); });
+
+  function notice(t, err) { const n = $("notice"); n.textContent = t; n.hidden = false; n.style.background = err ? "var(--no-bg)" : ""; }
+
+  setView(st.view); renderAll();
+
+  // ---- banco ----
+  (async () => {
+    const db = await window.claude?.use?.("db");
+    if (!db) { $("sync").textContent = "Sem conexão"; notice("Os dados salvos não estão disponíveis nesta visualização. Abra a página logado no claude.ai para ver e lançar valores."); $("b-doa").innerHTML = `<tr><td class="empty" colspan="9">Sem acesso aos dados.</td></tr>`; $("b-vs").innerHTML = `<tr><td class="empty" colspan="13">Sem acesso aos dados.</td></tr>`; return; }
+    st.db = db;
+    const user = await window.claude.use("user");
+    if (user) { try { const c = user.can("data.write"); if (c === false) { st.canWrite = false; } } catch (e) {} }
+    let first = true;
+    const tick = () => { $("sync").textContent = st.canWrite ? "Salvo para todos · ao vivo" : "Somente leitura"; };
+    db.collection("membros").onSnapshot((snap) => {
+      st.membros = new Map(snap.docs.map((d) => [d.id, { id: d.id, ...d.data() }]));
+      st.loaded.m = true; tick(); keepFocus(renderAll);
+    }, (e) => notice("A lista de membros parou de atualizar (" + (e && e.code) + "). Recarregue a página.", true));
+    db.collection("registros").onSnapshot((snap) => {
+      st.regs = new Map(snap.docs.map((d) => [d.id, d.data()]));
+      st.loaded.r = true; tick(); keepFocus(renderAll);
+    }, (e) => notice("Os registros pararam de atualizar (" + (e && e.code) + "). Recarregue a página.", true));
+  })();
+  function keepFocus(fn) {
+    const a = document.activeElement; const id = a && a.id;
+    if (a && a.tagName === "INPUT" && a.classList.contains("num") && a.value.trim() !== a.dataset.last) return; // usuário digitando: não sobrescrever
+    fn(); if (id && $(id)) $(id).focus();
+  }
+})();
+</script>
+
+</body></html>
