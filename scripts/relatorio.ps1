@@ -103,11 +103,15 @@ foreach ($i in $fechados) {
 }
 if ($hojeVS -ge 0) {
   $zerados = @($info | Where-Object { $_.hojeVS -eq 0 -or $null -eq $_.hojeVS })
-  $faltam = @($info | Where-Object { $_.hojeVS -gt 0 -and $_.hojeVS -lt $metas[$hojeVS] }).Count
+  $metade = $metas[$hojeVS] / 2
+  $abaixoMetade = @($info | Where-Object { $_.hojeVS -gt 0 -and $_.hojeVS -lt $metade } | Sort-Object hojeVS)
+  $entre = @($info | Where-Object { $_.hojeVS -ge $metade -and $_.hojeVS -lt $metas[$hojeVS] }).Count
   $l.Add('')
   $l.Add("VS DE HOJE ($($diasNome[$hojeVS]), parcial)")
   $l.Add("- Ainda não pontuaram ($($zerados.Count)): $(if ($zerados.Count) { Lista $zerados.nome } else { 'ninguém' })")
-  $l.Add("- Pontuaram mas ainda abaixo da meta: $faltam")
+  $l.Add("- Abaixo de 50% da meta, menos de $(EmMi $metade) ($($abaixoMetade.Count)):")
+  if ($abaixoMetade.Count) { foreach ($x in $abaixoMetade) { $l.Add("  - $($x.nome): $(EmMi $x.hojeVS)") } } else { $l.Add('  - ninguém') }
+  $l.Add("- Entre 50% e 99% da meta: $entre membros")
 }
 
 $critDoa = @($info | Where-Object { $_.pctDoa -lt 0.5 } | Sort-Object doa)
