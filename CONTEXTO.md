@@ -106,25 +106,29 @@ Foi montada uma mensagem para o grupo sobre o acompanhamento (rumo à S4, métri
 
 ## Scripts em PowerShell (pasta `scripts/`)
 
-Desde 03/11 os scripts ficam no repositório, em PowerShell, e não precisam de Node. Os dados de trabalho (prints, TSVs, banco baixado) vão para `%TEMP%\lastz-coleta` (parâmetro `-Dir`).
+Desde 03/11 os scripts ficam no repositório, em PowerShell, e não precisam de Node. Os dados de trabalho ficam em `C:\lz` (parâmetro `-Dir`), fora do repositório.
+
+**Espelho local do banco.** `C:\lz\estado` guarda uma cópia do banco da dash (`membros.json`, `registros.json`, `leituras.json` e `versoes.json`, com a versão de cada registro). As escritas e a foto saem desse espelho, então uma coleta normal **não baixa nada do banco**. Isso vale enquanto só a coleta escreve no banco. Se alguém lançar dados pela aba "Lançar dados" da dash, o próximo lote é recusado por versão (nada é gravado) e aí basta sincronizar.
 
 | Script | Para quê |
 |---|---|
 | `lz.ps1` | Print, clique, arrasto e tecla na janela do jogo. Traz a janela para frente e para se não conseguir (o Chrome costuma ficar por cima). |
 | `scan.ps1` | Rola a lista aberta e junta os prints em grades `G_<tag>_N.png` |
-| `junta.ps1` | Junta uma coleção baixada pelo `ArtifactData` num arquivo `all_<coleção>.json` |
-| `atualiza.ps1` | Compara os TSVs com o banco e monta `batch0.json`, `batch1.json`… |
-| `foto.ps1` | Regera a foto embutida em `dash/index.html` |
+| `atualiza.ps1` | Compara os TSVs com o espelho e monta `batch0.json`, `batch1.json`… já com `if_version` |
+| `confirma.ps1` | Depois que o banco aceitou os lotes, aplica as escritas no espelho (`-Lotes 0,1`) |
+| `foto.ps1` | Regera a foto embutida em `dash/index.html` a partir do espelho |
 | `resumo.ps1` | Números da semana para as mensagens do grupo |
+| `sincroniza.ps1` | Recarrega o espelho a partir de um download do `ArtifactData` |
+| `comum.ps1` | Funções usadas pelos outros |
 
 Fluxo de uma coleta:
 1. Abrir a lista no jogo e rodar `scan.ps1`. Na janela de 607x1046: doação com `-Tag doa -Drags 24`; VS com `-Tag vster -Drags 34 -FromY 660 -ToY 400 -CX 95 -CY 308 -CW 420 -CH 392 -PerGrid 4`, e mais alguns arrastos para pegar o fim da lista.
-2. Ler as grades e escrever `doacao_semanal.tsv` e `vs_<dia>.tsv` em `%TEMP%\lastz-coleta`.
-3. Baixar `membros` e os `registros` da semana com `ArtifactData`, **cada um em um `out_dir` diferente**, e rodar `junta.ps1` logo depois de cada download: a próxima leitura apaga os arquivos da anterior. Os arquivos não trazem a versão, então copie as versões do resultado para `versoes.txt` (`<idMembro> <versão>` por linha).
-4. Rodar `atualiza.ps1`. Se ele avisar "nome do jogo sem membro no banco", provavelmente alguém trocou de nome: compare o VS do dia com o banco, corrija o `nome` em `membros` e rode de novo.
-5. Mandar cada `batchN.json` num `ArtifactData` `batch`.
-6. Baixar de novo `membros`, `registros` (todos) e `leituras`, rodar `junta.ps1` em cada um e depois `foto.ps1`. Publicar `dash/index.html` no URL da dash e fazer commit.
+2. Ler as grades e escrever `doacao_semanal.tsv` e `vs_<dia>.tsv` em `C:\lz`.
+3. Rodar `atualiza.ps1 -Sem <segunda> -Dia <0-5> -VsTsv vs_<dia>.tsv -DiaDoa <0-6>`. Se ele avisar "nome do jogo sem membro no banco", provavelmente alguém trocou de nome: compare o VS do dia com o espelho, corrija o `nome` em `membros` no banco, sincronize `membros` e rode de novo.
+4. Mandar cada `batchN.json` num `ArtifactData` `batch` e, para os que foram aceitos, rodar `confirma.ps1 -Lotes 0,1`.
+5. Rodar `foto.ps1`, publicar `dash/index.html` no URL da dash e fazer commit.
 
+Para sincronizar (lote recusado, primeira vez numa máquina, ou dados lançados por outra pessoa): baixe cada coleção com `ArtifactData` num `out_dir` próprio (`C:\lz\dl`) e rode `sincroniza.ps1` **logo depois de cada download**, porque o download seguinte apaga os arquivos do anterior. Para `registros`, salve o texto do resultado do download em `C:\lz\versoes.txt`: os arquivos não trazem a versão, e o script a tira desse texto.
 Coordenadas na janela de 607x1046 (PC NOVO-0000): Aliança 570,785 · Ranking 190,837 · Contribuição 463,96 · Semanal 417,153 · voltar 103,995 · VS 568,228 · Ranking do VS 502,70 · Minha Aliança 228,824 · fechar ranking 497,160. Nesse PC o git é o do GitHub Desktop (`%LOCALAPPDATA%\GitHubDesktop\app-3.6.10\resources\app\git\cmd\git.exe`).
 
 Renomeados em 03/11: Demon Tazz → Corrida Maluca, Gargamel ツ → Muttley ツ, Maikynhoo → Peter Perfect.

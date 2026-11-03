@@ -3,7 +3,7 @@
 # VS diário (janela 607x1046):     .\scan.ps1 -Tag vster -Drags 34 -FromY 660 -ToY 400 -CX 95 -CY 308 -CW 420 -CH 392 -PerGrid 4
 param([string]$Tag, [int]$Drags = 24, [int]$FromY = 780, [int]$ToY = 400,
       [int]$CX = 80, [int]$CY = 225, [int]$CW = 450, [int]$CH = 615, [int]$PerGrid = 3,
-      [string]$Dir = "$env:TEMP\lastz-coleta")
+      [string]$Dir = 'C:\lz')
 $lz = Join-Path $PSScriptRoot 'lz.ps1'
 Add-Type -AssemblyName System.Drawing
 New-Item -ItemType Directory -Force $Dir | Out-Null

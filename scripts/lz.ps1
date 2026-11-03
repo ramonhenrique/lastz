@@ -1,7 +1,7 @@
 ﻿param(
   [Parameter(Mandatory)][ValidateSet('shot','click','drag','key')][string]$Action,
   [int]$X, [int]$Y, [int]$X2, [int]$Y2,
-  [string]$Out = "$env:TEMP\lastz-coleta\shot.png",
+  [string]$Out = "C:\lz\shot.png",
   [string]$Key = 'ESC'
 )
 Add-Type -AssemblyName System.Drawing
@@ -47,6 +47,7 @@ function Down-Up($sx, $sy) {
 
 switch ($Action) {
   'shot' {
+    $pasta = Split-Path $Out; if ($pasta -and -not (Test-Path $pasta)) { New-Item -ItemType Directory -Force $pasta | Out-Null }
     $bmp = New-Object System.Drawing.Bitmap $w, $hh
     $g = [System.Drawing.Graphics]::FromImage($bmp)
     $g.CopyFromScreen($o.X, $o.Y, 0, 0, $bmp.Size)

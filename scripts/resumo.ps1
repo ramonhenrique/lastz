@@ -1,8 +1,7 @@
-﻿# Números da semana para mensagens do grupo, a partir de all_registros.json.
-param([string]$Sem, [string]$Dir = "$env:TEMP\lastz-coleta")
-$utf8 = New-Object System.Text.UTF8Encoding $false
-$todos = [IO.File]::ReadAllText("$Dir\all_registros.json", $utf8) | ConvertFrom-Json
-$R = @($todos | ForEach-Object { $_ } | Where-Object { $_.semana -eq $Sem })
+﻿# Números da semana para mensagens do grupo, a partir do espelho local.
+param([Parameter(Mandatory)][string]$Sem, [string]$Dir = 'C:\lz')
+. (Join-Path $PSScriptRoot 'comum.ps1')
+$R = @(LerLista "$(PastaEstado $Dir)\registros.json" | Where-Object { $_.semana -eq $Sem })
 $metas = 4.5e6, 5e6, 3.3e6, 6e6, 7e6, 6e6
 $dias = 'seg', 'ter', 'qua', 'qui', 'sex', 'sab'
 $diasDoa = ([int](Get-Date).DayOfWeek + 6) % 7 + 1
