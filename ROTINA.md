@@ -1,6 +1,6 @@
 # Rotina automática da dash DEDZ
 
-Este roteiro é seguido pelas tarefas agendadas das **12:00** e da noite (**~22:30**, antes do dia virar às 23:00) (horário de Brasília), sem ninguém acompanhando. Leia o `CONTEXTO.md` só se precisar de mais detalhes; tudo o que a rotina precisa está aqui.
+Este roteiro é seguido pelas tarefas agendadas das **11:01** (meio do dia do jogo) e das **23:01** (logo depois do dia virar às 23:00), horário de Brasília (o app atrasa alguns minutos: ~11:12 e ~23:07), sem ninguém acompanhando. Leia o `CONTEXTO.md` só se precisar de mais detalhes; tudo o que a rotina precisa está aqui.
 
 Regras gerais:
 - **Ninguém está olhando.** Não faça perguntas; quando algo impedir a coleta, pare e avise (passo 8).
@@ -17,11 +17,10 @@ Rode `scripts\hoje.ps1`. Ele devolve `semana`, `dia` (0 = segunda … 6 = doming
 
 | Execução | VS | Doação |
 |---|---|---|
-| 12:00 | VS final de `diaAnterior` (se não for -1) **e** VS parcial do `dia` (se `temVS`) | sim |
-| noite (~22:30) | VS do `dia` (se `temVS`), quase fechado | sim |
+| 11:01 | VS parcial do `dia` (se `temVS`) e o VS final de `diaAnterior` (se não for -1; confere/corrige o da noite) | sim |
+| 23:01 | VS **final** de `diaAnterior` (o dia que acabou de fechar). O VS do novo `dia` está começando: não colete | sim, exceto no caso abaixo |
 
-No domingo não há VS do dia. Na segunda às 12:00 não há dia anterior (a semana é nova).
-
+Às 23:01 o `hoje.ps1` já aponta para o novo dia, então o dia que fechou é o `diaAnterior`. **Virada da semana (domingo 23:01):** `hoje.ps1` devolve a semana nova com `dia` 0 e `diaAnterior` -1; o ranking semanal de doação zerou e o VS de sábado já foi gravado no sábado às 23:01. Nesse horário não colete nada no jogo: só gere e envie os relatórios da semana que fechou (`relatorio.ps1 -Turno fechamento -Semana <segunda da semana que fechou>`).
 ## 2. Deixar o jogo pronto
 
 1. `scripts\jogo.ps1 -Acao abrir`. O jogo entra sozinho, sem PIN (o PIN foi tirado em 03/11), e chega na cidade em uns 30 segundos.
