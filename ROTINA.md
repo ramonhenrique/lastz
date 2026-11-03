@@ -41,8 +41,9 @@ Na cidade: botão **VS** (583,228; à direita, abaixo de "Atividades Populares")
 Para cada dia a coletar:
 1. Clique na aba do dia e confira pelo print que ela ficou selecionada e que "Minha Aliança" continua marcado.
 2. Role a lista para o topo: `scripts\lz.ps1 -Action drag -X 300 -Y 400 -X2 300 -Y2 900` (duas vezes).
-3. `scripts\scan.ps1 -Tag vs<dia> -Drags 37 -FromY 660 -ToY 400 -CX 103 -CY 308 -CW 420 -CH 392 -PerGrid 4`
-4. Leia as grades `C:\lz\G_vs<dia>_N.png` e escreva `C:\lz\vs<dia>.tsv` (UTF-8, uma linha por membro: `posição<TAB>nome<TAB>valor`, sem separador de milhar). Os 97 membros precisam aparecer; a última grade deve terminar na última posição. Se faltar gente no fim, role mais e tire outro print.
+3. Confira pelo print que a aba de cima é **Ranking Diário** (laranja). Em 03/11 ela pulou para "Ranking Semanal" durante a rolagem: os valores ficam bem maiores (somam os dias) e o 1º lugar muda. Se isso acontecer, volte ao Diário (170,215), clique no dia e refaça o scan.
+4. `scripts\scan.ps1 -Tag vs<dia> -Drags 40 -FromY 660 -ToY 400 -CX 103 -CY 308 -CW 420 -CH 392 -PerGrid 4`
+5. Leia as grades `C:\lz\G_vs<dia>_N.png` e escreva `C:\lz\vs<dia>.tsv` (UTF-8, uma linha por membro: `posição<TAB>nome<TAB>valor`, sem separador de milhar). Todos os membros ativos precisam aparecer (96 desde a saída de GAMZ€ em 03/11); a última grade deve terminar na última posição. Se faltar gente no fim, role mais e tire outro print.
    - Copie os nomes exatamente como aparecem (com ², ³, ¹, •, ツ, 亥, €, Ø). O `atualiza.ps1` ignora espaços e acentos.
    - Dica: `C:\lz\estado\registros.json` tem os valores já gravados. Na leitura do mesmo dia, a maioria não muda; compare para pegar erros de leitura.
 
@@ -54,7 +55,7 @@ Na cidade: **Aliança** (585,790) → **Ranking** (198,837) → aba **Contribui�
 
 1. Role para o topo (drag de 400 para 900, duas vezes).
 2. `scripts\scan.ps1 -Tag doa -Drags 26 -CX 88`
-3. Leia `C:\lz\G_doa_N.png` e escreva `C:\lz\doacao_semanal.tsv` no mesmo formato. Os 97 precisam aparecer.
+3. Leia `C:\lz\G_doa_N.png` e escreva `C:\lz\doacao_semanal.tsv` no mesmo formato. Todos os membros ativos precisam aparecer.
 
 Volte para a cidade (111,995, duas vezes).
 
@@ -77,7 +78,7 @@ Para cada leitura, **uma de cada vez** (o espelho precisa ser confirmado antes d
 1. `scripts\atualiza.ps1 -Sem <semana> -Dia <diaAnterior> -VsTsv vs<diaAnterior>.tsv -DiaDoa <diaAnterior>`
 2. Domingo 23:01 (`diaAnterior` -1): nada a gravar.
 Depois de cada `atualiza.ps1`:
-- Ele avisa "nome do jogo sem membro no banco" quando alguém entrou, saiu ou trocou de nome. **Não renomeie nem crie membros sozinho**: siga com os outros e liste esses nomes no aviso final.
+- Ele avisa "nome do jogo sem membro no banco" quando alguém entrou ou trocou de nome, e "membros sem leitura" quando alguém sumiu dos dois rankings (provável saída). **Não renomeie nem crie membros sozinho**: siga com os outros e liste esses nomes no aviso final.
 - Mande cada `C:\lz\batchN.json` como `writes` de um `ArtifactData` `batch` no URL da dash.
 - Para os lotes aceitos: `scripts\confirma.ps1 -Lotes 0` (ou `0,1`…).
 - **Lote recusado por versão** (alguém lançou dados pela dash): nada foi gravado. Baixe os registros da semana com `ArtifactData` `query` (`where semana == <semana>`, `limit` 1000, `out_dir` `C:\lz\dl`), salve o texto do resultado em `C:\lz\versoes.txt`, rode `scripts\sincroniza.ps1 -Colecao registros -Pasta C:\lz\dl\registros -Esperado <quantidade> -Versoes C:\lz\versoes.txt` e repita o `atualiza.ps1`.
