@@ -90,7 +90,7 @@ Depois de cada `atualiza.ps1`:
 
 ## 7b. Relatório no grupo do WhatsApp
 
-Só se a coleta deu certo (dados gravados e dash publicada). Envie o texto com a ferramenta **Enviar no grupo cuja descrição fala em "relatório de atualização da dash DEDZ"** (conector do n8n `/mcp/dedz-relatorio-dash`). Não use a outra "Enviar no grupo", que é a da reflexão semanal. Deixe `imageUrl`, `imgBase64` e `mimeType` vazios.
+Só se a coleta deu certo (dados gravados e dash publicada). Envie o texto com a ferramenta **Enviar no grupo cuja descrição fala em "relatório de atualização da dash DEDZ"** (conector do n8n `/mcp/dedz-relatorio-dash`). Não use a outra "Enviar no grupo", que é a da reflexão semanal. O envio é **só texto**, nunca imagem: passe apenas `msg` (se a ferramenta ainda listar campos de imagem, mande-os vazios).
 
 Regras do texto: **sem nomes de membros e sem link da dash** (a dash é só da liderança), sem emoji, curto. Use os números do `resumo.ps1` e as metas do VS (seg 4,5Mi · ter 5Mi · qua 3,3Mi · qui 6Mi · sex 7Mi · sáb 6Mi; doação 20 mil por dia). Modelo:
 
