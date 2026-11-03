@@ -78,7 +78,8 @@ Para cada leitura, **uma de cada vez** (o espelho precisa ser confirmado antes d
 1. `scripts\atualiza.ps1 -Sem <semana> -Dia <diaAnterior> -VsTsv vs<diaAnterior>.tsv -DiaDoa <diaAnterior>`
 2. Domingo 23:01 (`diaAnterior` -1): nada a gravar.
 Depois de cada `atualiza.ps1`:
-- Ele avisa "nome do jogo sem membro no banco" quando alguém entrou ou trocou de nome, e "membros sem leitura" quando alguém sumiu dos dois rankings (provável saída). **Não renomeie nem crie membros sozinho**: siga com os outros e liste esses nomes no aviso final.
+- **Saída (faça sozinho, sem perguntar):** se o `atualiza.ps1` disser que um membro está "sem leitura de VS" **e** "sem leitura de doação" e você conferiu que a lista do jogo terminou (o último colocado apareceu), a pessoa saiu da aliança. Marque no banco: `ArtifactData` `update` em `membros/<id>` com `{"saiu": "<AAAA-MM-DD de hoje>"}` e o `if_version` dele (pegue com `get`), e faça o mesmo no espelho `C:\lz\estado\membros.json` (adicione `"saiu"` ao membro). Depois rode o `atualiza.ps1` de novo e siga. No relatório da liderança, acrescente no fim a linha `SAÍDA: <nome> deixou a aliança em <dd/mm> (sumiu dos rankings de VS e doação).`. Se a pessoa sumiu de só um dos rankings, não marque: cite no aviso.
+- **Entrada ou troca de nome:** "nome do jogo sem membro no banco". Não crie nem renomeie membros sozinho: siga com os outros e cite esses nomes no aviso de erro (passo 8). Os relatórios saem normalmente.
 - Mande cada `C:\lz\batchN.json` como `writes` de um `ArtifactData` `batch` no URL da dash.
 - Para os lotes aceitos: `scripts\confirma.ps1 -Lotes 0` (ou `0,1`…).
 - **Lote recusado por versão** (alguém lançou dados pela dash): nada foi gravado. Baixe os registros da semana com `ArtifactData` `query` (`where semana == <semana>`, `limit` 1000, `out_dir` `C:\lz\dl`), salve o texto do resultado em `C:\lz\versoes.txt`, rode `scripts\sincroniza.ps1 -Colecao registros -Pasta C:\lz\dl\registros -Esperado <quantidade> -Versoes C:\lz\versoes.txt` e repita o `atualiza.ps1`.
@@ -117,4 +118,4 @@ Feito: <o que chegou a ser feito: coleta, banco, dash, relatórios>
 Faltou: <o que não foi feito>
 ```
 
-Considera "deu errado" qualquer parada antes do fim, e também quando um relatório não foi enviado aos grupos reais, quando sobrou nome sem membro no banco ou quando o push falhou (nesse caso, a rotina continua e o aviso vai no final). Nunca mande esse aviso nos grupos reais.
+Considera "deu errado" qualquer parada antes do fim, e também quando um relatório não foi enviado aos grupos reais, quando sobrou nome sem membro no banco (entrada ou troca de nome) ou quando o push falhou. Saídas marcadas automaticamente não são erro (nesse caso, a rotina continua e o aviso vai no final). Nunca mande esse aviso nos grupos reais.
