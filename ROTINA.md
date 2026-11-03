@@ -20,7 +20,7 @@ Rode `scripts\hoje.ps1`. Ele devolve `semana`, `dia` (0 = segunda … 6 = doming
 | 11:01 | VS parcial do `dia` (se `temVS`) e o VS final de `diaAnterior` (se não for -1; confere/corrige o da noite) | sim |
 | 23:01 | VS **final** de `diaAnterior` (o dia que acabou de fechar). O VS do novo `dia` está começando: não colete | sim, exceto no caso abaixo |
 
-Às 23:01 o `hoje.ps1` já aponta para o novo dia, então o dia que fechou é o `diaAnterior`. **Virada da semana (domingo 23:01):** `hoje.ps1` devolve a semana nova com `dia` 0 e `diaAnterior` -1; o ranking semanal de doação zerou e o VS de sábado já foi gravado no sábado às 23:01. Nesse horário não colete nada no jogo: só gere e envie os relatórios da semana que fechou (`relatorio.ps1 -Turno fechamento -Semana <segunda da semana que fechou>`).
+Às 23:01 o `hoje.ps1` já aponta para o novo dia, então o dia que fechou é o `diaAnterior`. **Virada da semana (domingo 23:01):** `hoje.ps1` devolve a semana nova com `dia` 0 e `diaAnterior` -1; o ranking semanal de doação zerou e o VS de sábado já foi gravado no sábado às 23:01. Nesse horário não colete nada no jogo: só gere e envie os relatórios (`relatorio.ps1 -Turno fechamento` já analisa o domingo e fecha a semana que acabou).
 ## 2. Deixar o jogo pronto
 
 1. `scripts\jogo.ps1 -Acao abrir`. O jogo entra sozinho, sem PIN (o PIN foi tirado em 03/11), e chega na cidade em uns 30 segundos.
@@ -33,6 +33,8 @@ Rode `scripts\hoje.ps1`. Ele devolve `semana`, `dia` (0 = segunda … 6 = doming
 4. Se o `lz.ps1` falhar com "Janela do jogo nao ficou em primeiro plano", ou o print sair preto, o PC deve estar bloqueado → pare e avise.
 
 ## 3. Coletar o VS
+
+**Placar do duelo (antes do ranking):** ao abrir o jogo costuma aparecer a janela "Confronto de Alianças em andamento" com a Pontuação total (ex.: 0 : 1) e as porcentagens (ex.: 48% x 52%). Se ela não aparecer, a tela principal do botão VS mostra o mesmo. Grave em `C:\lz\duelo.json`, por exemplo `{"placar":"0:1","nos":48,"eles":52,"adversario":"[VVD]"}` (nós = DEDZ, à esquerda). Às 23:01 o placar já inclui o dia que fechou. Se não conseguir ler, apague `C:\lz\duelo.json` para não usar um placar velho.
 
 Na cidade: botão **VS** (583,228; à direita, abaixo de "Atividades Populares") → **Ranking** (510,70) → **Ranking Diário** (já vem selecionado) → marque **Minha Aliança** (236,824) e confira pelo print que o visto apareceu. As abas dos dias ficam em y=280: Seg 133 · Ter 205 · Qua 275 · Qui 347 · Sex 417 · Sáb 488.
 
@@ -64,12 +66,16 @@ Assim que os TSVs estiverem escritos e conferidos (todos os 97 em cada um), fech
 
 Para cada leitura, **uma de cada vez** (o espelho precisa ser confirmado antes da próxima):
 
-1. VS final do dia anterior (só às 12:00):
+**11:01** (`dia` = hoje):
+1. VS final do dia anterior (se `diaAnterior` não for -1 e você coletou):
    `scripts\atualiza.ps1 -Sem <semana> -Dia <diaAnterior> -VsTsv vs<diaAnterior>.tsv -DoaTsv ''`
-2. VS do dia e doação:
+2. VS parcial de hoje e doação:
    `scripts\atualiza.ps1 -Sem <semana> -Dia <dia> -VsTsv vs<dia>.tsv -DiaDoa <dia>`
    No domingo (sem VS): `scripts\atualiza.ps1 -Sem <semana> -DiaDoa 6`
 
+**23:01** (o dia que fechou é o `diaAnterior`; a doação lida agora é o acumulado do fim desse dia, então vai no slot dele):
+1. `scripts\atualiza.ps1 -Sem <semana> -Dia <diaAnterior> -VsTsv vs<diaAnterior>.tsv -DiaDoa <diaAnterior>`
+2. Domingo 23:01 (`diaAnterior` -1): nada a gravar.
 Depois de cada `atualiza.ps1`:
 - Ele avisa "nome do jogo sem membro no banco" quando alguém entrou, saiu ou trocou de nome. **Não renomeie nem crie membros sozinho**: siga com os outros e liste esses nomes no aviso final.
 - Mande cada `C:\lz\batchN.json` como `writes` de um `ArtifactData` `batch` no URL da dash.
@@ -91,7 +97,7 @@ Depois de cada `atualiza.ps1`:
 
 Só se a coleta deu certo (dados gravados e dash publicada).
 
-1. `scripts\relatorio.ps1 -Turno <12h|noite>` gera `C:\lz\relatorio_geral.txt` (membros: só números, sem nomes e sem link da dash) e `C:\lz\relatorio_lideranca.txt` (liderança: nomes abaixo das metas, abaixo de 50% do VS do dia, doação abaixo de 50% e alerta de baixa performance da semana). Envie o conteúdo exato desses arquivos, sem reescrever.
+1. `scripts\relatorio.ps1 -Turno <meio|fechamento>` (11:01 = `meio`, 23:01 = `fechamento`) gera `C:\lz\relatorio_geral.txt` (membros: só números, sem nomes e sem link da dash) e `C:\lz\relatorio_lideranca.txt` (liderança: no `meio`, ritmo do VS, lista de cobrança priorizada e quem não doou; no `fechamento`, resultado final, quem não bateu, destaques, projeção de doação, o tema de amanhã e, no sábado e domingo, o fechamento da semana; nos dois, o alerta de baixa performance). Ele usa `C:\lz\duelo.json` se existir. Envie o conteúdo exato desses arquivos, sem reescrever.
 2. Envie cada um com a ferramenta **Enviar no grupo cuja descrição fala em "relatório da dash DEDZ"** (conector do n8n `/mcp/dedz-relatorio-dash`); não use a da reflexão semanal. Só texto: passe `msg` e `destino` (se a ferramenta ainda listar campos de imagem, mande-os vazios).
 3. Destinos: leia `C:\lz\destinos.txt`. Se ele tiver a linha `real`, mande o geral com `destino: "geral"` (grupo DEDZ) e o da liderança com `destino: "lideranca"` (grupo DEDZ R4, R5 e Agregados). Se o arquivo não existir ou não tiver `real`, mande **os dois com `destino: "teste"`** (grupo de teste).
 4. Primeiro o geral, depois o da liderança. Se um envio falhar, siga e cite no aviso.
