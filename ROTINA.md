@@ -88,26 +88,16 @@ Depois de cada `atualiza.ps1`:
 
 `scripts\resumo.ps1 -Sem <semana>` dá os números da semana.
 
-## 7b. Relatório no grupo do WhatsApp
+## 7b. Relatórios no WhatsApp
 
-Só se a coleta deu certo (dados gravados e dash publicada). Envie o texto com a ferramenta **Enviar no grupo cuja descrição fala em "relatório de atualização da dash DEDZ"** (conector do n8n `/mcp/dedz-relatorio-dash`). Não use a outra "Enviar no grupo", que é a da reflexão semanal. O envio é **só texto**, nunca imagem: passe apenas `msg` (se a ferramenta ainda listar campos de imagem, mande-os vazios).
+Só se a coleta deu certo (dados gravados e dash publicada).
 
-Regras do texto: **sem nomes de membros e sem link da dash** (a dash é só da liderança), sem emoji, curto. Use os números do `resumo.ps1` e as metas do VS (seg 4,5Mi · ter 5Mi · qua 3,3Mi · qui 6Mi · sex 7Mi · sáb 6Mi; doação 20 mil por dia). Modelo:
-
-```text
-DEDZ - Atualização de <dia da semana> (<dd/mm>, <12h|noite>)
-
-VS de <dia> (<tema>, meta <x>Mi): <n> de <total> bateram a meta.
-VS de <dia de hoje> (<tema>, meta <x>Mi): <n> de <total> já bateram. O dia fecha às 23h.
-Doação da semana (meta de <20 mil x dias> até hoje): <n> de <total> na meta. Total doado pela aliança: <x>M.
-
-<uma frase curta de incentivo>
-```
-
-Temas: seg Radar + Veículo · ter Construção · qua Pesquisa · qui Heróis · sex Exército · sáb Combate. No domingo, só a linha da doação e o VS de sábado (fechado). Se o envio falhar, siga e cite no aviso.
-
+1. `scripts\relatorio.ps1 -Turno <12h|noite>` gera `C:\lz\relatorio_geral.txt` (membros: só números, sem nomes e sem link da dash) e `C:\lz\relatorio_lideranca.txt` (liderança: nomes abaixo das metas, abaixo de 50% do VS do dia, doação abaixo de 50% e alerta de baixa performance da semana). Envie o conteúdo exato desses arquivos, sem reescrever.
+2. Envie cada um com a ferramenta **Enviar no grupo cuja descrição fala em "relatório da dash DEDZ"** (conector do n8n `/mcp/dedz-relatorio-dash`); não use a da reflexão semanal. Só texto: passe `msg` e `destino` (se a ferramenta ainda listar campos de imagem, mande-os vazios).
+3. Destinos: leia `C:\lz\destinos.txt`. Se ele tiver a linha `real`, mande o geral com `destino: "geral"` (grupo DEDZ) e o da liderança com `destino: "lideranca"` (grupo DEDZ R4, R5 e Agregados). Se o arquivo não existir ou não tiver `real`, mande **os dois com `destino: "teste"`** (grupo de teste).
+4. Primeiro o geral, depois o da liderança. Se um envio falhar, siga e cite no aviso.
 ## 8. Avisar
 
 Termine sempre com um `PushNotification` curto:
-- Deu certo: "Dash atualizada (12h): VS seg 92/97, ter 54/97 · doação 48/97 na meta". Acrescente nomes sem membro no banco, se houver.
+- Deu certo: "Dash atualizada (12h): VS seg 92/97, ter 54/97 · doação 48/97 na meta · relatórios enviados (teste|grupos reais) · 5 em alerta". Acrescente nomes sem membro no banco, se houver.
 - Deu errado: o motivo em uma linha ("jogo pediu o PIN", "PC bloqueado", "ranking não abriu") e o que ficou feito.
