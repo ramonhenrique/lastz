@@ -106,3 +106,14 @@ Só se a coleta deu certo (dados gravados e dash publicada).
 Termine sempre com um `PushNotification` curto:
 - Deu certo: "Dash atualizada (12h): VS seg 92/97, ter 54/97 · doação 48/97 na meta · relatórios enviados (teste|grupos reais) · 5 em alerta". Acrescente nomes sem membro no banco, se houver.
 - Deu errado: o motivo em uma linha ("jogo pediu o PIN", "PC bloqueado", "ranking não abriu") e o que ficou feito.
+
+**Se deu errado, avise também no grupo de teste** (sempre, mesmo com `destinos.txt` em `real`): use a ferramenta "Enviar no grupo" do relatório da dash DEDZ com `destino: "teste"` e só texto, no formato:
+
+```text
+[ROTINA DEDZ - ERRO] <11:01|23:01> de <dd/mm>
+Motivo: <uma linha>
+Feito: <o que chegou a ser feito: coleta, banco, dash, relatórios>
+Faltou: <o que não foi feito>
+```
+
+Considera "deu errado" qualquer parada antes do fim, e também quando um relatório não foi enviado aos grupos reais, quando sobrou nome sem membro no banco ou quando o push falhou (nesse caso, a rotina continua e o aviso vai no final). Nunca mande esse aviso nos grupos reais.
