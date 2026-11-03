@@ -97,14 +97,41 @@ Foi montada uma mensagem para o grupo sobre o acompanhamento (rumo à S4, métri
 
 ## Pendências e ideias
 
-- Coletar o VS final de terça depois das 23:00 e atualizar banco + dash.
+- Coletar o VS final de terça depois das 23:00 e atualizar banco + dash. (Última coleta: 03/11 ~17:15, dash v19: VS ter 54 de 97 acima de 5Mi, doação 48 de 97 com 40k+, total 3,85M.)
 - **Participação no SVS** foi prometida na mensagem do grupo, mas a dash ainda não acompanha. Falta descobrir onde o jogo mostra isso.
 - A evolução de poder depende de novas leituras da lista de membros (só existe a de 02/11). O poder de arena aparece trocando a lista para "Combate Pessoal".
 - Commits locais ainda sem push: `125536f`, `082f917`, `f179401` (e este arquivo, se for commitado).
 
 ---
 
-## Scripts (estavam no scratchpad; copie para uma pasta temporária)
+## Scripts em PowerShell (pasta `scripts/`)
+
+Desde 03/11 os scripts ficam no repositório, em PowerShell, e não precisam de Node. Os dados de trabalho (prints, TSVs, banco baixado) vão para `%TEMP%\lastz-coleta` (parâmetro `-Dir`).
+
+| Script | Para quê |
+|---|---|
+| `lz.ps1` | Print, clique, arrasto e tecla na janela do jogo. Traz a janela para frente e para se não conseguir (o Chrome costuma ficar por cima). |
+| `scan.ps1` | Rola a lista aberta e junta os prints em grades `G_<tag>_N.png` |
+| `junta.ps1` | Junta uma coleção baixada pelo `ArtifactData` num arquivo `all_<coleção>.json` |
+| `atualiza.ps1` | Compara os TSVs com o banco e monta `batch0.json`, `batch1.json`… |
+| `foto.ps1` | Regera a foto embutida em `dash/index.html` |
+| `resumo.ps1` | Números da semana para as mensagens do grupo |
+
+Fluxo de uma coleta:
+1. Abrir a lista no jogo e rodar `scan.ps1`. Na janela de 607x1046: doação com `-Tag doa -Drags 24`; VS com `-Tag vster -Drags 34 -FromY 660 -ToY 400 -CX 95 -CY 308 -CW 420 -CH 392 -PerGrid 4`, e mais alguns arrastos para pegar o fim da lista.
+2. Ler as grades e escrever `doacao_semanal.tsv` e `vs_<dia>.tsv` em `%TEMP%\lastz-coleta`.
+3. Baixar `membros` e os `registros` da semana com `ArtifactData`, **cada um em um `out_dir` diferente**, e rodar `junta.ps1` logo depois de cada download: a próxima leitura apaga os arquivos da anterior. Os arquivos não trazem a versão, então copie as versões do resultado para `versoes.txt` (`<idMembro> <versão>` por linha).
+4. Rodar `atualiza.ps1`. Se ele avisar "nome do jogo sem membro no banco", provavelmente alguém trocou de nome: compare o VS do dia com o banco, corrija o `nome` em `membros` e rode de novo.
+5. Mandar cada `batchN.json` num `ArtifactData` `batch`.
+6. Baixar de novo `membros`, `registros` (todos) e `leituras`, rodar `junta.ps1` em cada um e depois `foto.ps1`. Publicar `dash/index.html` no URL da dash e fazer commit.
+
+Coordenadas na janela de 607x1046 (PC NOVO-0000): Aliança 570,785 · Ranking 190,837 · Contribuição 463,96 · Semanal 417,153 · voltar 103,995 · VS 568,228 · Ranking do VS 502,70 · Minha Aliança 228,824 · fechar ranking 497,160. Nesse PC o git é o do GitHub Desktop (`%LOCALAPPDATA%\GitHubDesktop\app-3.6.10\resources\app\git\cmd\git.exe`).
+
+Renomeados em 03/11: Demon Tazz → Corrida Maluca, Gargamel ツ → Muttley ツ, Maikynhoo → Peter Perfect.
+
+---
+
+## Scripts antigos em JS (referência; precisam de Node)
 
 Todos usam a mesma pasta. Em outra máquina, confira se a janela do jogo tem a mesma área útil (o `lz.ps1 -Action shot` imprime o tamanho); se mudar, as coordenadas mudam junto.
 
