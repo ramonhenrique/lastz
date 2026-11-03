@@ -1,6 +1,6 @@
 # Rotina automática da dash DEDZ
 
-Este roteiro é seguido pelas tarefas agendadas das **12:00** e das **22:50** (horário de Brasília), sem ninguém acompanhando. Leia o `CONTEXTO.md` só se precisar de mais detalhes; tudo o que a rotina precisa está aqui.
+Este roteiro é seguido pelas tarefas agendadas das **12:00** e da noite (**~22:30**, antes do dia virar às 23:00) (horário de Brasília), sem ninguém acompanhando. Leia o `CONTEXTO.md` só se precisar de mais detalhes; tudo o que a rotina precisa está aqui.
 
 Regras gerais:
 - **Ninguém está olhando.** Não faça perguntas; quando algo impedir a coleta, pare e avise (passo 8).
@@ -18,7 +18,7 @@ Rode `scripts\hoje.ps1`. Ele devolve `semana`, `dia` (0 = segunda … 6 = doming
 | Execução | VS | Doação |
 |---|---|---|
 | 12:00 | VS final de `diaAnterior` (se não for -1) **e** VS parcial do `dia` (se `temVS`) | sim |
-| 22:50 | VS do `dia` (se `temVS`), quase fechado | sim |
+| noite (~22:30) | VS do `dia` (se `temVS`), quase fechado | sim |
 
 No domingo não há VS do dia. Na segunda às 12:00 não há dia anterior (a semana é nova).
 
