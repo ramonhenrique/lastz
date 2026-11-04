@@ -4,14 +4,16 @@
 #
 # Turnos:
 #   meio        (11:01) meio do dia do jogo: ritmo do VS de hoje, lista de cobrança, quem parou de doar
+#   alerta      (19:01) começa o combo de pontuação: alerta incisivo sobre o VS de hoje e a projeção da doação
+#                       (sem os dias anteriores); no domingo, só a doação
 #   fechamento  (23:01) o dia acabou de fechar: resultado final, reincidentes, destaques, projeção, amanhã
 #                       (no sábado e no domingo inclui o fechamento da semana)
-# Uso: .\relatorio.ps1 [-Turno meio|fechamento] [-Agora 'AAAA-MM-DD HH:mm'] [-Dir C:\lz]
+# Uso: .\relatorio.ps1 [-Turno meio|alerta|fechamento] [-Agora 'AAAA-MM-DD HH:mm'] [-Dir C:\lz]
 # Duelo (opcional): $Dir\duelo.json  {"placar":"0:1","nos":48,"eles":52,"adversario":"[VVD]"} lido no jogo nesta execução.
-param([ValidateSet('meio','fechamento')][string]$Turno, [datetime]$Agora = (Get-Date), [string]$Dir = 'C:\lz', [switch]$NaoSalvarHistorico)
+param([ValidateSet('meio','alerta','fechamento')][string]$Turno, [datetime]$Agora = (Get-Date), [string]$Dir = 'C:\lz', [switch]$NaoSalvarHistorico)
 . (Join-Path $PSScriptRoot 'comum.ps1')
 $est = PastaEstado $Dir
-if (-not $Turno) { $Turno = if ($Agora.Hour -ge 5 -and $Agora.Hour -lt 18) { 'meio' } else { 'fechamento' } }
+if (-not $Turno) { $Turno = if ($Agora.Hour -ge 5 -and $Agora.Hour -lt 17) { 'meio' } elseif ($Agora.Hour -ge 17 -and $Agora.Hour -lt 23) { 'alerta' } else { 'fechamento' } }
 
 # ---------- calendário (o dia do jogo vira às 23:00 de Brasília) ----------
 $jogoData = $Agora.AddHours(1).Date
@@ -25,8 +27,9 @@ $metas = 4.5e6, 5e6, 3.3e6, 6e6, 7e6, 6e6
 $diasDoa = $refDia + 1
 $metaDoa = 20000 * $diasDoa
 $metaSemanaDoa = 140000
+$emAndamento = $Turno -ne 'fechamento'                                                   # meio (11:01) e alerta (19:01): o dia ainda está correndo
 $diasFechados = @(0..5 | Where-Object { if ($Turno -eq 'fechamento') { $_ -le $refDia } else { $_ -lt $refDia } })
-$vsHoje = if ($Turno -eq 'meio' -and $refDia -le 5) { $refDia } else { -1 }            # VS em andamento (só no meio)
+$vsHoje = if ($emAndamento -and $refDia -le 5) { $refDia } else { -1 }            # VS em andamento (só no meio)
 $vsFechou = if ($Turno -eq 'fechamento' -and $refDia -le 5) { $refDia } else { -1 }    # VS que acabou de fechar
 $fimDeSemana = $Turno -eq 'fechamento' -and $refDia -ge 5
 
@@ -110,7 +113,7 @@ $lid = New-Object System.Collections.Generic.List[string]
 
 # ---------- análise e previsão para o grupo geral (sem nomes) ----------
 # Dias de doação já corridos: no meio do dia conta a fração de hoje (o dia do jogo começa às 23:00 de Brasília).
-$diasCorridos = if ($Turno -eq 'meio') { $refDia + [math]::Min([math]::Max(($Agora.AddHours(1) - $refData).TotalHours / 24, 0.1), 1) } else { $refDia + 1 }
+$diasCorridos = if ($emAndamento) { $refDia + [math]::Min([math]::Max(($Agora.AddHours(1) - $refData).TotalHours / 24, 0.1), 1) } else { $refDia + 1 }
 $metaTimeSemana = $metaSemanaDoa * [math]::Max($total, 1)
 $projTime = if ($diasCorridos -gt 0) { $somaDoa / $diasCorridos * 7 } else { 0 }
 $projPessoa = @($pessoas | ForEach-Object { $_.doa / $diasCorridos * 7 })
@@ -152,6 +155,7 @@ function MensagensPrivado {
   $l = New-Object System.Collections.Generic.List[string]
   if ($diaCob -lt 0) { return $l }
   $alvo = @($cobZerados) + @($cobMetade)
+  $prazo = if ($Turno -eq 'alerta') { 'O combo de pontuação está ativo até as 23h: é a hora de recuperar.' } else { 'Ainda dá tempo até as 23h.' }
   $amanhaVS = $diaCob + 1
   foreach ($p in $alvo) {
     $v = ValorCob $p
@@ -161,10 +165,10 @@ function MensagensPrivado {
              else { "$($p.nome), é o $($diasRuins)º dia abaixo da meta nesta semana ($(ArtigoDia $diaCob) fechou com $(EmMi $v) de $(MetaMi $diaCob))." }
       $txt += ' A aliança precisa de quem participa. Se não der para acompanhar, conversa com a gente. Se continuar assim, vamos precisar rever sua permanência.'
     } elseif (-not $v) {
-      $txt = if ($vsHoje -ge 0) { "Fala, $($p.nome). Você está zerado no VS de hoje (meta $(MetaMi $diaCob)). Não dá para seguir assim: cada zero pesa no duelo da aliança. Consegue pontuar até as 23h? Se tiver algum problema, me fala que a gente ajuda." }
+      $txt = if ($vsHoje -ge 0) { "Fala, $($p.nome). Você está zerado no VS de hoje (meta $(MetaMi $diaCob)). Não dá para seguir assim: cada zero pesa no duelo da aliança. Consegue pontuar até as 23h? $(if ($Turno -eq 'alerta') { 'O combo de pontuação já está ativo. ' })Se tiver algum problema, me fala que a gente ajuda." }
              else { "Fala, $($p.nome). Você fechou $(ArtigoDia $diaCob) zerado no VS (meta $(MetaMi $diaCob)). Cada zero pesa no duelo da aliança.$(if ($amanhaVS -le 5) { " Amanhã o tema é $($temas[$amanhaVS]), meta $(MetaMi $amanhaVS): conto com você." }) Se tiver algum problema, me fala que a gente ajuda." }
     } else {
-      $txt = if ($vsHoje -ge 0) { "$($p.nome), você está com $(EmMi $v) no VS de hoje, menos da metade da meta de $(MetaMi $diaCob). Ainda dá tempo até as 23h. Precisamos que você chegue na meta hoje." }
+      $txt = if ($vsHoje -ge 0) { "$($p.nome), você está com $(EmMi $v) no VS de hoje, menos da metade da meta de $(MetaMi $diaCob). $prazo Precisamos que você chegue na meta hoje." }
              else { "$($p.nome), você fechou $(ArtigoDia $diaCob) com $(EmMi $v) no VS, menos da metade da meta de $(MetaMi $diaCob).$(if ($amanhaVS -le 5) { " Amanhã o tema é $($temas[$amanhaVS]) (meta $(MetaMi $amanhaVS)): precisamos que você chegue na meta." })" }
     }
     if ($p.pctDoa -lt 0.5) { $txt += " Sua doação também está baixa: $(EmMil $p.doa) de $(EmMil $metaDoa) até agora. Dá para doar com diamantes: 30 por dia já fazem diferença." }
@@ -184,7 +188,7 @@ function AnaliseGeral {
   if ($nivel -ne 'NO CAMINHO') {
     if ($pctProj -lt 1) {
       $falta = [math]::Max($metaTimeSemana - $somaDoa, 0); $diasRest = [math]::Max(7 - $diasCorridos, 0.5)
-      $l.Add("- Para fechar a meta, a aliança precisa doar ~$(EmMil ($falta / $diasRest)) por dia até domingo, contra ~$(EmMil ($somaDoa / $diasCorridos)) por dia até agora.")
+      $l.Add("- Para fechar a meta, a aliança precisa doar ~$(EmMil ($falta / $diasRest)) $(if ($refDia -eq 6) { 'até o fim de hoje' } else { 'por dia até domingo' }), contra ~$(EmMil ($somaDoa / $diasCorridos)) por dia até agora.")
     } else {
       $l.Add("- O total só está acima porque uma parte doa bem mais que a meta. Isso não cobre os $($total - $okDoa) atrasados: a meta de 20 mil por dia vale para cada um.")
     }
@@ -215,7 +219,79 @@ function AnaliseGeral {
   $l
 }
 
-if ($Turno -eq 'meio') {
+if ($Turno -eq 'alerta') {
+  # ================= ALERTA DAS 19H (combo de pontuação) =================
+  # Foco: VS de hoje e projeção da doação, tom incisivo. Sem os dias anteriores do VS.
+  $faltaVS = @(); $okHoje = 0; $meiaMeta = 0
+  if ($vsHoje -ge 0) {
+    $okHoje = OkVS $vsHoje; $meiaMeta = $metas[$vsHoje] / 2
+    $faltaVS = @($pessoas | Where-Object { (Num $_.vsHoje) -lt $metas[$vsHoje] })
+    $quaseVS = @($faltaVS | Where-Object { (Num $_.vsHoje) -ge $meiaMeta })
+  }
+  $pctProjA = $projTime / $metaTimeSemana
+  $atrasados = $total - $okDoa
+
+  $geral.Add("⚠️ DEDZ - ALERTA DAS 19H - $titulo"); $geral.Add('')
+  if ($vsHoje -ge 0) {
+    $geral.Add("O COMBO DE PONTUAÇÃO COMEÇOU. Faltam 4 horas para o VS de $($temas[$vsHoje]) fechar (meta $(MetaMi $vsHoje)).")
+    $geral.Add('')
+    $geral.Add('VS DE HOJE')
+    $geral.Add("- $okHoje de $total bateram ($(Pct $okHoje $total)). $($faltaVS.Count) ainda NÃO bateram.")
+    $geral.Add("- $(Qtd $cobZerados.Count 'membro está' 'membros estão') ZERADO$(if ($cobZerados.Count -ne 1) { 'S' }) e $(Qtd $cobMetade.Count 'não chegou' 'não chegaram') nem à metade da meta ($(EmMi $meiaMeta)).")
+    $geral.Add("- Previsão: no ritmo atual, de $okHoje a $($okHoje + $quaseVS.Count) fecham na meta. Os outros $($total - $okHoje - $quaseVS.Count) vão deixar pontos na mesa se não jogarem agora.")
+    if ($cobZerados.Count + $cobMetade.Count) {
+      $geral.Add("- Zerado às 19h não é falta de recurso, é falta de participação. O combo é a melhor hora do dia para pontuar: use agora o que você guardou para $($temas[$vsHoje]).")
+    }
+  } else {
+    $geral.Add('Domingo não tem VS. Hoje é o ÚLTIMO dia para fechar a doação da semana (140 mil).')
+  }
+  $geral.Add('')
+  $geral.Add("DOAÇÃO: $(if ($pctNaMeta -lt 0.6 -or $pctProjA -lt 0.8) { 'CRÍTICO' } elseif ($pctNaMeta -lt 0.8 -or $pctProjA -lt 0.95) { 'ATENÇÃO' } else { 'NO CAMINHO' })")
+  $geral.Add("- $atrasados de $total estão ATRASADOS na doação (meta de $(EmMil $metaDoa) até hoje)$(if ($abaixoMetadeDoa) { ", e $abaixoMetadeDoa não chegaram nem à metade" }).")
+  $geral.Add("- Previsão: a aliança fecha a semana com ~$(EmMil $projTime) de $(EmMil $metaTimeSemana) ($(Pct $projTime $metaTimeSemana)). Só $vaoBater de $total chegam aos 140 mil nesse ritmo.")
+  if ($pctProjA -lt 1) {
+    $faltaD = [math]::Max($metaTimeSemana - $somaDoa, 0); $diasRestD = [math]::Max(7 - $diasCorridos, 0.5)
+    $geral.Add("- Para fechar a meta, a aliança precisa doar ~$(EmMil ($faltaD / $diasRestD)) $(if ($refDia -eq 6) { 'até o fim de hoje' } else { 'por dia até domingo' }), contra ~$(EmMil ($somaDoa / $diasCorridos)) por dia até agora.")
+  } elseif ($atrasados) {
+    $geral.Add("- O total só está acima porque poucos doam muito. Isso não cobre os $atrasados atrasados: a meta de 20 mil por dia vale para cada um.")
+  }
+  $geral.Add('- Sem doação a loja da aliança não é reabastecida, e todo mundo perde.')
+  $geral.Add('- Não dependa só da recarga: 30 diamantes por dia já fazem muita diferença.')
+  $geral.Add('')
+  $geral.Add('A liderança está acompanhando quem está zerado, abaixo da metade ou atrasado na doação, e vai chamar no privado. Quem não participa abre a vaga para quem quer participar.')
+  $geral.Add($(if ($vsHoje -ge 0) { 'Combo ativo até as 23h. É agora!' } else { 'Fechem a doação até as 23h!' }))
+
+  $lid.Add("⚠️ DEDZ - Liderança - ALERTA DAS 19H - $titulo"); $lid.Add('')
+  if ($vsHoje -ge 0) {
+    $lid.Add("VS DE HOJE ($($temas[$vsHoje]), meta $(MetaMi $vsHoje)) - combo ativo até as 23h")
+    $lid.Add("- Bateram: $okHoje/$total ($(Pct $okHoje $total)) · faltam $($faltaVS.Count)")
+    $antigosA = @($hist | Where-Object { $_.turno -eq 'alerta' -and $_.data -ne $refData.ToString('yyyy-MM-dd') -and $_.pctMeta -ne $null })
+    if ($antigosA.Count) {
+      $mediaA = ($antigosA | Measure-Object pctMeta -Average).Average
+      $difA = [math]::Round(100 * $okHoje / [math]::Max($total, 1) - $mediaA)
+      $lid.Add("- Comparado com as 19h dos outros dias ($($antigosA.Count) leituras): $(if ($difA -ge 0) { "$difA pontos acima" } else { "$(-$difA) pontos abaixo" }) da média de $([math]::Round($mediaA))%")
+    }
+    if ($duelo) { $lid.Add("- Duelo com $($duelo.adversario): placar $($duelo.placar) · nós $($duelo.nos)% x $($duelo.eles)% $(if ($duelo.nos -lt $duelo.eles) { '(estamos atrás no dia)' } else { '(estamos na frente no dia)' })") }
+    $lid.Add('')
+    $lid.Add("AINDA NÃO BATERAM ($($faltaVS.Count))")
+    if ($cobZerados.Count) { $lid.Add("- ZERADOS ($($cobZerados.Count)): $(Juntar $cobZerados.nome)") }
+    if ($cobMetade.Count) { $lid.Add("- Abaixo da metade, menos de $(EmMi $meiaMeta) ($($cobMetade.Count)):"); foreach ($p in $cobMetade) { $lid.Add("  - $($p.nome): $(EmMi $p.vsHoje)") } }
+    if ($quaseVS.Count) { $lid.Add("- Passaram da metade, falta pouco ($($quaseVS.Count)): $(Juntar $quaseVS.nome)") }
+  } else {
+    $lid.Add('Domingo não tem VS: foco total em fechar a doação da semana.')
+  }
+  $msgA = @(MensagensPrivado)
+  if ($msgA.Count) { $lid.Add(''); $lid.Add("MENSAGENS PARA O PRIVADO ($($msgA.Count), copiar e colar agora)"); foreach ($x in $msgA) { $lid.Add($x) } }
+  $lid.Add('')
+  $lid.Add("DOAÇÃO - PROJEÇÃO (meta 140 mil por membro)")
+  $lid.Add("- Em dia até hoje: $okDoa/$total · total $(EmMil $somaDoa) · previsão da aliança ~$(EmMil $projTime) ($(Pct $projTime $metaTimeSemana))")
+  $critA = @($pessoas | Where-Object { $_.pctDoa -lt 0.5 } | Sort-Object doa)
+  if ($critA.Count) { $lid.Add("- Abaixo de 50% da meta ($($critA.Count)): $(($critA | ForEach-Object { "$($_.nome) ($(EmMil $_.doa))" }) -join ', ')") }
+  $riscoA = @($pessoas | Where-Object { $_.pctDoa -ge 0.5 -and ($_.doa / $diasCorridos * 7) -lt 100000 } | Sort-Object doa)
+  if ($riscoA.Count) { $lid.Add("- Não chegam a 100 mil no ritmo atual ($($riscoA.Count)): $(($riscoA | ForEach-Object { "$($_.nome) (~$(EmMil ($_.doa / $diasCorridos * 7)))" }) -join ', ')") }
+  $lid.Add('- Na cobrança, lembre que dá para doar com diamantes: 30 por dia já fazem muita diferença.')
+}
+elseif ($Turno -eq 'meio') {
   # ================= MEIO DO DIA =================
   $geral.Add("DEDZ - Meio do dia - $titulo"); $geral.Add('')
   if ($vsHoje -ge 0) {

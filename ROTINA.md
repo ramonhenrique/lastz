@@ -1,6 +1,6 @@
 # Rotina automática da dash DEDZ
 
-Este roteiro é seguido pelas tarefas agendadas das **11:01** (meio do dia do jogo) e das **23:01** (logo depois do dia virar às 23:00), horário de Brasília (o app atrasa alguns minutos: ~11:12 e ~23:07), sem ninguém acompanhando. Leia o `CONTEXTO.md` só se precisar de mais detalhes; tudo o que a rotina precisa está aqui.
+Este roteiro é seguido pelas tarefas agendadas das **11:01** (meio do dia do jogo), das **19:01** (começa o combo de pontuação do VS) e das **23:01** (logo depois do dia virar às 23:00), horário de Brasília (o app atrasa alguns minutos: ~11:12, ~19:07 e ~23:07), sem ninguém acompanhando. Leia o `CONTEXTO.md` só se precisar de mais detalhes; tudo o que a rotina precisa está aqui.
 
 Regras gerais:
 - **Ninguém está olhando.** Não faça perguntas; quando algo impedir a coleta, pare e avise (passo 8).
@@ -18,6 +18,7 @@ Rode `scripts\hoje.ps1`. Ele devolve `semana`, `dia` (0 = segunda … 6 = doming
 | Execução | VS | Doação |
 |---|---|---|
 | 11:01 | VS parcial do `dia` (se `temVS`) e o VS final de `diaAnterior` (se não for -1; confere/corrige o da noite) | sim |
+| 19:01 | VS parcial do `dia` (se `temVS`). Não precisa reler o dia anterior | sim |
 | 23:01 | VS **final** de `diaAnterior` (o dia que acabou de fechar). O VS do novo `dia` está começando: não colete | sim, exceto no caso abaixo |
 
 Às 23:01 o `hoje.ps1` já aponta para o novo dia, então o dia que fechou é o `diaAnterior`. **Virada da semana (domingo 23:01):** `hoje.ps1` devolve a semana nova com `dia` 0 e `diaAnterior` -1; o ranking semanal de doação zerou e o VS de sábado já foi gravado no sábado às 23:01. Nesse horário não colete nada no jogo: só gere e envie os relatórios (`relatorio.ps1 -Turno fechamento` já analisa o domingo e fecha a semana que acabou).
@@ -74,6 +75,8 @@ Para cada leitura, **uma de cada vez** (o espelho precisa ser confirmado antes d
    `scripts\atualiza.ps1 -Sem <semana> -Dia <dia> -VsTsv vs<dia>.tsv -DiaDoa <dia>`
    No domingo (sem VS): `scripts\atualiza.ps1 -Sem <semana> -DiaDoa 6`
 
+**19:01** (`dia` = hoje): só o passo 2 do 11:01 (VS parcial de hoje e doação no slot de hoje). No domingo, só a doação.
+
 **23:01** (o dia que fechou é o `diaAnterior`; a doação lida agora é o acumulado do fim desse dia, então vai no slot dele):
 1. `scripts\atualiza.ps1 -Sem <semana> -Dia <diaAnterior> -VsTsv vs<diaAnterior>.tsv -DiaDoa <diaAnterior>`
 2. Domingo 23:01 (`diaAnterior` -1): nada a gravar.
@@ -88,7 +91,7 @@ Depois de cada `atualiza.ps1`:
 
 1. `scripts\foto.ps1` (regera a foto em `dash\index.html` a partir do espelho).
 2. Leia a dash com `Artifact` `action: "read"` no URL (obrigatório antes de publicar numa sessão nova) e publique `dash\index.html` com `url` igual ao da dash. Não passe `capabilities`.
-3. Commit: `git add dash/index.html` e `git commit -m "Rotina <12h|22h50>: VS de <dia> e doação (<data>)"`.
+3. Commit: `git add dash/index.html` e `git commit -m "Rotina <11h|19h|23h>: VS de <dia> e doação (<data>)"`.
 4. Push: tente `git push origin main` no shell. Se falhar pedindo usuário, rode o mesmo comando com `run_in_terminal` (o login está guardado no Git Credential Manager). Se ainda falhar, deixe o commit local e cite no aviso.
 
 ## 7. Resumo
@@ -99,7 +102,7 @@ Depois de cada `atualiza.ps1`:
 
 Só se a coleta deu certo (dados gravados e dash publicada).
 
-1. `scripts\relatorio.ps1 -Turno <meio|fechamento>` (11:01 = `meio`, 23:01 = `fechamento`) gera `C:\lz\relatorio_geral.txt` (membros: só números, sem nomes e sem link da dash) e `C:\lz\relatorio_lideranca.txt` (liderança: no `meio`, ritmo do VS, lista de cobrança priorizada e quem não doou; no `fechamento`, resultado final, quem não bateu, destaques, projeção de doação, o tema de amanhã e, no sábado e domingo, o fechamento da semana; nos dois, o alerta de baixa performance). Ele usa `C:\lz\duelo.json` se existir. Envie o conteúdo exato desses arquivos, sem reescrever.
+1. `scripts\relatorio.ps1 -Turno <meio|alerta|fechamento>` (11:01 = `meio`, 19:01 = `alerta`, 23:01 = `fechamento`). O `alerta` é o puxão de orelha da hora do combo: só o VS de hoje (zerados, abaixo da metade, previsão) e a projeção da doação, em tom incisivo, sem os dias anteriores; na liderança vai com nomes e as mensagens prontas para o privado. No domingo fala só da doação. gera `C:\lz\relatorio_geral.txt` (membros: só números, sem nomes e sem link da dash) e `C:\lz\relatorio_lideranca.txt` (liderança: no `meio`, ritmo do VS, lista de cobrança priorizada e quem não doou; no `fechamento`, resultado final, quem não bateu, destaques, projeção de doação, o tema de amanhã e, no sábado e domingo, o fechamento da semana; nos dois, o alerta de baixa performance). Ele usa `C:\lz\duelo.json` se existir. Envie o conteúdo exato desses arquivos, sem reescrever.
    **Antes de enviar, analise.** O relatório geral traz "ANÁLISE DA DOAÇÃO" e "ANÁLISE DO VS" (nível, previsão da semana e de hoje, tendência), sempre sem nomes. Leia esses números e confira se fazem sentido com o que você leu no jogo (total de membros, quantos na meta, previsão). Se algo estiver estranho (leitura faltando, previsão absurda), corrija os dados e gere de novo antes de enviar. O tom com a doação baixa é crítico de propósito: sem doação a loja da aliança não é reabastecida.
 2. Envie cada um com a ferramenta **Enviar no grupo cuja descrição fala em "relatório da dash DEDZ"** (conector do n8n `/mcp/dedz-relatorio-dash`); não use a da reflexão semanal. Só texto: passe `msg` e `destino` (se a ferramenta ainda listar campos de imagem, mande-os vazios).
 3. Destinos: leia `C:\lz\destinos.txt`. Se ele tiver a linha `real`, mande o geral com `destino: "geral"` (grupo DEDZ) e o da liderança com `destino: "lideranca"` (grupo DEDZ R4, R5 e Agregados). Se o arquivo não existir ou não tiver `real`, mande **os dois com `destino: "teste"`** (grupo de teste).
@@ -113,7 +116,7 @@ Termine sempre com um `PushNotification` curto:
 **Se deu errado, avise também no grupo de teste** (sempre, mesmo com `destinos.txt` em `real`): use a ferramenta "Enviar no grupo" do relatório da dash DEDZ com `destino: "teste"` e só texto, no formato:
 
 ```text
-[ROTINA DEDZ - ERRO] <11:01|23:01> de <dd/mm>
+[ROTINA DEDZ - ERRO] <11:01|19:01|23:01> de <dd/mm>
 Motivo: <uma linha>
 Feito: <o que chegou a ser feito: coleta, banco, dash, relatórios>
 Faltou: <o que não foi feito>
