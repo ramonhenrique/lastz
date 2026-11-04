@@ -49,6 +49,11 @@ function Pct($a, $b) { if (-not $b) { return '-' }; [string][math]::Round(100 * 
 function Juntar($lista) { (@($lista) | Sort-Object { $_.ToLowerInvariant() }) -join ', ' }
 function Num($v) { if ($null -eq $v) { 0 } else { [double]$v } }
 
+# contas secundárias da liderança (scripts\secundarias.json): ficam fora só da cobrança no privado
+$secundarias = @{}
+$arqSec = Join-Path $PSScriptRoot 'secundarias.json'
+if (Test-Path $arqSec) { foreach ($pr in (LerJson $arqSec).PSObject.Properties) { if ($pr.Name -notlike '_*') { $secundarias[$pr.Name] = $pr.Value } } }
+
 # ---------- por membro ----------
 $pessoas = foreach ($reg in $regsSemana) {
   $dd = @($reg.doacaoDias); while ($dd.Count -lt 7) { $dd += $null }
@@ -155,7 +160,7 @@ function CobrancaGeral {
 function MensagensPrivado {
   $l = New-Object System.Collections.Generic.List[string]
   if ($diaCob -lt 0) { return $l }
-  $alvo = @($cobZerados) + @($cobMetade)
+  $alvo = @(@($cobZerados) + @($cobMetade) | Where-Object { -not $secundarias.ContainsKey($_.id) })   # contas secundárias da liderança não recebem cobrança no privado
   $prazo = if ($Turno -eq 'alerta') { 'O combo de pontuação está ativo até as 23h: é a hora de recuperar.' } else { 'Ainda dá tempo até as 23h.' }
   $amanhaVS = $diaCob + 1
   foreach ($p in $alvo) {
@@ -326,6 +331,7 @@ elseif ($Turno -eq 'meio') {
 
     # lista de cobrança priorizada
     $fila = foreach ($p in $pessoas) {
+      if ($secundarias.ContainsKey($p.id)) { continue }   # conta secundária da liderança: fora da cobrança no privado
       $s = 0
       if (-not $p.vsHoje) { $s += 3 } elseif ($p.vsHoje -lt $metas[$vsHoje] / 4) { $s += 2 } elseif ($p.vsHoje -lt $metade) { $s += 1 }
       if ($p.pctDoa -lt 0.5) { $s += 2 } elseif ($p.pctDoa -lt 1) { $s += 1 }
