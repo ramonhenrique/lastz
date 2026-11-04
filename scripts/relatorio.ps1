@@ -161,9 +161,15 @@ function MensagensPrivado {
   $l = New-Object System.Collections.Generic.List[string]
   if ($diaCob -lt 0) { return $l }
   $alvo = @(@($cobZerados) + @($cobMetade) | Where-Object { -not $secundarias.ContainsKey($_.id) })   # contas secundárias da liderança não recebem cobrança no privado
+  foreach ($p in $alvo) { $l.Add("> $(TextoPrivado $p)") }
+  $l
+}
+
+# Texto da cobrança no privado de uma pessoa zerada ou abaixo de 50% no VS do dia.
+function TextoPrivado($p) {
   $prazo = if ($Turno -eq 'alerta') { 'O combo de pontuação está ativo até as 23h: é a hora de recuperar.' } else { 'Ainda dá tempo até as 23h.' }
   $amanhaVS = $diaCob + 1
-  foreach ($p in $alvo) {
+  & {
     $v = ValorCob $p
     $diasRuins = $p.falhas.Count + $(if ($vsHoje -ge 0) { 1 } else { 0 })
     if ($diasRuins -ge 2) {
@@ -178,9 +184,80 @@ function MensagensPrivado {
              else { "$($p.nome), você fechou $(ArtigoDia $diaCob) com $(EmMi $v) no VS, menos da metade da meta de $(MetaMi $diaCob).$(if ($amanhaVS -le 5) { " Amanhã o tema é $($temas[$amanhaVS]) (meta $(MetaMi $amanhaVS)): precisamos que você chegue na meta." })" }
     }
     if ($p.pctDoa -lt 0.5) { $txt += " Sua doação também está baixa: $(EmMil $p.doa) de $(EmMil $metaDoa) até agora. Dá para doar com diamantes: 30 por dia já fazem diferença." }
-    $l.Add("> $txt")
+    $txt
   }
-  $l
+}
+
+# ---------- lista do PV (envio no chat privado do jogo, só com o "pode enviar" do usuário) ----------
+# Quarta no alerta das 19:01: puxão de orelha do dia. Sábado no fechamento das 23:01: balanço da semana.
+# Só os piores (até 10): fora quem está entre 50% e 99% da meta e as contas secundárias da liderança.
+$diaPV = if ($Turno -eq 'alerta' -and $refDia -eq 2) { 'quarta' } elseif ($Turno -eq 'fechamento' -and $refDia -eq 5) { 'sabado' } else { $null }
+
+function JuntarDias($ds) { $n = @($ds | ForEach-Object { $curtos[$_] }); if ($n.Count -le 1) { $n -join '' } else { ($n[0..($n.Count - 2)] -join ', ') + ' e ' + $n[-1] } }
+
+function TextoDoacaoPV($p) {
+  "$($p.nome), sua doação da semana está em $(EmMil $p.doa) de $(EmMil $metaDoa) até hoje. Sem doação a loja da aliança não é reabastecida. Dá para doar com diamantes: 30 por dia já fazem diferença. Contamos com você para colocar em dia até domingo."
+}
+
+function TextoSemanaPV($p, $diasVS) {
+  $bat = @($diasVS | Where-Object { $p.reg.vs[$_] -ge $metas[$_] })
+  $abx = @($diasVS | Where-Object { $p.reg.vs[$_] -lt $metas[$_] })
+  $zer = @($diasVS | Where-Object { -not $p.reg.vs[$_] })
+  $t = New-Object System.Collections.Generic.List[string]
+  $t.Add("$($p.nome), o VS da semana fechou e quero te mostrar seu resultado:")
+  $linhaVS = "- VS: bateu a meta em $($bat.Count) de $($diasVS.Count) dias."
+  if ($abx.Count) { $linhaVS += " Ficou abaixo na $(JuntarDias $abx)" + $(if ($zer.Count) { ", e zerou na $(JuntarDias $zer)." } else { '.' }) }
+  $t.Add($linhaVS)
+  $pior = $null
+  if ($abx.Count) {
+    $pior = $abx | Sort-Object { (Num $p.reg.vs[$_]) / $metas[$_] } | Select-Object -First 1
+    $t.Add("- Pior dia: $($nomesDia[$pior]) ($($temas[$pior])), com $(EmMi (Num $p.reg.vs[$pior])) de $(MetaMi $pior).")
+  }
+  $faltaSem = [math]::Max($metaSemanaDoa - $p.doa, 0)
+  $t.Add("- Doação: $(EmMil $p.doa) de $(EmMil $metaDoa) até hoje ($(Pct $p.doa $metaDoa)).$(if ($faltaSem -gt 0) { " Para fechar os 140 mil, faltam $(EmMil $faltaSem) até amanhã." } else { ' Meta da semana batida, obrigado!' })")
+  $t.Add('')
+  $vsBom = $abx.Count -le 1; $doaBoa = $p.doa -ge $metaDoa
+  if ($vsBom -and -not $doaBoa) { $t.Add("Seu VS foi bom ($($bat.Count) de $($diasVS.Count) dias na meta). O ponto agora é a doação.") }
+  elseif ($doaBoa -and -not $vsBom) { $t.Add('Sua doação está em dia, obrigado. O foco é o VS.') }
+  $t.Add('Pontos de melhoria:')
+  if ($zer.Count) { $t.Add('- Entre no VS todo dia, mesmo que seja para fazer o básico. Dia zerado não ajuda a aliança.') }
+  $altos = @($abx | Where-Object { $metas[$_] -ge 6e6 })
+  if ($altos.Count) { $t.Add('- Guarde aceleradores e recursos para os dias de meta alta (Heróis, Exército e Combate) e use no combo, das 19h às 23h.') }
+  if ($null -ne $pior -and $metas[$pior] -lt 6e6) { $t.Add("- No tema de $($temas[$pior]) você ficou mais longe da meta: planeje os recursos desse dia com antecedência.") }
+  if ($abx.Count -and -not $zer.Count -and -not $altos.Count -and ($null -eq $pior -or $metas[$pior] -ge 6e6)) { $t.Add('- Use o combo, das 19h às 23h, para fechar a meta nos dias em que estiver perto.') }
+  if (-not $doaBoa) { $t.Add('- Doe todo dia. Não dependa só da recarga: 30 diamantes por dia já fazem diferença.') }
+  $t.Add('')
+  $t.Add('Contamos com você na próxima semana para virar esse jogo.')
+  $t -join "`n"
+}
+
+function ListaPV {
+  $itens = @()
+  if ($diaPV -eq 'quarta') {
+    foreach ($p in $pessoas) {
+      if ($secundarias.ContainsKey($p.id)) { continue }
+      $v = Num $p.vsHoje; $mt = $metas[$vsHoje]
+      $vsRuim = $v -lt $mt / 2; $doaRuim = $p.pctDoa -lt 0.5
+      if (-not $vsRuim -and -not $doaRuim) { continue }
+      $s = 0
+      if (-not $v) { $s += 4 } elseif ($v -lt $mt / 4) { $s += 3 } elseif ($vsRuim) { $s += 2 }
+      if ($p.pctDoa -lt 0.25) { $s += 2 } elseif ($doaRuim) { $s += 1 }
+      $s += $p.falhas.Count
+      $txt = if ($vsRuim) { TextoPrivado $p } else { TextoDoacaoPV $p }
+      $itens += [pscustomobject]@{ nome = $p.nome; s = $s; txt = $txt }
+    }
+  } elseif ($diaPV -eq 'sabado') {
+    $diasVS = @(0..5 | Where-Object { $d = $_; @($regsSemana | Where-Object { $null -ne $_.vs[$d] }).Count })
+    foreach ($p in $pessoas) {
+      if ($secundarias.ContainsKey($p.id)) { continue }
+      $bat = @($diasVS | Where-Object { $p.reg.vs[$_] -ge $metas[$_] }).Count
+      $zer = @($diasVS | Where-Object { -not $p.reg.vs[$_] }).Count
+      if ($bat -gt [math]::Floor($diasVS.Count / 2) -and $p.pctDoa -ge 0.5) { continue }   # 3 de 6 dias ou menos, ou doação abaixo de 50%
+      $s = ($diasVS.Count - $bat) + 2 * $zer + $(if ($p.pctDoa -lt 0.25) { 3 } elseif ($p.pctDoa -lt 0.5) { 2 } else { 0 })
+      $itens += [pscustomobject]@{ nome = $p.nome; s = $s; txt = (TextoSemanaPV $p $diasVS) }
+    }
+  }
+  @($itens | Sort-Object @{e = 's'; Descending = $true }, nome | Select-Object -First 10)
 }
 
 function AnaliseGeral {
@@ -457,6 +534,17 @@ else {
 # ---------- salvar ----------
 [IO.File]::WriteAllText((Join-Path $Dir 'relatorio_geral.txt'), ($geral -join "`n"), $script:utf8)
 [IO.File]::WriteAllText((Join-Path $Dir 'relatorio_lideranca.txt'), ($lid -join "`n"), $script:utf8)
+# lista do PV: só na quarta (alerta) e no sábado (fechamento); nos outros turnos o arquivo é apagado para não reaproveitar lista velha
+$arqPV = Join-Path $Dir 'pv.txt'
+if ($diaPV) {
+  $pv = @(ListaPV)
+  $cab = if ($diaPV -eq 'quarta') { "LISTA DO PV - puxão de orelha de quarta ($($refData.ToString('dd/MM'))), combo ativo" } else { "LISTA DO PV - balanço da semana ($($refData.AddDays(-$refDia).ToString('dd/MM')) a $($refData.ToString('dd/MM')))" }
+  $linhasPV = New-Object System.Collections.Generic.List[string]
+  $linhasPV.Add("$cab · $($pv.Count) pessoa(s), as piores primeiro · fora quem está entre 50% e 99% e as contas secundárias"); $linhasPV.Add('')
+  $n = 1; foreach ($i in $pv) { $linhasPV.Add("$n. $($i.nome)"); $linhasPV.Add($i.txt); $linhasPV.Add(''); $n++ }
+  if (-not $pv.Count) { $linhasPV.Add('Ninguém na lista.') }
+  [IO.File]::WriteAllText($arqPV, ($linhasPV -join "`n").TrimEnd(), $script:utf8)
+} elseif (Test-Path $arqPV) { Remove-Item $arqPV -Force }
 if (-not $NaoSalvarHistorico) {
   $chave = "$($refData.ToString('yyyy-MM-dd'))_$Turno"
   $novo = [ordered]@{ chave = $chave; data = $refData.ToString('yyyy-MM-dd'); turno = $Turno; dia = $refDia; total = $total

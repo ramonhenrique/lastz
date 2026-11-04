@@ -108,6 +108,19 @@ Só se a coleta deu certo (dados gravados e dash publicada).
 2. Envie cada um com a ferramenta **Enviar no grupo cuja descrição fala em "relatório da dash DEDZ"** (conector do n8n `/mcp/dedz-relatorio-dash`); não use a da reflexão semanal. Só texto: passe `msg` e `destino` (se a ferramenta ainda listar campos de imagem, mande-os vazios).
 3. Destinos: leia `C:\lz\destinos.txt`. Se ele tiver a linha `real`, mande o geral com `destino: "geral"` (grupo DEDZ) e o da liderança com `destino: "lideranca"` (grupo DEDZ R4, R5 e Agregados). Se o arquivo não existir ou não tiver `real`, mande **os dois com `destino: "teste"`** (grupo de teste).
 4. Primeiro o geral, depois o da liderança. Se um envio falhar, siga e cite no aviso.
+## 7c. Lista do PV (só quarta 19:01 e sábado 23:01)
+
+O `relatorio.ps1` gera `C:\lz\pv.txt` só nesses dois horários (nos outros ele apaga o arquivo):
+- **Quarta 19:01:** puxão de orelha do dia (mesmos textos do alerta das 19h) para zerados e abaixo de 50% no VS de hoje, mais quem está com a doação abaixo de 50%.
+- **Sábado 23:01:** balanço da semana para quem bateu a meta em 3 de 6 dias ou menos, ou está com a doação abaixo de 50%: dias na meta, dias abaixo e zerados, pior dia, doação e quanto falta para os 140 mil, pontos de melhoria.
+
+Até 10 pessoas, as piores primeiro. Ficam fora quem está entre 50% e 99% (a liderança cobra) e as contas secundárias.
+
+1. Mande o conteúdo de `pv.txt` no grupo de **teste** (destino `teste`), começando com a linha `[LISTA DO PV - aguardando "pode enviar"]`. Se ficar longo demais para uma mensagem, divida em partes.
+2. No `PushNotification` final, acrescente: "Lista do PV pronta (N pessoas): responda 'pode enviar' nesta sessão".
+3. **Não envie nada no jogo nesta execução.** O envio no chat privado só acontece depois que o usuário responder "pode enviar" na sessão (ele pode tirar nomes antes). Sem essa resposta, a lista fica só no grupo de teste.
+4. Quando o usuário aprovar: abra o jogo, mande cada mensagem no chat privado da pessoa exatamente como está na lista, confira pelo print que foi enviada, feche o jogo e responda com quem recebeu e quem não deu certo. Cuidado com o botão "Expulsar da aliança", que fica perto do chat privado: confira cada clique pelo print. O caminho até o chat privado está no `CONTEXTO.md` (seção "Chat privado"); **se essa seção ainda não existir, não tente enviar: avise que o caminho precisa ser mapeado com o usuário.**
+
 ## 8. Avisar
 
 Termine sempre com um `PushNotification` curto:
