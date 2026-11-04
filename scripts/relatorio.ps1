@@ -147,7 +147,7 @@ function CobrancaGeral {
   if ($vsHoje -ge 0) { $l.Add('A meta é para todos. Quem estiver zerado ou abaixo da metade até o fechamento vai ser chamado no privado pela liderança.') }
   else { $l.Add('A meta é para todos. Quem ficou zerado ou abaixo da metade vai ser chamado no privado pela liderança.') }
   $repet = @($pessoas | Where-Object { $_.falhas.Count -ge 2 }).Count
-  if ($repet) { $l.Add("Quem fica abaixo da meta vários dias seguidos está sendo acompanhado ($repet nesta semana). Aliança forte é aliança em que todo mundo joga junto. Quem não participa abre a vaga para quem quer participar.") }
+  if ($repet) { $l.Add("Quem fica abaixo da meta vários dias seguidos está sendo acompanhado ($repet nesta semana). Aliança forte é aliança em que todo mundo joga junto.") }
   $l
 }
 
@@ -258,7 +258,7 @@ if ($Turno -eq 'alerta') {
   $geral.Add('- Sem doação a loja da aliança não é reabastecida, e todo mundo perde.')
   $geral.Add('- Não dependa só da recarga: 30 diamantes por dia já fazem muita diferença.')
   $geral.Add('')
-  $geral.Add('A liderança está acompanhando quem está zerado, abaixo da metade ou atrasado na doação, e vai chamar no privado. Quem não participa abre a vaga para quem quer participar.')
+  $geral.Add('A liderança está acompanhando quem está zerado, abaixo da metade ou atrasado na doação, e vai chamar no privado.')
   $geral.Add($(if ($vsHoje -ge 0) { 'Combo ativo até as 23h. É agora!' } else { 'Fechem a doação até as 23h!' }))
 
   $lid.Add("⚠️ DEDZ - Liderança - ALERTA DAS 19H - $titulo"); $lid.Add('')
