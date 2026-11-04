@@ -134,6 +134,7 @@ function AnaliseGeral {
       $l.Add("- O total só está acima porque uma parte doa bem mais que a meta. Isso não cobre os $($total - $okDoa) atrasados: a meta de 20 mil por dia vale para cada um.")
     }
     $l.Add('- Sem doação a loja da aliança não é reabastecida, e todo mundo perde. Quem está atrasado, coloque em dia hoje.')
+    $l.Add('- Dica: não dependa só da recarga. Dá para doar também com diamantes e dar um upgrade na doação.')
   }
 
   $dias = @($diasFechados | Where-Object { $d = $_; @($regsSemana | Where-Object { $null -ne $_.vs[$d] }).Count })
@@ -225,6 +226,7 @@ if ($Turno -eq 'meio') {
   }
   $critDoa = @($pessoas | Where-Object { $_.pctDoa -lt 0.5 } | Sort-Object doa)
   if ($critDoa.Count) { $lid.Add("- Abaixo de 50% da meta: $(($critDoa | ForEach-Object { "$($_.nome) ($(EmMil $_.doa))" }) -join ', ')") }
+  if ($okDoa -lt $total) { $lid.Add('- Na cobrança, lembre que dá para doar com diamantes, não só com a recarga.') }
   $lid.Add(''); $lid.Add("ALERTA DE BAIXA PERFORMANCE NA SEMANA ($($alertas.Count))")
   if ($alertas.Count) { foreach ($a in $alertas) { $lid.Add("- $($a.nome): $($a.mot)") } } else { $lid.Add('- ninguém por enquanto') }
 }
