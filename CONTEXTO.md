@@ -250,7 +250,8 @@ Usado só pelo passo 7c do `ROTINA.md`, depois do "pode enviar" do usuário. Tes
 4. Toque na **foto** do membro: aparece um balão com só dois botões, **Detalhes** e **Chat privado** (logo abaixo da foto). Não há "Expulsar" nesse balão; mesmo assim confira pelo print antes de cada clique.
 5. **Chat privado** abre a conversa: o topo mostra `(DEDZ)<nome>`. Confira que é a pessoa certa.
 6. Clique no campo "Clique para inserir texto" (280,995), cole com `lz.ps1 -Action text -Text '<mensagem>'` (aceita acentos, ², ³, •, quebras de linha) e confira pelo print. Para desfazer: `lz.ps1 -Action limpar`.
-7. Com texto no campo o botão verde vira **enviar** (510,1000; sem texto ele mostra um "+"). Clique e tire um print.
+7. **Antes de clicar em enviar, confira pelo print as duas coisas:** a aba ativa no topo (a clara, entre Duelo, Mundo, Aliança, Atividades e Chat privado) é **Chat privado**, e o título é `(DEDZ)<nome da pessoa>`. **NUNCA envie na aba "Mundo" (chat global)**, nem em Aliança, Duelo ou Atividades. Se a aba ativa não for Chat privado, ou o nome não bater, apague o campo (`lz.ps1 -Action limpar`), não envie e refaça o caminho; se não der certo, pare e avise.
+   Com texto no campo o botão verde vira **enviar** (510,1000; sem texto ele mostra um "+"). Clique e tire um print.
 8. **Enviou:** aparece um balão verde à direita, com o horário acima e o nome da nossa conta, e o campo volta a "Clique para inserir texto". **Não enviou** (o membro só aceita mensagem de amigos, ou outro bloqueio): o balão não aparece. Registre como "não recebeu" e siga para o próximo.
 9. Volte (111,995) até a grade de membros para o próximo nome. Se o chat fechar sozinho (acontece se ficar parado), refaça a partir do passo 2.
 

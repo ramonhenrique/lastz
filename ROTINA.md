@@ -6,6 +6,7 @@ Regras gerais:
 - **Ninguém está olhando.** Não faça perguntas; quando algo impedir a coleta, pare e avise (passo 8).
 - **Nunca digite senha nem PIN.** Se o jogo pedir login ou PIN, feche o jogo, pare e avise.
 - **O jogo só fica aberto durante a leitura:** abra no passo 2 e feche no passo 4b.
+- **NUNCA envie nada na aba "Mundo" (chat global), em nenhuma hipótese.** Nem nas abas "Aliança", "Duelo" ou "Atividades". O único envio permitido no jogo é no "Chat privado", pelo passo 7c, depois do "pode enviar" do usuário.
 - **No jogo, só leia rankings.** Não clique em nada que gaste recursos, aceite convites, envie mensagens ou mexa em membros (o botão "Expulsar da aliança" fica perto do chat privado).
 - Antes de cada clique, confira pelo print onde está. Volte para a cidade com o botão de voltar ou `ESC` (`scripts\lz.ps1 -Action key`) quando aparecer algo inesperado.
 - Pasta de trabalho: `C:\lz`. Scripts: `scripts\` deste repositório. Git: `%LOCALAPPDATA%\GitHubDesktop\app-3.6.10\resources\app\git\cmd\git.exe`.
