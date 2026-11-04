@@ -163,7 +163,7 @@ function MensagensPrivado {
     if ($diasRuins -ge 2) {
       $txt = if ($vsHoje -ge 0) { "$($p.nome), já são $diasRuins dias abaixo da meta nesta semana, contando hoje até agora ($(EmMi $v) de $(MetaMi $diaCob))." }
              else { "$($p.nome), é o $($diasRuins)º dia abaixo da meta nesta semana ($(ArtigoDia $diaCob) fechou com $(EmMi $v) de $(MetaMi $diaCob))." }
-      $txt += ' A aliança precisa de quem participa. Se não der para acompanhar, conversa com a gente. Se continuar assim, vamos precisar rever sua permanência.'
+      $txt += ' A aliança precisa de quem participa. Se não der para acompanhar, conversa com a gente. Contamos com você nos próximos dias para virar esse jogo.'
     } elseif (-not $v) {
       $txt = if ($vsHoje -ge 0) { "Fala, $($p.nome). Você está zerado no VS de hoje (meta $(MetaMi $diaCob)). Não dá para seguir assim: cada zero pesa no duelo da aliança. Consegue pontuar até as 23h? $(if ($Turno -eq 'alerta') { 'O combo de pontuação já está ativo. ' })Se tiver algum problema, me fala que a gente ajuda." }
              else { "Fala, $($p.nome). Você fechou $(ArtigoDia $diaCob) zerado no VS (meta $(MetaMi $diaCob)). Cada zero pesa no duelo da aliança.$(if ($amanhaVS -le 5) { " Amanhã o tema é $($temas[$amanhaVS]), meta $(MetaMi $amanhaVS): conto com você." }) Se tiver algum problema, me fala que a gente ajuda." }
