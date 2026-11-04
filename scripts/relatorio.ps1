@@ -130,6 +130,7 @@ if ($diaCob -ge 0) {
   $cobZerados = @($pessoas | Where-Object { -not (ValorCob $_) })
   $cobMetade = @($pessoas | Where-Object { (ValorCob $_) -gt 0 -and (ValorCob $_) -lt $metas[$diaCob] / 2 } | Sort-Object { ValorCob $_ })
 }
+function TempoFalta { $min = [math]::Max([math]::Round(($refData.AddHours(23) - $Agora).TotalMinutes), 0); $h = [math]::Floor($min / 60); $m = $min % 60; if ($h -ge 1 -and $m -lt 10) { "$h hora$(if ($h -gt 1) { 's' })" } elseif ($h -ge 1) { "$h h e $m min" } else { "$m minutos" } }
 function Qtd($n, $um, $varios) { if ($n -eq 1) { "1 $um" } else { "$n $varios" } }
 function ArtigoDia($i) { if ($i -eq 5) { "o $($nomesDia[$i])" } else { "a $($nomesDia[$i])" } }
 
@@ -233,14 +234,14 @@ if ($Turno -eq 'alerta') {
 
   $geral.Add("⚠️ DEDZ - ALERTA DAS 19H - $titulo"); $geral.Add('')
   if ($vsHoje -ge 0) {
-    $geral.Add("O COMBO DE PONTUAÇÃO COMEÇOU. Faltam 4 horas para o VS de $($temas[$vsHoje]) fechar (meta $(MetaMi $vsHoje)).")
+    $geral.Add("O COMBO DE PONTUAÇÃO ESTÁ ATIVO. Faltam $(TempoFalta) para o VS de $($temas[$vsHoje]) fechar (meta $(MetaMi $vsHoje)).")
     $geral.Add('')
     $geral.Add('VS DE HOJE')
     $geral.Add("- $okHoje de $total bateram ($(Pct $okHoje $total)). $($faltaVS.Count) ainda NÃO bateram.")
     $geral.Add("- $(Qtd $cobZerados.Count 'membro está' 'membros estão') ZERADO$(if ($cobZerados.Count -ne 1) { 'S' }) e $(Qtd $cobMetade.Count 'não chegou' 'não chegaram') nem à metade da meta ($(EmMi $meiaMeta)).")
     $geral.Add("- Previsão: no ritmo atual, de $okHoje a $($okHoje + $quaseVS.Count) fecham na meta. Os outros $($total - $okHoje - $quaseVS.Count) vão deixar pontos na mesa se não jogarem agora.")
     if ($cobZerados.Count + $cobMetade.Count) {
-      $geral.Add("- Zerado às 19h não é falta de recurso, é falta de participação. O combo é a melhor hora do dia para pontuar: use agora o que você guardou para $($temas[$vsHoje]).")
+      $geral.Add("- Zerado na hora do combo não é falta de recurso, é falta de participação. O combo é a melhor hora do dia para pontuar: use agora o que você guardou para $($temas[$vsHoje]).")
     }
   } else {
     $geral.Add('Domingo não tem VS. Hoje é o ÚLTIMO dia para fechar a doação da semana (140 mil).')
