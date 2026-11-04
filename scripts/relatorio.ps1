@@ -107,6 +107,58 @@ $alertas = Alertas
 $geral = New-Object System.Collections.Generic.List[string]
 $lid = New-Object System.Collections.Generic.List[string]
 
+# ---------- análise e previsão para o grupo geral (sem nomes) ----------
+# Dias de doação já corridos: no meio do dia conta a fração de hoje (o dia do jogo começa às 23:00 de Brasília).
+$diasCorridos = if ($Turno -eq 'meio') { $refDia + [math]::Min([math]::Max(($Agora.AddHours(1) - $refData).TotalHours / 24, 0.1), 1) } else { $refDia + 1 }
+$metaTimeSemana = $metaSemanaDoa * [math]::Max($total, 1)
+$projTime = if ($diasCorridos -gt 0) { $somaDoa / $diasCorridos * 7 } else { 0 }
+$projPessoa = @($pessoas | ForEach-Object { $_.doa / $diasCorridos * 7 })
+$vaoBater = @($projPessoa | Where-Object { $_ -ge $metaSemanaDoa }).Count
+$abaixo100 = @($projPessoa | Where-Object { $_ -lt 100000 }).Count
+$abaixoMetadeDoa = @($pessoas | Where-Object { $_.pctDoa -lt 0.5 }).Count
+$pctNaMeta = $okDoa / [math]::Max($total, 1)
+
+function AnaliseGeral {
+  $l = New-Object System.Collections.Generic.List[string]
+  $pctProj = $projTime / $metaTimeSemana
+  $nivel = if ($pctNaMeta -lt 0.6 -or $pctProj -lt 0.8) { 'CRÍTICO' } elseif ($pctNaMeta -lt 0.8 -or $pctProj -lt 0.95) { 'ATENÇÃO' } else { 'NO CAMINHO' }
+  $l.Add("ANÁLISE DA DOAÇÃO: $nivel")
+  $l.Add("- $okDoa de $total ($(Pct $okDoa $total)) estão em dia com a meta. $($total - $okDoa) estão atrasados$(if ($abaixoMetadeDoa) { ", e $abaixoMetadeDoa não chegaram nem à metade" }).")
+  $l.Add("- Previsão no ritmo atual: a aliança fecha a semana com ~$(EmMil $projTime) de $(EmMil $metaTimeSemana) ($(Pct $projTime $metaTimeSemana)).")
+  $l.Add("- Só $vaoBater de $total chegam aos 140 mil nesse ritmo; $abaixo100 ficam abaixo de 100 mil.")
+  if ($nivel -ne 'NO CAMINHO') {
+    if ($pctProj -lt 1) {
+      $falta = [math]::Max($metaTimeSemana - $somaDoa, 0); $diasRest = [math]::Max(7 - $diasCorridos, 0.5)
+      $l.Add("- Para fechar a meta, a aliança precisa doar ~$(EmMil ($falta / $diasRest)) por dia até domingo, contra ~$(EmMil ($somaDoa / $diasCorridos)) por dia até agora.")
+    } else {
+      $l.Add("- O total só está acima porque uma parte doa bem mais que a meta. Isso não cobre os $($total - $okDoa) atrasados: a meta de 20 mil por dia vale para cada um.")
+    }
+    $l.Add('- Sem doação a loja da aliança não é reabastecida, e todo mundo perde. Quem está atrasado, coloque em dia hoje.')
+  }
+
+  $dias = @($diasFechados | Where-Object { $d = $_; @($regsSemana | Where-Object { $null -ne $_.vs[$d] }).Count })
+  if ($dias.Count -or $vsHoje -ge 0) {
+    $l.Add('')
+    $pcts = @($dias | ForEach-Object { (OkVS $_) / [math]::Max($total, 1) })
+    $media = if ($pcts.Count) { ($pcts | Measure-Object -Average).Average } else { $null }
+    $nivelVS = if ($null -eq $media) { $null } elseif ($media -lt 0.7) { 'CRÍTICO' } elseif ($media -lt 0.85) { 'ATENÇÃO' } else { 'BOM' }
+    $l.Add("ANÁLISE DO VS$(if ($nivelVS) { ": $nivelVS" })")
+    if ($pcts.Count) {
+      $l.Add("- Média da semana: $([math]::Round(100 * $media))% batem a meta do dia ($(($dias | ForEach-Object { "$($curtos[$_]) $(Pct (OkVS $_) $total)" }) -join ' · ')).")
+      $repet = @($pessoas | Where-Object { $_.falhas.Count -ge 2 }).Count
+      if ($repet) { $l.Add("- $repet membros já ficaram abaixo da meta em 2 dias ou mais. Isso pesa no duelo.") }
+      if ($pcts.Count -ge 2 -and $pcts[-1] -lt $pcts[0] - 0.05) { $l.Add("- A adesão caiu de $([math]::Round(100 * $pcts[0]))% na $($nomesDia[$dias[0]]) para $([math]::Round(100 * $pcts[-1]))% na $($nomesDia[$dias[-1]]).") }
+    }
+    if ($vsHoje -ge 0) {
+      $ok = OkVS $vsHoje; $meio = @($pessoas | Where-Object { $_.vsHoje -ge $metas[$vsHoje] / 2 -and $_.vsHoje -lt $metas[$vsHoje] }).Count
+      $l.Add("- Previsão para hoje: de $ok a $($ok + $meio) de $total devem bater ($ok já bateram e $meio passaram da metade). $(@($pessoas | Where-Object { -not $_.vsHoje }).Count) ainda não pontuaram.")
+    }
+    $prox = @((($refDia + 1)..5) | Where-Object { $_ -le 5 -and $metas[$_] -gt $metas[[math]::Min($refDia, 5)] })
+    if ($prox.Count) { $l.Add("- Atenção: as próximas metas são maiores ($(($prox | ForEach-Object { "$($curtos[$_]) $(MetaMi $_)" }) -join ', ')). Guarde aceleradores e recursos para os temas.") }
+  }
+  $l
+}
+
 if ($Turno -eq 'meio') {
   # ================= MEIO DO DIA =================
   $geral.Add("DEDZ - Meio do dia - $titulo"); $geral.Add('')
@@ -115,6 +167,7 @@ if ($Turno -eq 'meio') {
   } else { $geral.Add('Hoje não tem VS: dia de colocar as doações em dia.') }
   foreach ($i in $diasFechados) { $geral.Add("VS de $($nomesDia[$i]): $(OkVS $i) de $total bateram.") }
   $geral.Add("Doação da semana (meta de $(EmMil $metaDoa) até hoje): $okDoa de $total na meta. Total doado: $(EmMil $somaDoa).")
+  $geral.Add(''); foreach ($x in (AnaliseGeral)) { $geral.Add($x) }
   $geral.Add('')
   $geral.Add($(if ($vsHoje -ge 0) { 'Ainda dá tempo: o VS fecha às 23h. Cada ponto conta!' } else { 'Bora deixar a doação da semana em dia!' }))
 
@@ -185,6 +238,7 @@ else {
     if ($duelo) { $geral.Add("Duelo com $($duelo.adversario): placar $($duelo.placar).") }
   }
   $geral.Add("Doação da semana (meta de $(EmMil $metaDoa) até $($nomesDia[$refDia])): $okDoa de $total na meta. Total doado: $(EmMil $somaDoa).")
+  $geral.Add(''); foreach ($x in (AnaliseGeral)) { $geral.Add($x) }
   if ($amanha -le 5 -and $refDia -ne 6) { $geral.Add(''); $geral.Add("Amanhã: VS de $($temas[$amanha]), meta $(MetaMi $amanha). Bora!") }
   elseif ($refDia -eq 5) { $geral.Add(''); $geral.Add('Domingo não tem VS: aproveite para fechar a doação da semana (140 mil).') }
   $geral.Add('Rumo à S4!')
