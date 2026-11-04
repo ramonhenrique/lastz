@@ -240,7 +240,25 @@ for ($k = 0; $k -lt $files.Count; $k += 4) {
 
 Para a doação semanal, o mesmo esquema com arrasto de 850 para 380 (21 vezes), recorte `110,240,490,665` e 3 prints por grade.
 
+### Chat privado (mapeado em 04/11/2026, janela 623x1046)
+
+Usado só pelo passo 7c do `ROTINA.md`, depois do "pode enviar" do usuário. Testado com uma mensagem para C0r1nga³ (conta do próprio usuário).
+
+1. Na cidade: **Aliança** (585,790); se o menu não abrir, o jogo ainda estava carregando, clique de novo.
+2. Aba **Membros** no rodapé (352,1000). No topo ficam o R5 e os cargos especiais; abaixo, uma grade de 2 colunas com foto, nome, nível e poder.
+3. **A ordem da grade muda** (quem está online sobe), então ache o nome pelo print a cada vez. Role com `lz.ps1 -Action drag` dentro da grade se o nome não estiver visível.
+4. Toque na **foto** do membro: aparece um balão com só dois botões, **Detalhes** e **Chat privado** (logo abaixo da foto). Não há "Expulsar" nesse balão; mesmo assim confira pelo print antes de cada clique.
+5. **Chat privado** abre a conversa: o topo mostra `(DEDZ)<nome>`. Confira que é a pessoa certa.
+6. Clique no campo "Clique para inserir texto" (280,995), cole com `lz.ps1 -Action text -Text '<mensagem>'` (aceita acentos, ², ³, •, quebras de linha) e confira pelo print. Para desfazer: `lz.ps1 -Action limpar`.
+7. Com texto no campo o botão verde vira **enviar** (510,1000; sem texto ele mostra um "+"). Clique e tire um print.
+8. **Enviou:** aparece um balão verde à direita, com o horário acima e o nome da nossa conta, e o campo volta a "Clique para inserir texto". **Não enviou** (o membro só aceita mensagem de amigos, ou outro bloqueio): o balão não aparece. Registre como "não recebeu" e siga para o próximo.
+9. Volte (111,995) até a grade de membros para o próximo nome. Se o chat fechar sozinho (acontece se ficar parado), refaça a partir do passo 2.
+
+Uma faixa "Esta é uma sessão não comercial." (do programa de acesso remoto) cobre parte do canto inferior direito da janela; o botão enviar continua clicável logo abaixo dela.
+
 ### membros.ps1: da cidade, abre Aliança → Membros → grupo do cargo
+
+(Desatualizado: coordenadas de uma janela antiga e o script não está no repositório. Use a seção "Chat privado" acima.)
 
 ```powershell
 param([ValidateSet('R3','R2','R1')][string]$Grupo, [int]$Rolar = 0, [string]$Out)
@@ -254,6 +272,8 @@ for ($i = 0; $i -lt $Rolar; $i++) { & "$s\lz.ps1" -Action drag -X 350 -Y 950 -X2
 ```
 
 ### enviar.ps1: cola o texto de um arquivo no chat aberto e envia
+
+(Desatualizado: coordenadas de uma janela antiga e o script não está no repositório. Hoje o envio usa `lz.ps1 -Action text` e o clique em 510,1000; veja "Chat privado".)
 
 ```powershell
 param([Parameter(Mandatory)][string]$Arquivo, [string]$Out)

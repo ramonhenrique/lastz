@@ -1,8 +1,9 @@
 ﻿param(
-  [Parameter(Mandatory)][ValidateSet('shot','click','drag','key')][string]$Action,
+  [Parameter(Mandatory)][ValidateSet('shot','click','drag','key','text','limpar')][string]$Action,
   [int]$X, [int]$Y, [int]$X2, [int]$Y2,
   [string]$Out = "C:\lz\shot.png",
-  [string]$Key = 'ESC'
+  [string]$Key = 'ESC',
+  [string]$Text
 )
 Add-Type -AssemblyName System.Drawing
 Add-Type @"
@@ -66,5 +67,9 @@ switch ($Action) {
     Start-Sleep -Milliseconds 200
     [W]::mouse_event(4, 0, 0, 0, [IntPtr]::Zero); "dragged $X,$Y -> $X2,$Y2"
   }
+  # cola o texto no campo que estiver com foco (Ctrl+V); não aperta Enter, quem envia é o clique no botão
+  'text' { Set-Clipboard -Value $Text; Start-Sleep -Milliseconds 150; [W]::keybd_event(0x11, 0, 0, [IntPtr]::Zero); [W]::keybd_event(0x56, 0, 0, [IntPtr]::Zero); [W]::keybd_event(0x56, 0, 2, [IntPtr]::Zero); [W]::keybd_event(0x11, 0, 2, [IntPtr]::Zero); "colou $($Text.Length) caracteres" }
+  # apaga o campo de texto com foco (Ctrl+A e Backspace)
+  'limpar' { [W]::keybd_event(0x11, 0, 0, [IntPtr]::Zero); [W]::keybd_event(0x41, 0, 0, [IntPtr]::Zero); [W]::keybd_event(0x41, 0, 2, [IntPtr]::Zero); [W]::keybd_event(0x11, 0, 2, [IntPtr]::Zero); Start-Sleep -Milliseconds 100; for ($i = 0; $i -lt 3; $i++) { [W]::keybd_event(0x08, 0, 0, [IntPtr]::Zero); [W]::keybd_event(0x08, 0, 2, [IntPtr]::Zero); Start-Sleep -Milliseconds 40 }; 'campo limpo' }
   'key' { $vk = @{ ESC = 0x1B }[$Key]; [W]::keybd_event($vk, 0, 0, [IntPtr]::Zero); [W]::keybd_event($vk, 0, 2, [IntPtr]::Zero); "key $Key" }
 }
