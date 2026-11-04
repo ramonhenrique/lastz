@@ -49,7 +49,8 @@ function Num($v) { if ($null -eq $v) { 0 } else { [double]$v } }
 # ---------- por membro ----------
 $pessoas = foreach ($reg in $regsSemana) {
   $dd = @($reg.doacaoDias); while ($dd.Count -lt 7) { $dd += $null }
-  $doaAtual = Num $reg.doacao
+  # doação acumulada no dia analisado (permite refazer relatórios de dias anteriores); sem leitura no dia, usa a última
+  $doaAtual = if ($null -ne $dd[$refDia]) { [double]$dd[$refDia] } else { Num $reg.doacao }
   # doação no dia de referência e no dia anterior (leituras acumuladas por dia)
   $antes = $null; for ($k = $refDia - 1; $k -ge 0; $k--) { if ($null -ne $dd[$k]) { $antes = [double]$dd[$k]; break } }
   if ($null -eq $antes -and $refDia -eq 0) { $antes = 0 }
@@ -118,6 +119,60 @@ $abaixo100 = @($projPessoa | Where-Object { $_ -lt 100000 }).Count
 $abaixoMetadeDoa = @($pessoas | Where-Object { $_.pctDoa -lt 0.5 }).Count
 $pctNaMeta = $okDoa / [math]::Max($total, 1)
 
+# ---------- cobrança incisiva: zerados e abaixo de 50% no VS do dia ----------
+$diaCob = if ($vsHoje -ge 0) { $vsHoje } else { $vsFechou }        # dia do VS cobrado (-1 = nenhum)
+function ValorCob($p) { if ($vsHoje -ge 0) { $p.vsHoje } else { $p.vsFechou } }
+$cobZerados = @(); $cobMetade = @()
+if ($diaCob -ge 0) {
+  $cobZerados = @($pessoas | Where-Object { -not (ValorCob $_) })
+  $cobMetade = @($pessoas | Where-Object { (ValorCob $_) -gt 0 -and (ValorCob $_) -lt $metas[$diaCob] / 2 } | Sort-Object { ValorCob $_ })
+}
+function Qtd($n, $um, $varios) { if ($n -eq 1) { "1 $um" } else { "$n $varios" } }
+function ArtigoDia($i) { if ($i -eq 5) { "o $($nomesDia[$i])" } else { "a $($nomesDia[$i])" } }
+
+function CobrancaGeral {
+  $l = New-Object System.Collections.Generic.List[string]
+  if ($diaCob -lt 0 -or ($cobZerados.Count + $cobMetade.Count) -eq 0) { return $l }
+  $baixa = if ($metas[$diaCob] -le 4.5e6) { ', e é um dia de meta baixa' } else { '' }
+  $l.Add('COBRANÇA DO DIA')
+  if ($vsHoje -ge 0) {
+    $l.Add("Hoje $(Qtd $cobZerados.Count 'membro ainda está' 'membros ainda estão') ZERADOS no VS e $(Qtd $cobMetade.Count 'não chegou' 'não chegaram') nem à metade da meta de $(MetaMi $diaCob) ($(EmMi ($metas[$diaCob] / 2)))$baixa.")
+  } else {
+    $l.Add("$(Qtd $cobZerados.Count 'membro fechou' 'membros fecharam') $(ArtigoDia $diaCob) ZERADO$(if ($cobZerados.Count -ne 1) { 'S' }) no VS e $(Qtd $cobMetade.Count 'ficou' 'ficaram') abaixo da metade da meta de $(MetaMi $diaCob) ($(EmMi ($metas[$diaCob] / 2)))$baixa.")
+  }
+  $l.Add('Zerar o VS não é falta de recurso, é falta de participação. Cada zero tira pontos do duelo e coloca a aliança inteira em desvantagem.')
+  if ($vsHoje -ge 0) { $l.Add('A meta é para todos. Quem estiver zerado ou abaixo da metade até o fechamento vai ser chamado no privado pela liderança.') }
+  else { $l.Add('A meta é para todos. Quem ficou zerado ou abaixo da metade vai ser chamado no privado pela liderança.') }
+  $repet = @($pessoas | Where-Object { $_.falhas.Count -ge 2 }).Count
+  if ($repet) { $l.Add("Quem fica abaixo da meta vários dias seguidos está sendo acompanhado ($repet nesta semana). Aliança forte é aliança em que todo mundo joga junto. Quem não participa abre a vaga para quem quer participar.") }
+  $l
+}
+
+function MensagensPrivado {
+  $l = New-Object System.Collections.Generic.List[string]
+  if ($diaCob -lt 0) { return $l }
+  $alvo = @($cobZerados) + @($cobMetade)
+  $amanhaVS = $diaCob + 1
+  foreach ($p in $alvo) {
+    $v = ValorCob $p
+    $diasRuins = $p.falhas.Count + $(if ($vsHoje -ge 0) { 1 } else { 0 })
+    if ($diasRuins -ge 2) {
+      $txt = if ($vsHoje -ge 0) { "$($p.nome), já são $diasRuins dias abaixo da meta nesta semana, contando hoje até agora ($(EmMi $v) de $(MetaMi $diaCob))." }
+             else { "$($p.nome), é o $($diasRuins)º dia abaixo da meta nesta semana ($(ArtigoDia $diaCob) fechou com $(EmMi $v) de $(MetaMi $diaCob))." }
+      $txt += ' A aliança precisa de quem participa. Se não der para acompanhar, conversa com a gente. Se continuar assim, vamos precisar rever sua permanência.'
+    } elseif (-not $v) {
+      $txt = if ($vsHoje -ge 0) { "Fala, $($p.nome). Você está zerado no VS de hoje (meta $(MetaMi $diaCob)). Não dá para seguir assim: cada zero pesa no duelo da aliança. Consegue pontuar até as 23h? Se tiver algum problema, me fala que a gente ajuda." }
+             else { "Fala, $($p.nome). Você fechou $(ArtigoDia $diaCob) zerado no VS (meta $(MetaMi $diaCob)). Cada zero pesa no duelo da aliança.$(if ($amanhaVS -le 5) { " Amanhã o tema é $($temas[$amanhaVS]), meta $(MetaMi $amanhaVS): conto com você." }) Se tiver algum problema, me fala que a gente ajuda." }
+    } else {
+      $txt = if ($vsHoje -ge 0) { "$($p.nome), você está com $(EmMi $v) no VS de hoje, menos da metade da meta de $(MetaMi $diaCob). Ainda dá tempo até as 23h. Precisamos que você chegue na meta hoje." }
+             else { "$($p.nome), você fechou $(ArtigoDia $diaCob) com $(EmMi $v) no VS, menos da metade da meta de $(MetaMi $diaCob).$(if ($amanhaVS -le 5) { " Amanhã o tema é $($temas[$amanhaVS]) (meta $(MetaMi $amanhaVS)): precisamos que você chegue na meta." })" }
+    }
+    if ($p.pctDoa -lt 0.5) { $txt += " Sua doação também está baixa: $(EmMil $p.doa) de $(EmMil $metaDoa) até agora. Dá para doar com diamantes: 30 por dia já fazem diferença." }
+    $l.Add("> $txt")
+  }
+  $l
+}
+
 function AnaliseGeral {
   $l = New-Object System.Collections.Generic.List[string]
   $pctProj = $projTime / $metaTimeSemana
@@ -169,6 +224,7 @@ if ($Turno -eq 'meio') {
   foreach ($i in $diasFechados) { $geral.Add("VS de $($nomesDia[$i]): $(OkVS $i) de $total bateram.") }
   $geral.Add("Doação da semana (meta de $(EmMil $metaDoa) até hoje): $okDoa de $total na meta. Total doado: $(EmMil $somaDoa).")
   $geral.Add(''); foreach ($x in (AnaliseGeral)) { $geral.Add($x) }
+  $cobG = @(CobrancaGeral); if ($cobG.Count) { $geral.Add(''); foreach ($x in $cobG) { $geral.Add($x) } }
   $geral.Add('')
   $geral.Add($(if ($vsHoje -ge 0) { 'Ainda dá tempo: o VS fecha às 23h. Cada ponto conta!' } else { 'Bora deixar a doação da semana em dia!' }))
 
@@ -215,6 +271,7 @@ if ($Turno -eq 'meio') {
     if ($fila.Count) { $n = 1; foreach ($f in $fila) { $lid.Add("$n. $($f.txt)"); $n++ } } else { $lid.Add('- ninguém em situação crítica') }
     if ($abaixoMetade.Count) { $lid.Add(''); $lid.Add("ABAIXO DE 50% DA META DE HOJE, menos de $(EmMi $metade) ($($abaixoMetade.Count))"); foreach ($p in $abaixoMetade) { $lid.Add("- $($p.nome): $(EmMi $p.vsHoje)") } }
     if ($zerados.Count) { $lid.Add("ZERADOS HOJE ($($zerados.Count)): $(Juntar $zerados.nome)") }
+    $msgP = @(MensagensPrivado); if ($msgP.Count) { $lid.Add(''); $lid.Add("MENSAGENS PARA O PRIVADO ($($msgP.Count), copiar e colar)"); foreach ($x in $msgP) { $lid.Add($x) } }
   }
   # quem parou de doar
   $semDoar = @($pessoas | Where-Object { $null -ne $_.doaNoDia -and $_.doaNoDia -le 0 })
@@ -241,6 +298,7 @@ else {
   }
   $geral.Add("Doação da semana (meta de $(EmMil $metaDoa) até $($nomesDia[$refDia])): $okDoa de $total na meta. Total doado: $(EmMil $somaDoa).")
   $geral.Add(''); foreach ($x in (AnaliseGeral)) { $geral.Add($x) }
+  $cobG = @(CobrancaGeral); if ($cobG.Count) { $geral.Add(''); foreach ($x in $cobG) { $geral.Add($x) } }
   if ($amanha -le 5 -and $refDia -ne 6) { $geral.Add(''); $geral.Add("Amanhã: VS de $($temas[$amanha]), meta $(MetaMi $amanha). Bora!") }
   elseif ($refDia -eq 5) { $geral.Add(''); $geral.Add('Domingo não tem VS: aproveite para fechar a doação da semana (140 mil).') }
   $geral.Add('Rumo à S4!')
@@ -269,6 +327,7 @@ else {
     $top = @($pessoas | Sort-Object vsFechou -Descending | Select-Object -First 5)
     $lid.Add(''); $lid.Add('DESTAQUES DO DIA (para reconhecer no grupo)')
     $n = 1; foreach ($p in $top) { $lid.Add("$n. $($p.nome): $(EmMi $p.vsFechou)"); $n++ }
+    $msgP = @(MensagensPrivado); if ($msgP.Count) { $lid.Add(''); $lid.Add("MENSAGENS PARA O PRIVADO ($($msgP.Count), copiar e colar)"); foreach ($x in $msgP) { $lid.Add($x) } }
   }
   $lid.Add(''); $lid.Add("ALERTA DE BAIXA PERFORMANCE NA SEMANA ($($alertas.Count))")
   if ($alertas.Count) { foreach ($a in $alertas) { $lid.Add("- $($a.nome): $($a.mot)") } } else { $lid.Add('- ninguém') }
