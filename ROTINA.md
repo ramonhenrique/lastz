@@ -126,6 +126,8 @@ Até 10 pessoas, as piores primeiro. Ficam fora quem está entre 50% e 99% (a li
    📩 DEDZ - Notificações no PV - <quarta|sábado> (<dd/mm>)
    Enviadas: <N> de <total> · Não deu certo: <M>
 
+   Por que esses nomes: <regra do dia, abaixo>
+
    ✅ RECEBERAM (<N>)
    1. <nome> - <assunto: doação | VS, X dias abaixo da meta | VS, X dias abaixo da meta, e doação | balanço da semana>
    ...
@@ -133,7 +135,10 @@ Até 10 pessoas, as piores primeiro. Ficam fora quem está entre 50% e 99% (a li
    ❌ NÃO DEU CERTO (<M>)
    - <nome> - <motivo: só aceita mensagem de amigos | não encontrado na lista de membros | outro>
    ```
-   Se todos receberam, a seção ❌ vira `❌ NÃO DEU CERTO: ninguém`. Cuidado com o botão "Expulsar da aliança", que fica perto do chat privado: confira cada clique pelo print. O caminho até o chat privado está no `CONTEXTO.md` (seção "Chat privado"); **se essa seção ainda não existir, não tente enviar: avise que o caminho precisa ser mapeado com o usuário.**
+   Se todos receberam, a seção ❌ vira `❌ NÃO DEU CERTO: ninguém`.
+   Regra do dia (texto exato):
+   - Quarta: `os piores do dia: zerados ou abaixo de 50% da meta do VS de hoje, ou com a doação da semana abaixo de 50% da meta. Quem está entre 50% e 99% fica para a cobrança de vocês. Contas secundárias da liderança ficam de fora.`
+   - Sábado: `os piores da semana: bateram a meta do VS em 3 de 6 dias ou menos, ou estão com a doação da semana abaixo de 50% da meta. Receberam o balanço da semana com os pontos de melhoria. Contas secundárias da liderança ficam de fora.` Cuidado com o botão "Expulsar da aliança", que fica perto do chat privado: confira cada clique pelo print. O caminho até o chat privado está no `CONTEXTO.md` (seção "Chat privado"); **se essa seção ainda não existir, não tente enviar: avise que o caminho precisa ser mapeado com o usuário.**
 
 ## 8. Avisar
 
