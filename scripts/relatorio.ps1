@@ -265,6 +265,22 @@ function ReincPV($p) {
   $partes -join ' · '
 }
 
+# Linha curta para o resumo da liderança: VS dia a dia (✅/❌ e o % dos dias que falhou) e a doação da semana.
+function CompactoPV($p) {
+  $partes = @()
+  $dias = @(0..[math]::Min($refDia, 5) | Where-Object { $null -ne $p.reg.vs[$_] })
+  $falhos = @($dias | Where-Object { (Num $p.reg.vs[$_]) -lt $metas[$_] })
+  if ($falhos.Count) {
+    $icones = ($dias | ForEach-Object { if ((Num $p.reg.vs[$_]) -ge $metas[$_]) { '✅' } else { '❌' } }) -join ''
+    $pcts = ($falhos | ForEach-Object { "$($curtos[$_]) $([math]::Round(100 * (Num $p.reg.vs[$_]) / $metas[$_]))%" }) -join ' · '
+    $partes += "VS $icones ($pcts)"
+  }
+  $rein = ReincPV $p
+  if ($p.pctDoa -lt 0.5 -or $rein -like '*doou menos*') { $partes += "Doação $([math]::Round($p.doa / 1000))/$([math]::Round($metaDoa / 1000)) mil ($(Pct $p.doa $metaDoa))" }
+  if (-not $partes.Count) { $partes += 'abaixo do esperado na semana' }
+  $partes -join ' · '
+}
+
 function ListaPV {
   $itens = @()
   if ($diaPV -eq 'quarta') {
@@ -278,7 +294,7 @@ function ListaPV {
       if ($p.pctDoa -lt 0.25) { $s += 2 } elseif ($doaRuim) { $s += 1 }
       $s += $p.falhas.Count
       $txt = if ($vsRuim) { TextoPrivado $p } else { TextoDoacaoPV $p }
-      $itens += [pscustomobject]@{ nome = $p.nome; s = $s; txt = $txt; mot = (MotivoPV $p); rein = (ReincPV $p) }
+      $itens += [pscustomobject]@{ nome = $p.nome; s = $s; txt = $txt; mot = (MotivoPV $p); rein = (ReincPV $p); curto = (CompactoPV $p) }
     }
   } elseif ($diaPV -eq 'sabado') {
     $diasVS = @(0..5 | Where-Object { $d = $_; @($regsSemana | Where-Object { $null -ne $_.vs[$d] }).Count })
@@ -288,7 +304,7 @@ function ListaPV {
       $zer = @($diasVS | Where-Object { -not $p.reg.vs[$_] }).Count
       if ($bat -gt [math]::Floor($diasVS.Count / 2) -and $p.pctDoa -ge 0.5) { continue }   # 3 de 6 dias ou menos, ou doação abaixo de 50%
       $s = ($diasVS.Count - $bat) + 2 * $zer + $(if ($p.pctDoa -lt 0.25) { 3 } elseif ($p.pctDoa -lt 0.5) { 2 } else { 0 })
-      $itens += [pscustomobject]@{ nome = $p.nome; s = $s; txt = (TextoSemanaPV $p $diasVS); mot = (MotivoPV $p); rein = (ReincPV $p) }
+      $itens += [pscustomobject]@{ nome = $p.nome; s = $s; txt = (TextoSemanaPV $p $diasVS); mot = (MotivoPV $p); rein = (ReincPV $p); curto = (CompactoPV $p) }
     }
   }
   @($itens | Sort-Object @{e = 's'; Descending = $true }, nome | Select-Object -First 10)
@@ -579,7 +595,7 @@ if ($diaPV) {
   if (-not $pv.Count) { $linhasPV.Add('Ninguém na lista.') }
   # pv_lista.tsv: nome<TAB>motivo com os números da semana, usado pelo pv_resumo.ps1
   $periodo = "seg a $($curtos[$refDia]) $($refData.ToString('dd/MM'))"
-  [IO.File]::WriteAllText((Join-Path $Dir 'pv_lista.tsv'), ((@("#periodo`t$periodo") + @($pv | ForEach-Object { "$($_.nome)`t$($_.mot)`t$($_.rein)" })) -join "`n"), $script:utf8)
+  [IO.File]::WriteAllText((Join-Path $Dir 'pv_lista.tsv'), ((@("#periodo`t$periodo") + @($pv | ForEach-Object { "$($_.nome)`t$($_.mot)`t$($_.rein)`t$($_.curto)" })) -join "`n"), $script:utf8)
   [IO.File]::WriteAllText($arqPV, ($linhasPV -join "`n").TrimEnd(), $script:utf8)
 } else { foreach ($a in @($arqPV, (Join-Path $Dir 'pv_lista.tsv'))) { if (Test-Path $a) { Remove-Item $a -Force } } }
 if (-not $NaoSalvarHistorico) {

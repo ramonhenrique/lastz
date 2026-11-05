@@ -20,12 +20,16 @@ $anteriores = @($hist | Where-Object { $_.data -lt $dataTxt -and $_.data -ge $li
 
 # motivos com os números da semana
 if (-not $Lista) { $Lista = Join-Path $Dir 'pv_lista.tsv' }
-$motivos = @{}; $reincs = @{}; $periodo = $null
+$motivos = @{}; $reincs = @{}; $curtos = @{}; $periodo = $null
 if (Test-Path $Lista) {
   foreach ($ln in (Get-Content $Lista -Encoding UTF8)) {
     $cols = $ln -split "`t"
     if ($cols[0] -eq '#periodo') { $periodo = $cols[1] }
-    elseif ($cols.Count -ge 2) { $motivos[(Norm $cols[0])] = $cols[1]; if ($cols.Count -ge 3) { $reincs[(Norm $cols[0])] = $cols[2].Trim() } }
+    elseif ($cols.Count -ge 2) {
+      $motivos[(Norm $cols[0])] = $cols[1]
+      if ($cols.Count -ge 3) { $reincs[(Norm $cols[0])] = $cols[2].Trim() }
+      if ($cols.Count -ge 4) { $curtos[(Norm $cols[0])] = $cols[3].Trim() }
+    }
   }
 }
 
@@ -37,7 +41,8 @@ $itens = foreach ($ln in $entradas) {
   $id = if ($mb) { $mb.id } else { $null }
   $antes = @($anteriores | Where-Object { ($id -and $_.id -eq $id) -or (Norm $_.nome) -eq (Norm $nm) } | Sort-Object data)
   $assunto = $motivos[(Norm $nm)]; if (-not $assunto) { $assunto = '(motivo não encontrado na lista)' }
-  [pscustomobject]@{ nome = $nm; id = $id; assunto = $assunto; rein = [string]$reincs[(Norm $nm)]; ok = ($cols[1].Trim() -eq 'ok'); motivo = $(if ($cols.Count -gt 2) { $cols[2].Trim() } else { '' }); antes = $antes }
+  $curto = $curtos[(Norm $nm)]; if (-not $curto) { $curto = $assunto }
+  [pscustomobject]@{ nome = $nm; id = $id; assunto = $assunto; curto = $curto; rein = [string]$reincs[(Norm $nm)]; ok = ($cols[1].Trim() -eq 'ok'); motivo = $(if ($cols.Count -gt 2) { $cols[2].Trim() } else { '' }); antes = $antes }
 }
 $itens = @($itens)
 $okL = @($itens | Where-Object { $_.ok }); $falhou = @($itens | Where-Object { -not $_.ok })
@@ -49,28 +54,21 @@ function Quando($regs) { ($regs | ForEach-Object { $d = [datetime]$_.data; "$(@(
 $r = New-Object System.Collections.Generic.List[string]
 $r.Add("📩 DEDZ - Notificações no PV - $tipo ($($Data.ToString('dd/MM')))")
 $r.Add("Enviadas: $($okL.Count) de $($itens.Count) · Não deu certo: $($falhou.Count) · Reincidentes: $($rein.Count)")
-if ($periodo) { $r.Add("Período analisado: $periodo (VS e doação somam a semana inteira até hoje, não só o dia)") }
+if ($periodo) { $r.Add("Período: $periodo (semana até hoje)") }
+if ($tipo -eq 'quarta') { $r.Add('Critério: piores da semana no VS (zerado ou abaixo de 50% hoje) ou na doação (abaixo de 50%). Entre 50% e 99% fica com vocês. Secundárias fora.') }
+else { $r.Add('Critério: bateram o VS em 3 de 6 dias ou menos, ou doação abaixo de 50%. Receberam o balanço da semana. Secundárias fora.') }
 $r.Add('')
-if ($tipo -eq 'quarta') { $r.Add('Por que esses nomes: os piores da semana até hoje: abaixo de 50% da meta do VS de hoje (ou zerados), ou com a doação da semana abaixo de 50% da meta. Quem está entre 50% e 99% fica para a cobrança de vocês. Contas secundárias da liderança ficam de fora.') }
-else { $r.Add('Por que esses nomes: os piores da semana: bateram a meta do VS em 3 de 6 dias ou menos, ou estão com a doação da semana abaixo de 50% da meta. Receberam o balanço da semana com os pontos de melhoria. Contas secundárias da liderança ficam de fora.') }
-$r.Add('')
-$r.Add("✅ RECEBERAM ($($okL.Count)): $(if ($okL.Count) { ($okL | ForEach-Object { "$($_.nome)$(if ($_.rein) { ' 🔁' })" }) -join ', ' } else { 'ninguém' })")
-$r.Add('')
-$r.Add("🔁 REINCIDENTES NA SEMANA ($($rein.Count))$(if ($rein.Count) { ': erraram a meta em 2 dias ou mais (VS abaixo da meta ou doação abaixo de 20 mil no dia)' })")
-if ($rein.Count) {
-  foreach ($i in $rein) {
-    $doaSem = ($i.assunto -split ' · ' | Where-Object { $_ -like 'doação *' }) -join ''
-    $r.Add("- $($i.nome): $($i.rein)$(if ($doaSem) { " · $doaSem" })$(if ($i.antes.Count) { ". Já notificado no PV: $(Quando $i.antes)" })")
-  }
-  $r.Add('Para os reincidentes vale uma conversa direta da liderança.')
-} else { $r.Add('- ninguém errou a meta em 2 dias ou mais') }
-$outros = @($itens | Where-Object { -not $_.rein })
-if ($outros.Count) { $r.Add(''); $r.Add("📌 OUTROS NOTIFICADOS ($($outros.Count))"); foreach ($i in $outros) { $r.Add("- $($i.nome): $($i.assunto)") } }
+# formato curto: uma linha por pessoa; VS dia a dia (✅/❌ e o % dos dias que falhou), doação da semana
+$r.Add("✅ RECEBERAM ($($okL.Count)) · 🔁 = errou a meta em 2 dias ou mais")
+if ($okL.Count) {
+  foreach ($i in $okL) { $r.Add("- $($i.nome)$(if ($i.rein) { ' 🔁' }): $($i.curto)$(if ($i.antes.Count) { " · já notificado: $(Quando $i.antes)" })") }
+} else { $r.Add('- ninguém') }
 $r.Add('')
 if ($falhou.Count) {
   $r.Add("❌ NÃO DEU CERTO ($($falhou.Count))")
-  foreach ($i in $falhou) { $r.Add("- $($i.nome)$(if ($i.rein) { ' 🔁' }) - $(if ($i.motivo) { $i.motivo } else { 'outro' }) (motivo da notificação: $($i.assunto))") }
+  foreach ($i in $falhou) { $r.Add("- $($i.nome)$(if ($i.rein) { ' 🔁' }): $(if ($i.motivo) { $i.motivo } else { 'outro' }) · $($i.curto)") }
 } else { $r.Add('❌ NÃO DEU CERTO: ninguém') }
+if ($rein.Count) { $r.Add(''); $r.Add('Para os 🔁 vale uma conversa direta da liderança.') }
 
 [IO.File]::WriteAllText((Join-Path $Dir 'pv_resumo.txt'), ($r -join "`n"), (New-Object Text.UTF8Encoding $false))
 if (-not $NaoSalvarHistorico) {
