@@ -231,6 +231,23 @@ function TextoSemanaPV($p, $diasVS) {
   $t -join "`n"
 }
 
+# Motivo da notificação com os números da semana (segunda até o dia analisado), para o resumo da liderança.
+function MotivoPV($p) {
+  $partes = @()
+  $dias = @(0..[math]::Min($refDia, 5) | Where-Object { $null -ne $p.reg.vs[$_] })
+  $abx = @($dias | Where-Object { (Num $p.reg.vs[$_]) -lt $metas[$_] })
+  $zer = @($dias | Where-Object { -not (Num $p.reg.vs[$_]) })
+  if ($abx.Count) {
+    $txt = "VS abaixo da meta em $($abx.Count) de $($dias.Count) dias ($(JuntarDias $abx))"
+    if ($zer.Count) { $txt += ", zerou na $(JuntarDias $zer)" }
+    if ($vsHoje -ge 0 -and $abx -contains $vsHoje) { $txt += "; hoje $(EmMi (Num $p.vsHoje)) de $(MetaMi $vsHoje)" }
+    $partes += $txt
+  }
+  if ($p.pctDoa -lt 0.5) { $partes += "doação $(EmMil $p.doa) de $(EmMil $metaDoa) na semana ($(Pct $p.doa $metaDoa))" }
+  if (-not $partes.Count) { $partes += "VS e doação abaixo do esperado na semana" }
+  $partes -join ' · '
+}
+
 function ListaPV {
   $itens = @()
   if ($diaPV -eq 'quarta') {
@@ -244,7 +261,7 @@ function ListaPV {
       if ($p.pctDoa -lt 0.25) { $s += 2 } elseif ($doaRuim) { $s += 1 }
       $s += $p.falhas.Count
       $txt = if ($vsRuim) { TextoPrivado $p } else { TextoDoacaoPV $p }
-      $itens += [pscustomobject]@{ nome = $p.nome; s = $s; txt = $txt }
+      $itens += [pscustomobject]@{ nome = $p.nome; s = $s; txt = $txt; mot = (MotivoPV $p) }
     }
   } elseif ($diaPV -eq 'sabado') {
     $diasVS = @(0..5 | Where-Object { $d = $_; @($regsSemana | Where-Object { $null -ne $_.vs[$d] }).Count })
@@ -254,7 +271,7 @@ function ListaPV {
       $zer = @($diasVS | Where-Object { -not $p.reg.vs[$_] }).Count
       if ($bat -gt [math]::Floor($diasVS.Count / 2) -and $p.pctDoa -ge 0.5) { continue }   # 3 de 6 dias ou menos, ou doação abaixo de 50%
       $s = ($diasVS.Count - $bat) + 2 * $zer + $(if ($p.pctDoa -lt 0.25) { 3 } elseif ($p.pctDoa -lt 0.5) { 2 } else { 0 })
-      $itens += [pscustomobject]@{ nome = $p.nome; s = $s; txt = (TextoSemanaPV $p $diasVS) }
+      $itens += [pscustomobject]@{ nome = $p.nome; s = $s; txt = (TextoSemanaPV $p $diasVS); mot = (MotivoPV $p) }
     }
   }
   @($itens | Sort-Object @{e = 's'; Descending = $true }, nome | Select-Object -First 10)
@@ -543,8 +560,11 @@ if ($diaPV) {
   $linhasPV.Add("$cab · $($pv.Count) pessoa(s), as piores primeiro · fora quem está entre 50% e 99% e as contas secundárias"); $linhasPV.Add('')
   $n = 1; foreach ($i in $pv) { $linhasPV.Add("$n. $($i.nome)"); $linhasPV.Add($i.txt); $linhasPV.Add(''); $n++ }
   if (-not $pv.Count) { $linhasPV.Add('Ninguém na lista.') }
+  # pv_lista.tsv: nome<TAB>motivo com os números da semana, usado pelo pv_resumo.ps1
+  $periodo = "seg a $($curtos[$refDia]) $($refData.ToString('dd/MM'))"
+  [IO.File]::WriteAllText((Join-Path $Dir 'pv_lista.tsv'), ((@("#periodo`t$periodo") + @($pv | ForEach-Object { "$($_.nome)`t$($_.mot)" })) -join "`n"), $script:utf8)
   [IO.File]::WriteAllText($arqPV, ($linhasPV -join "`n").TrimEnd(), $script:utf8)
-} elseif (Test-Path $arqPV) { Remove-Item $arqPV -Force }
+} else { foreach ($a in @($arqPV, (Join-Path $Dir 'pv_lista.tsv'))) { if (Test-Path $a) { Remove-Item $a -Force } } }
 if (-not $NaoSalvarHistorico) {
   $chave = "$($refData.ToString('yyyy-MM-dd'))_$Turno"
   $novo = [ordered]@{ chave = $chave; data = $refData.ToString('yyyy-MM-dd'); turno = $Turno; dia = $refDia; total = $total

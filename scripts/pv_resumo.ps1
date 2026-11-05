@@ -1,29 +1,42 @@
 ﻿# Monta o resumo das notificações no PV para o grupo da liderança e grava o histórico de envios.
-# Uso: .\pv_resumo.ps1 -Resultado C:\lz\pv_resultado.tsv [-Data 2026-11-04] [-Dir C:\lz] [-NaoSalvarHistorico]
-#   pv_resultado.tsv: uma linha por pessoa da lista, na ordem: nome<TAB>assunto<TAB>ok|falhou<TAB>motivo (motivo só se falhou)
-#   assunto: doação | VS, 2 dias abaixo da meta | VS, 3 dias abaixo da meta, e doação | balanço da semana ...
+# Uso: .\pv_resumo.ps1 -Resultado C:\lz\pv_resultado.tsv [-Lista C:\lz\pv_lista.tsv] [-Data 2026-11-04] [-Dir C:\lz] [-NaoSalvarHistorico]
+#   pv_resultado.tsv: uma linha por pessoa da lista, na ordem: nome<TAB>ok|falhou<TAB>motivo da falha (só se falhou)
+#   pv_lista.tsv (gerado pelo relatorio.ps1 junto com a lista do PV): nome<TAB>motivo com os números da semana;
+#     a primeira linha é "#periodo<TAB>seg a qua 04/11".
 # Saída: $Dir\pv_resumo.txt (texto exato para enviar) e $Dir\estado\pv_historico.json (um registro por envio).
 # Reincidente = já recebeu notificação no PV antes desta data (últimas 4 semanas), recebida ou não.
-param([Parameter(Mandatory)][string]$Resultado, [datetime]$Data = (Get-Date).AddHours(1).Date, [string]$Dir = 'C:\lz', [switch]$NaoSalvarHistorico)
+param([Parameter(Mandatory)][string]$Resultado, [string]$Lista, [datetime]$Data = (Get-Date).AddHours(1).Date, [string]$Dir = 'C:\lz', [switch]$NaoSalvarHistorico)
 . (Join-Path $PSScriptRoot 'comum.ps1')
 $est = PastaEstado $Dir
 $dataTxt = $Data.ToString('yyyy-MM-dd')
 $diaSem = ([int]$Data.DayOfWeek + 6) % 7
 $tipo = if ($diaSem -eq 5) { 'sábado' } else { 'quarta' }
 
-$porNome = @{}; foreach ($m in (LerLista "$est\membros.json")) { $porNome[(Norm $m.nome)] = $m }
+$porNome = @{}; foreach ($mb in (LerLista "$est\membros.json")) { $porNome[(Norm $mb.nome)] = $mb }
 $histArq = "$est\pv_historico.json"
 $hist = @(); if (Test-Path $histArq) { $hist = @(LerLista $histArq) }
 $limite = $Data.AddDays(-28).ToString('yyyy-MM-dd')
 $anteriores = @($hist | Where-Object { $_.data -lt $dataTxt -and $_.data -ge $limite })
 
-$linhas = @(Get-Content $Resultado -Encoding UTF8 | Where-Object { $_.Trim() })
-$itens = foreach ($l in $linhas) {
-  $c = $l -split "`t"
-  $m = $porNome[(Norm $c[0])]
-  $id = if ($m) { $m.id } else { $null }
-  $antes = @($anteriores | Where-Object { ($id -and $_.id -eq $id) -or (Norm $_.nome) -eq (Norm $c[0]) } | Sort-Object data)
-  [pscustomobject]@{ nome = $c[0].Trim(); id = $id; assunto = $c[1].Trim(); ok = ($c[2].Trim() -eq 'ok'); motivo = $(if ($c.Count -gt 3) { $c[3].Trim() } else { '' }); antes = $antes }
+# motivos com os números da semana
+if (-not $Lista) { $Lista = Join-Path $Dir 'pv_lista.tsv' }
+$motivos = @{}; $periodo = $null
+if (Test-Path $Lista) {
+  foreach ($ln in (Get-Content $Lista -Encoding UTF8)) {
+    $cols = $ln -split "`t"
+    if ($cols[0] -eq '#periodo') { $periodo = $cols[1] } elseif ($cols.Count -ge 2) { $motivos[(Norm $cols[0])] = $cols[1] }
+  }
+}
+
+$entradas = @(Get-Content $Resultado -Encoding UTF8 | Where-Object { $_.Trim() })
+$itens = foreach ($ln in $entradas) {
+  $cols = $ln -split "`t"
+  $nm = $cols[0].Trim()
+  $mb = $porNome[(Norm $nm)]
+  $id = if ($mb) { $mb.id } else { $null }
+  $antes = @($anteriores | Where-Object { ($id -and $_.id -eq $id) -or (Norm $_.nome) -eq (Norm $nm) } | Sort-Object data)
+  $assunto = $motivos[(Norm $nm)]; if (-not $assunto) { $assunto = '(motivo não encontrado na lista)' }
+  [pscustomobject]@{ nome = $nm; id = $id; assunto = $assunto; ok = ($cols[1].Trim() -eq 'ok'); motivo = $(if ($cols.Count -gt 2) { $cols[2].Trim() } else { '' }); antes = $antes }
 }
 $itens = @($itens)
 $okL = @($itens | Where-Object { $_.ok }); $falhou = @($itens | Where-Object { -not $_.ok })
@@ -34,8 +47,9 @@ function Quando($regs) { ($regs | ForEach-Object { $d = [datetime]$_.data; "$(@(
 $r = New-Object System.Collections.Generic.List[string]
 $r.Add("📩 DEDZ - Notificações no PV - $tipo ($($Data.ToString('dd/MM')))")
 $r.Add("Enviadas: $($okL.Count) de $($itens.Count) · Não deu certo: $($falhou.Count) · Reincidentes: $($rein.Count)")
+if ($periodo) { $r.Add("Período analisado: $periodo (VS e doação somam a semana inteira até hoje, não só o dia)") }
 $r.Add('')
-if ($tipo -eq 'quarta') { $r.Add('Por que esses nomes: os piores do dia: zerados ou abaixo de 50% da meta do VS de hoje, ou com a doação da semana abaixo de 50% da meta. Quem está entre 50% e 99% fica para a cobrança de vocês. Contas secundárias da liderança ficam de fora.') }
+if ($tipo -eq 'quarta') { $r.Add('Por que esses nomes: os piores da semana até hoje: abaixo de 50% da meta do VS de hoje (ou zerados), ou com a doação da semana abaixo de 50% da meta. Quem está entre 50% e 99% fica para a cobrança de vocês. Contas secundárias da liderança ficam de fora.') }
 else { $r.Add('Por que esses nomes: os piores da semana: bateram a meta do VS em 3 de 6 dias ou menos, ou estão com a doação da semana abaixo de 50% da meta. Receberam o balanço da semana com os pontos de melhoria. Contas secundárias da liderança ficam de fora.') }
 $r.Add('')
 $r.Add("🔁 REINCIDENTES ($($rein.Count))$(if ($rein.Count) { ': já tinham sido notificados no PV nas últimas 4 semanas' })")
@@ -44,10 +58,12 @@ if ($rein.Count) {
 } else { $r.Add('- ninguém (primeira notificação de todos)') }
 $r.Add('')
 $r.Add("✅ RECEBERAM ($($okL.Count))")
-$n = 1; foreach ($i in $okL) { $r.Add("$n. $($i.nome) - $($i.assunto)$(if ($i.antes.Count) { ' 🔁' })"); $n++ }
+$n = 1; foreach ($i in $okL) { $r.Add("$n. $($i.nome)$(if ($i.antes.Count) { ' 🔁' }) - $($i.assunto)"); $n++ }
 $r.Add('')
-if ($falhou.Count) { $r.Add("❌ NÃO DEU CERTO ($($falhou.Count))"); foreach ($i in $falhou) { $r.Add("- $($i.nome) - $(if ($i.motivo) { $i.motivo } else { 'outro' })$(if ($i.antes.Count) { ' 🔁' })") } }
-else { $r.Add('❌ NÃO DEU CERTO: ninguém') }
+if ($falhou.Count) {
+  $r.Add("❌ NÃO DEU CERTO ($($falhou.Count))")
+  foreach ($i in $falhou) { $r.Add("- $($i.nome)$(if ($i.antes.Count) { ' 🔁' }) - $(if ($i.motivo) { $i.motivo } else { 'outro' }) (motivo da notificação: $($i.assunto))") }
+} else { $r.Add('❌ NÃO DEU CERTO: ninguém') }
 
 [IO.File]::WriteAllText((Join-Path $Dir 'pv_resumo.txt'), ($r -join "`n"), (New-Object Text.UTF8Encoding $false))
 if (-not $NaoSalvarHistorico) {
