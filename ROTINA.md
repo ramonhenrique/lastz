@@ -120,7 +120,20 @@ Até 10 pessoas, as piores primeiro. Ficam fora quem está entre 50% e 99% (a li
 1. Mande o conteúdo de `pv.txt` no grupo de **teste** (destino `teste`), começando com a linha `[LISTA DO PV - aguardando "pode enviar"]`. Se ficar longo demais para uma mensagem, divida em partes.
 2. No `PushNotification` final, acrescente: "Lista do PV pronta (N pessoas): responda 'pode enviar' nesta sessão".
 3. **Não envie nada no jogo nesta execução.** O envio no chat privado só acontece depois que o usuário responder "pode enviar" na sessão (ele pode tirar nomes antes). Sem essa resposta, a lista fica só no grupo de teste.
-4. Quando o usuário aprovar: abra o jogo, mande cada mensagem no chat privado da pessoa exatamente como está na lista, confira pelo print que foi enviada, feche o jogo e responda com quem recebeu e quem não deu certo. Cuidado com o botão "Expulsar da aliança", que fica perto do chat privado: confira cada clique pelo print. O caminho até o chat privado está no `CONTEXTO.md` (seção "Chat privado"); **se essa seção ainda não existir, não tente enviar: avise que o caminho precisa ser mapeado com o usuário.**
+4. Quando o usuário aprovar: abra o jogo, mande cada mensagem no chat privado da pessoa exatamente como está na lista, confira pelo print que foi enviada, feche o jogo e responda com quem recebeu e quem não deu certo.
+5. **Resumo na liderança (sempre, ao terminar os envios):** mande no grupo da liderança (`destino: "lideranca"` se `C:\lz\destinos.txt` tiver `real`; senão `teste`) só texto, no formato:
+   ```text
+   📩 DEDZ - Notificações no PV - <quarta|sábado> (<dd/mm>)
+   Enviadas: <N> de <total> · Não deu certo: <M>
+
+   ✅ RECEBERAM (<N>)
+   1. <nome> - <assunto: doação | VS, X dias abaixo da meta | VS, X dias abaixo da meta, e doação | balanço da semana>
+   ...
+
+   ❌ NÃO DEU CERTO (<M>)
+   - <nome> - <motivo: só aceita mensagem de amigos | não encontrado na lista de membros | outro>
+   ```
+   Se todos receberam, a seção ❌ vira `❌ NÃO DEU CERTO: ninguém`. Cuidado com o botão "Expulsar da aliança", que fica perto do chat privado: confira cada clique pelo print. O caminho até o chat privado está no `CONTEXTO.md` (seção "Chat privado"); **se essa seção ainda não existir, não tente enviar: avise que o caminho precisa ser mapeado com o usuário.**
 
 ## 8. Avisar
 
