@@ -31,35 +31,35 @@ Rode `scripts\hoje.ps1`. Ele devolve `semana`, `dia` (0 = segunda … 6 = doming
    - Tela de **Código PIN** ou login → pare (passo 8, sem esquecer de fechar o jogo) e avise "o jogo pediu o PIN".
    - Vídeo de entrada → botão **Pular** (canto superior direito).
    - Janelas abertas (cartão de perfil, ofertas, eventos) → feche no X ou com `ESC` até ver a cidade.
-3. O `lz.ps1` imprime o tamanho da janela (a posição na tela pode mudar; as coordenadas são relativas à janela). As coordenadas abaixo são para **623x1046**. Se o tamanho for outro, ache os botões pelo print.
+3. O `lz.ps1` imprime o tamanho da janela (a posição na tela pode mudar; as coordenadas são relativas à janela). As coordenadas abaixo são para **623x993** (desde 04/11, com a barra de tarefas do Windows fixa). Se o tamanho for outro, ache os botões pelo print.
 4. Se o `lz.ps1` falhar com "Janela do jogo nao ficou em primeiro plano", ou o print sair preto, o PC deve estar bloqueado → pare e avise.
 
 ## 3. Coletar o VS
 
 **Placar do duelo (antes do ranking):** ao abrir o jogo costuma aparecer a janela "Confronto de Alianças em andamento" com a Pontuação total (ex.: 0 : 1) e as porcentagens (ex.: 48% x 52%). Se ela não aparecer, a tela principal do botão VS mostra o mesmo. Grave em `C:\lz\duelo.json`, por exemplo `{"placar":"0:1","nos":48,"eles":52,"adversario":"[VVD]"}` (nós = DEDZ, à esquerda). Às 23:01 o placar já inclui o dia que fechou. Se não conseguir ler, apague `C:\lz\duelo.json` para não usar um placar velho.
 
-Na cidade: botão **VS** (583,228; à direita, abaixo de "Atividades Populares") → **Ranking** (510,70) → **Ranking Diário** (já vem selecionado) → marque **Minha Aliança** (236,824) e confira pelo print que o visto apareceu. As abas dos dias ficam em y=280: Seg 133 · Ter 205 · Qua 275 · Qui 347 · Sex 417 · Sáb 488.
+Na cidade: botão **VS** (587,213; à direita, abaixo de "Atividades Populares") → **Ranking** (505,62) → **Ranking Diário** (já vem selecionado) → marque **Minha Aliança** (240,782) e confira pelo print que o visto apareceu. As abas dos dias ficam em y=262: Seg 145 · Ter 210 · Qua 277 · Qui 345 · Sex 411 · Sáb 478.
 
 Para cada dia a coletar:
 1. Clique na aba do dia e confira pelo print que ela ficou selecionada e que "Minha Aliança" continua marcado.
 2. Role a lista para o topo: `scripts\lz.ps1 -Action drag -X 300 -Y 400 -X2 300 -Y2 900` (duas vezes).
-3. Confira pelo print que a aba de cima é **Ranking Diário** (laranja). Em 03/11 ela pulou para "Ranking Semanal" durante a rolagem: os valores ficam bem maiores (somam os dias) e o 1º lugar muda. Se isso acontecer, volte ao Diário (170,215), clique no dia e refaça o scan.
-4. `scripts\scan.ps1 -Tag vs<dia> -Drags 40 -FromY 660 -ToY 400 -CX 103 -CY 308 -CW 420 -CH 392 -PerGrid 4`
+3. Confira pelo print que a aba de cima é **Ranking Diário** (laranja). Em 03/11 ela pulou para "Ranking Semanal" durante a rolagem: os valores ficam bem maiores (somam os dias) e o 1º lugar muda. Se isso acontecer, volte ao Diário (176,204), clique no dia e refaça o scan.
+4. `scripts\scan.ps1 -Tag vs<dia> -Drags 40 -FromY 627 -ToY 380 -CX 113 -CY 292 -CW 400 -CH 372 -PerGrid 4`
 5. Leia as grades `C:\lz\G_vs<dia>_N.png` e escreva `C:\lz\vs<dia>.tsv` (UTF-8, uma linha por membro: `posição<TAB>nome<TAB>valor`, sem separador de milhar). Todos os membros ativos precisam aparecer (96 desde a saída de GAMZ€ em 03/11); a última grade deve terminar na última posição. Se faltar gente no fim, role mais e tire outro print.
    - Copie os nomes exatamente como aparecem (com ², ³, ¹, •, ツ, 亥, €, Ø). O `atualiza.ps1` ignora espaços e acentos.
    - Dica: `C:\lz\estado\registros.json` tem os valores já gravados. Na leitura do mesmo dia, a maioria não muda; compare para pegar erros de leitura.
 
-Feche o ranking no X (505,160) e volte para a cidade (botão de voltar, 111,995).
+Feche o ranking no X (495,152) e volte para a cidade (botão de voltar, 120,945; se não responder, `ESC`).
 
 ## 4. Coletar a doação semanal
 
-Na cidade: **Aliança** (585,790) → **Ranking** (198,837) → aba **Contribuição** (471,96) → **Semanal** (425,153). Use sempre o Semanal.
+Na cidade: **Aliança** (587,748) → **Ranking** (205,795) → aba **Contribuição** (463,90) → **Semanal** (418,145). Use sempre o Semanal. **Nunca clique no botão verde "Doar"** (rodapé, 311,950): ele gasta recursos.
 
-1. Role para o topo (drag de 400 para 900, duas vezes).
-2. `scripts\scan.ps1 -Tag doa -Drags 26 -CX 88`
+1. Role para o topo (drag de 400 para 760, duas vezes; nunca arraste a partir do rodapé, onde fica o "Doar").
+2. `scripts\scan.ps1 -Tag doa -Drags 28 -FromY 760 -ToY 400 -CX 98 -CY 218 -CW 430 -CH 580 -PerGrid 3`
 3. Leia `C:\lz\G_doa_N.png` e escreva `C:\lz\doacao_semanal.tsv` no mesmo formato. Todos os membros ativos precisam aparecer.
 
-Volte para a cidade (111,995, duas vezes).
+Volte para a cidade (120,945, duas vezes; ou `ESC`).
 
 ## 4b. Fechar o jogo
 

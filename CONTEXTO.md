@@ -240,23 +240,24 @@ for ($k = 0; $k -lt $files.Count; $k += 4) {
 
 Para a doação semanal, o mesmo esquema com arrasto de 850 para 380 (21 vezes), recorte `110,240,490,665` e 3 prints por grade.
 
-### Chat privado (mapeado em 04/11/2026, janela 623x1046)
+### Chat privado (mapeado em 04/11/2026, janela 623x993)
 
-Usado só pelo passo 7c do `ROTINA.md`, depois do "pode enviar" do usuário. Testado com uma mensagem para C0r1nga³ (conta do próprio usuário).
+Usado só pelo passo 7c do `ROTINA.md`, depois do "pode enviar" do usuário. Primeiro envio real em 04/11 (9 membros, todos receberam).
 
-1. Na cidade: **Aliança** (585,790); se o menu não abrir, o jogo ainda estava carregando, clique de novo.
-2. Aba **Membros** no rodapé (352,1000). No topo ficam o R5 e os cargos especiais; abaixo, uma grade de 2 colunas com foto, nome, nível e poder.
-3. **A ordem da grade muda** (quem está online sobe), então ache o nome pelo print a cada vez. Role com `lz.ps1 -Action drag` dentro da grade se o nome não estiver visível.
-4. Toque na **foto** do membro: aparece um balão com só dois botões, **Detalhes** e **Chat privado** (logo abaixo da foto). Não há "Expulsar" nesse balão; mesmo assim confira pelo print antes de cada clique.
-5. **Chat privado** abre a conversa: o topo mostra `(DEDZ)<nome>`. Confira que é a pessoa certa.
-6. Clique no campo "Clique para inserir texto" (280,995), cole com `lz.ps1 -Action text -Text '<mensagem>'` (aceita acentos, ², ³, •, quebras de linha) e confira pelo print. Para desfazer: `lz.ps1 -Action limpar`.
-7. **Antes de clicar em enviar, confira pelo print as duas coisas:** a aba ativa no topo (a clara, entre Duelo, Mundo, Aliança, Atividades e Chat privado) é **Chat privado**, e o título é `(DEDZ)<nome da pessoa>`. **NUNCA envie na aba "Mundo" (chat global)**, nem em Aliança, Duelo ou Atividades. Se a aba ativa não for Chat privado, ou o nome não bater, apague o campo (`lz.ps1 -Action limpar`), não envie e refaça o caminho; se não der certo, pare e avise.
-   Com texto no campo o botão verde vira **enviar** (510,1000; sem texto ele mostra um "+"). Clique e tire um print.
-8. **Enviou:** aparece um balão verde à direita, com o horário acima e o nome da nossa conta, e o campo volta a "Clique para inserir texto". **Não enviou** (o membro só aceita mensagem de amigos, ou outro bloqueio): o balão não aparece. Registre como "não recebeu" e siga para o próximo.
-9. Volte (111,995) até a grade de membros para o próximo nome. Se o chat fechar sozinho (acontece se ficar parado), refaça a partir do passo 2.
+1. Na cidade: **Aliança** (587,748); se o menu não abrir, o jogo ainda estava carregando, clique de novo. **Membros** no rodapé (352,945).
+2. No topo ficam o R5 e os cargos especiais; abaixo, uma grade de 2 colunas (foto, nome, nível, poder) por grupo de cargo: R4, R3, depois as faixas **R2** e **R1**, que vêm recolhidas. Role até o fim (`lz.ps1 -Action drag -X 300 -Y 820 -X2 300 -Y2 480`, umas 12 vezes) e abra a faixa pela seta ▼ da direita (508, na altura da faixa: R2 ~820, R1 ~873 quando estão no fim da lista).
+3. **A ordem dentro de cada grupo muda** (quem está online sobe), então ache o nome pelo print a cada vez.
+4. Toque na **foto** do membro: aparece um balão com **Detalhes** e **Chat privado**; nos membros R2 e R1 aparece também **"Ajuste de classe"** (muda o cargo): **nunca clique nele**. Confira pelo print antes de cada clique; "Chat privado" é sempre o botão do canto superior direito do balão.
+5. Espere uns 8 segundos e tire um print. Duas telas valem como chat privado:
+   - **Conversa com histórico:** a aba **Chat privado** destacada (clara) e o título `(DEDZ)<nome>`.
+   - **Conversa nova:** nenhuma aba destacada, título só `<nome>` (sem "(DEDZ)") e "Sem mensagens" no meio. Depois do primeiro envio ela vira a tela com histórico.
+6. Clique no campo "Clique para inserir texto" (290,943), cole com `lz.ps1 -Action text -Text '<mensagem>'` (aceita acentos, ², ³, •) e confira pelo print. Para desfazer: `lz.ps1 -Action limpar`.
+7. **Antes de enviar, confira pelo print:** é uma das duas telas do passo 5 e o nome no título é exatamente o da pessoa. **NUNCA envie na aba "Mundo" (chat global)**, nem em Aliança, Duelo ou Atividades. Se a tela mostrar mensagens de várias pessoas, outra aba destacada ou outro nome, apague o campo, não envie e refaça o caminho; se não der certo, pare e avise.
+   Com texto no campo o botão verde vira **enviar** (500,943; sem texto ele mostra um "+"). Clique e tire um print.
+8. **Enviou:** aparece um balão verde à direita, com o horário acima e o nome da nossa conta, e o título passa a `(DEDZ)<nome>`. **Não enviou** (o membro só aceita mensagem de amigos, ou outro bloqueio): o balão não aparece. Registre como "não recebeu" e siga.
+9. Para sair do chat use **`ESC`** (o botão de voltar da tela de chat não respondeu em 04/11). Volta para a cidade; refaça a partir do passo 1 para o próximo nome.
 
-Uma faixa "Esta é uma sessão não comercial." (do programa de acesso remoto) cobre parte do canto inferior direito da janela; o botão enviar continua clicável logo abaixo dela.
-
+Se o `lz.ps1` reclamar "Janela do jogo nao ficou em primeiro plano" logo depois de um clique em enviar, o clique já foi dado: tire outro print para conferir o balão antes de tentar de novo (não envie duas vezes).
 ### membros.ps1: da cidade, abre Aliança → Membros → grupo do cargo
 
 (Desatualizado: coordenadas de uma janela antiga e o script não está no repositório. Use a seção "Chat privado" acima.)
