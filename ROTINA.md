@@ -45,7 +45,7 @@ Para cada dia a coletar:
 2. Role a lista para o topo: `scripts\lz.ps1 -Action drag -X 300 -Y 400 -X2 300 -Y2 900` (duas vezes).
 3. Confira pelo print que a aba de cima é **Ranking Diário** (laranja). Em 03/11 ela pulou para "Ranking Semanal" durante a rolagem: os valores ficam bem maiores (somam os dias) e o 1º lugar muda. Se isso acontecer, volte ao Diário (176,204), clique no dia e refaça o scan.
 4. `scripts\scan.ps1 -Tag vs<dia> -Drags 40 -FromY 627 -ToY 380 -CX 113 -CY 292 -CW 400 -CH 372 -PerGrid 4`
-5. Leia as grades `C:\lz\G_vs<dia>_N.png` e escreva `C:\lz\vs<dia>.tsv` (UTF-8, uma linha por membro: `posição<TAB>nome<TAB>valor`, sem separador de milhar). Todos os membros ativos precisam aparecer (96 desde a saída de GAMZ€ em 03/11); a última grade deve terminar na última posição. Se faltar gente no fim, role mais e tire outro print.
+5. Leia as grades `C:\lz\G_vs<dia>_N.png` e escreva `C:\lz\vs<dia>.tsv` (UTF-8, uma linha por membro: `posição<TAB>nome<TAB>valor`, sem separador de milhar). Todos os membros ativos precisam aparecer (97 desde a entrada de SABUTAY em 05/11); a última grade deve terminar na última posição. Se faltar gente no fim, role mais e tire outro print.
    - Copie os nomes exatamente como aparecem (com ², ³, ¹, •, ツ, 亥, €, Ø). O `atualiza.ps1` ignora espaços e acentos.
    - Dica: `C:\lz\estado\registros.json` tem os valores já gravados. Na leitura do mesmo dia, a maioria não muda; compare para pegar erros de leitura.
 
@@ -60,6 +60,18 @@ Na cidade: **Aliança** (587,748) → **Ranking** (205,795) → aba **Contribui�
 3. Leia `C:\lz\G_doa_N.png` e escreva `C:\lz\doacao_semanal.tsv` no mesmo formato. Todos os membros ativos precisam aparecer.
 
 Volte para a cidade (120,945, duas vezes; ou `ESC`).
+
+## 4a. Registro da aliança (quem entrou e quem saiu)
+
+Faça sempre que a leitura tiver nome novo ou membro sumido; nas outras coletas é opcional. Na cidade: **Aliança** (587,748) → **Registro da aliança** (425,795) → aba **Membros** (311,89). Abre na aba Guerra; confira pelo print que a aba Membros ficou clara.
+
+- A lista vem do mais novo para o mais antigo, agrupada por data (`2026-11-05`), com hora em cada linha. Role com `lz.ps1 -Action drag -X 311 -Y 820 -X2 311 -Y2 260` até passar da segunda-feira da semana.
+- Entrada (ícone verde, porta com seta para dentro): "X aceitou a aplicação de NOME, NOME entrou com sucesso na aliança" ou "NOME recebeu um convite de X e entrou na aliança".
+- Saída (ícone vermelho): "NOME saiu da aliança" ou "X removeu NOME da aliança" (expulsão).
+- Também aparecem as mudanças de cargo ("X ajustou o nível de membro de NOME de R1 para R2"). Só leitura: não clique em nada da lista.
+- Uso: "nome do jogo sem membro no banco" com entrada no registro é **membro novo**; sem entrada no registro, é provável **troca de nome**. Membro sumido dos dois rankings com saída no registro confirma a saída. Saiu e voltou (ex.: Motoboy fodinha) continua o mesmo membro. Cite no aviso de erro o que o registro mostrou (nome, data, hora, quem aceitou).
+
+Volte para a cidade com `ESC`.
 
 ## 4b. Fechar o jogo
 
