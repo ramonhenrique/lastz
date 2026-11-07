@@ -264,6 +264,8 @@ Se o `lz.ps1` reclamar "Janela do jogo nao ficou em primeiro plano" logo depois 
 Ensinado pelo Ramon em 05/11. Aliança (587,748) → **Registro da aliança** (425,795, coluna da direita) → aba **Membros** (311,89; abre em Guerra). Lista com entradas, saídas, expulsões e mudanças de cargo, por data e hora, do mais novo para o mais antigo. Rolar: drag 311,820 → 311,260. Detalhes de uso no passo 4a do `ROTINA.md`.
 
 Lido em 05/11: SABUTAY entrou 05/11 10:15 (aceito por Marcelo QAF); Motoboy fodinha saiu e voltou (01/11 e 05/11); GAMZ€ saiu 03/11 19:18; dynami6ht saiu 02/11; Døn Dante e Belladønna saíram 01/11; Mateus cruz removido por Victtor 01/11; LARI • removida 03/11 01:45 e voltou 10:44; em 03/11 ~11:07 Maikynhoo mudou cargos (Draugz, odiata, LARI • R1→R2; Odin Mizo, adamınbiri, Motoboy fodinha, MAGO亥 R1→R3; Faveras, Coronell, José58 R2→R3).
+
+Lido em 07/11: Horst747 entrou 07/11 04:01 (aceito por C0r1nga) e VR-ONE entrou 07/11 de manhã (aceito por Xambre); Victtor R4→R3 (06/11) e Mané 07 R3→R4 (07/11), ambos por Marcelo QAF; o jogo mostra 99/100. O registro não mostra troca de nome. As trocas de 06–07/11 foram casadas pelos números (VS e doação acumulada seguem do nome antigo para o novo): Corrida Maluca → Demon Tazz (m007), Medonho 亖 → UserTheOne (m013), Muttley ツ → Assofra (m018), Vini¹²³ → hahaTAngel (m087, secundária de Vini²²).
 ### membros.ps1: da cidade, abre Aliança → Membros → grupo do cargo
 
 (Desatualizado: coordenadas de uma janela antiga e o script não está no repositório. Use a seção "Chat privado" acima.)
