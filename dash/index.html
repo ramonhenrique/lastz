@@ -147,13 +147,26 @@
   .det-g { display: grid; gap: 4px 18px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); }
   .rec { display: grid; gap: 6px; } .rec h4 { margin: 4px 0 0; font-size: 14px; font-weight: 600; }
   .chip.ok { background: var(--go-bg); color: var(--go); } .chip.mid { background: var(--wait-bg); color: var(--wait); }
+  .toprow { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .langs { display: flex; gap: 4px; }
+  .langs button { border: 0; background: transparent; padding: 3px; border-radius: 4px; cursor: pointer; opacity: .5; line-height: 0; }
+  .langs button:hover { opacity: .85; }
+  .langs button[aria-pressed="true"] { opacity: 1; background: var(--soft); }
+  .langs svg { width: 22px; height: 15px; border-radius: 2px; box-shadow: 0 0 0 1px var(--line); }
   footer { display: grid; gap: 6px; }
   footer p { margin: 0; font-size: 13px; color: var(--muted); max-width: 95ch; }
 </style>
 
 <div class="wrap">
   <header>
-    <span class="eyebrow">New Deadz [DEDZ] · Zona de guerra #614</span>
+    <div class="toprow">
+      <span class="eyebrow">New Deadz [DEDZ] · Zona de guerra #614</span>
+      <div class="langs" role="group" aria-label="Idioma">
+        <button type="button" data-lang="pt" title="Português" aria-pressed="false"><svg viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="20" fill="#009c3b"/><polygon points="15,2.2 27.6,10 15,17.8 2.4,10" fill="#ffdf00"/><circle cx="15" cy="10" r="4.4" fill="#002776"/></svg></button>
+        <button type="button" data-lang="en" title="English" aria-pressed="false"><svg viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="20" fill="#b22234"/><g fill="#fff"><rect y="1.54" width="30" height="1.54"/><rect y="4.62" width="30" height="1.54"/><rect y="7.69" width="30" height="1.54"/><rect y="10.77" width="30" height="1.54"/><rect y="13.85" width="30" height="1.54"/><rect y="16.92" width="30" height="1.54"/></g><rect width="13" height="10.77" fill="#3c3b6e"/></svg></button>
+        <button type="button" data-lang="es" title="Español" aria-pressed="false"><svg viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="20" fill="#aa151b"/><rect y="5" width="30" height="10" fill="#f1bf00"/></svg></button>
+      </div>
+    </div>
     <h1>Acompanhamento de membros</h1>
     <p class="lede">Doações da semana contra a meta de 20 mil por dia e o ranking de pontos do VS, dia a dia. Os valores são lidos no jogo e ficam salvos para todos que abrirem esta página.</p>
   </header>
@@ -426,17 +439,188 @@
 <script>
 (() => {
   const META_DIA = 20000, META_SEM = META_DIA * 7;
-  const DIAS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-  const TEMAS = ["Radar + Veículo", "Construção", "Pesquisa", "Heróis", "Exército", "Combate"];
   const METAS_VS = [4.5e6, 5e6, 3.3e6, 6e6, 7e6, 6e6];
   const $ = (id) => document.getElementById(id);
-  const fmt = (n) => n == null ? "—" : Math.round(n).toLocaleString("pt-BR");
+
+  // ---- idiomas ----
+  // O texto do código é o português; TR traz [inglês, espanhol] para cada frase. {x} = valor trocado na hora.
+  const LANGS = { pt: "pt-BR", en: "en-US", es: "es-ES" };
+  let LANG = (() => {
+    try { const s = localStorage.getItem("dedz-lang"); if (LANGS[s]) return s; } catch (e) {}
+    for (const l of navigator.languages || [navigator.language || ""]) { const k = String(l).slice(0, 2).toLowerCase(); if (LANGS[k]) return k; }
+    return "en";
+  })();
+  let LOC = LANGS[LANG];
+  const TR = {
+    // topo
+    "Acompanhamento DEDZ": ["DEDZ Tracker", "Seguimiento DEDZ"],
+    "New Deadz [DEDZ] · Zona de guerra #614": ["New Deadz [DEDZ] · War zone #614", "New Deadz [DEDZ] · Zona de guerra #614"],
+    "Acompanhamento de membros": ["Member tracker", "Seguimiento de miembros"],
+    "Doações da semana contra a meta de 20 mil por dia e o ranking de pontos do VS, dia a dia. Os valores são lidos no jogo e ficam salvos para todos que abrirem esta página.": ["Weekly donations against the goal of 20k per day and the VS points ranking, day by day. Values are read in the game and saved for everyone who opens this page.", "Donaciones de la semana frente a la meta de 20 mil por día y el ranking de puntos del VS, día a día. Los valores se leen en el juego y quedan guardados para todos los que abran esta página."],
+    "Idioma": ["Language", "Idioma"],
+    "Semana anterior": ["Previous week", "Semana anterior"], "Próxima semana": ["Next week", "Semana siguiente"], "Semana atual": ["Current week", "Semana actual"],
+    "Semana de {a} a {b}": ["Week of {a} to {b}", "Semana del {a} al {b}"], "atual": ["current", "actual"],
+    "Conectando…": ["Connecting…", "Conectando…"], "Somente leitura · dados de {d}": ["Read only · data from {d}", "Solo lectura · datos del {d}"], "Sem conexão": ["Offline", "Sin conexión"],
+    "Salvo para todos · ao vivo": ["Saved for everyone · live", "Guardado para todos · en vivo"], "Somente leitura": ["Read only", "Solo lectura"],
+    "Os dados salvos não estão disponíveis nesta visualização. Abra a página logado no claude.ai para ver e lançar valores.": ["Saved data is not available in this view. Open the page signed in to claude.ai to see and enter values.", "Los datos guardados no están disponibles en esta vista. Abre la página con sesión iniciada en claude.ai para ver y cargar valores."],
+    "Sem acesso aos dados.": ["No access to the data.", "Sin acceso a los datos."],
+    "A lista de membros parou de atualizar ({c}). Recarregue a página.": ["The member list stopped updating ({c}). Reload the page.", "La lista de miembros dejó de actualizarse ({c}). Recarga la página."],
+    "Os registros pararam de atualizar ({c}). Recarregue a página.": ["The records stopped updating ({c}). Reload the page.", "Los registros dejaron de actualizarse ({c}). Recarga la página."],
+    // indicadores
+    "Resumo da semana": ["Week summary", "Resumen de la semana"], "Doações da aliança": ["Alliance donations", "Donaciones de la alianza"], "Meta de doação": ["Donation goal", "Meta de donación"],
+    "VS do dia": ["Today's VS", "VS del día"], "VS de {dia}": ["{dia} VS", "VS del {dia}"], "Pontos VS": ["VS points", "Puntos VS"],
+    "{a} de {b} lançados · média {m}/dia": ["{a} of {b} entered · average {m}/day", "{a} de {b} cargados · media {m}/día"],
+    "Nenhuma doação lançada nesta semana": ["No donations entered this week", "Ninguna donación cargada esta semana"], "Nenhuma doação lançada nesta semana.": ["No donations entered this week.", "Ninguna donación cargada esta semana."],
+    "meta até agora {m} ({d} de 7 dias)": ["goal so far {m} ({d} of 7 days)", "meta hasta ahora {m} ({d} de 7 días)"], "{n} faltam": ["{n} missing", "faltan {n}"],
+    "{a} abaixo, {z} sem doação": ["{a} below, {z} without donation", "{a} por debajo, {z} sin donación"], "Nenhum ponto lançado nesta semana": ["No points entered this week", "Ningún punto cargado esta semana"],
+    "meta {m}": ["goal {m}", "meta {m}"], "Líder: {nome} · {v} · {n} com {m} ou mais na semana": ["Leader: {nome} · {v} · {n} with {m} or more this week", "Líder: {nome} · {v} · {n} con {m} o más en la semana"],
+    "Meta da semana: {m} por jogador": ["Weekly goal: {m} per player", "Meta de la semana: {m} por jugador"],
+    // abas
+    "Seções": ["Sections", "Secciones"], "Doações": ["Donations", "Donaciones"], "Ranking VS": ["VS ranking", "Ranking VS"], "Resumo": ["Summary", "Resumen"], "Desempenho": ["Performance", "Rendimiento"], "Análises": ["Analysis", "Análisis"], "Lançar dados": ["Enter data", "Cargar datos"],
+    // doações
+    "Faixas da meta": ["Goal bands", "Franjas de la meta"],
+    "Doação de cada membro comparada a 20 mil por dia já passado na semana (segunda = 20 mil, terça = 40 mil… domingo = 140 mil).": ["Each member's donation compared to 20k per day elapsed in the week (Monday = 20k, Tuesday = 40k… Sunday = 140k).", "Donación de cada miembro comparada con 20 mil por día transcurrido de la semana (lunes = 20 mil, martes = 40 mil… domingo = 140 mil)."],
+    "Últimas semanas": ["Last weeks", "Últimas semanas"], "Total doado pela aliança e quantos bateram a meta.": ["Total donated by the alliance and how many hit the goal.", "Total donado por la alianza y cuántos cumplieron la meta."],
+    "Filtrar por faixa": ["Filter by band", "Filtrar por franja"], "Todos": ["All", "Todos"], "Na meta": ["On goal", "En la meta"], "Abaixo": ["Below", "Por debajo"], "Sem doação": ["No donation", "Sin donación"], "Quase": ["Almost", "Casi"],
+    "Na meta (≥ 20k/dia)": ["On goal (≥ 20k/day)", "En la meta (≥ 20k/día)"], "Quase (10k–20k)": ["Almost (10k–20k)", "Casi (10k–20k)"], "Abaixo (< 10k)": ["Below (< 10k)", "Por debajo (< 10k)"],
+    "Buscar jogador": ["Search player", "Buscar jugador"], "Carregando membros…": ["Loading members…", "Cargando miembros…"],
+    "{n} na meta": ["{n} on goal", "{n} en la meta"], "sem dados": ["no data", "sin datos"],
+    "Jogador": ["Player", "Jugador"], "Cargo": ["Rank", "Rango"], "Poder total": ["Total power", "Poder total"], "Poder arena": ["Arena power", "Poder arena"], "Doação semana": ["Week donation", "Donación semana"],
+    "Média/dia": ["Avg/day", "Media/día"], "% da meta": ["% of goal", "% de la meta"], "Situação": ["Status", "Situación"], "Sem. anterior": ["Prev. week", "Sem. anterior"],
+    "Ninguém nesse filtro.": ["Nobody in this filter.", "Nadie en este filtro."], "Nenhum membro cadastrado ainda. Adicione em Lançar dados.": ["No members yet. Add them in Enter data.", "Aún no hay miembros. Agrégalos en Cargar datos."],
+    "Doação de {nome}": ["Donation of {nome}", "Donación de {nome}"], "Doação": ["Donation", "Donación"], "doação": ["donation", "donación"], "dia": ["day", "día"],
+    // VS
+    "Meta batida por dia": ["Goal hit per day", "Meta cumplida por día"], "Quantos dos membros lançados bateram a meta de cada dia, e a soma de pontos da aliança.": ["How many of the entered members hit each day's goal, and the alliance's total points.", "Cuántos de los miembros cargados cumplieron la meta de cada día, y la suma de puntos de la alianza."],
+    "Top 10 da semana": ["Top 10 of the week", "Top 10 de la semana"], "Total acumulado nos 6 dias.": ["Total over the 6 days.", "Total acumulado en los 6 días."],
+    "Verde: bateu a meta do dia. Vermelho: ficou abaixo. Clique no cabeçalho de um dia para ordenar por ele.": ["Green: hit the day's goal. Red: below it. Click a day's header to sort by it.", "Verde: cumplió la meta del día. Rojo: quedó por debajo. Haz clic en el encabezado de un día para ordenar por él."],
+    "{a} de {b}": ["{a} of {b}", "{a} de {b}"], "Sem pontos lançados": ["No points entered", "Sin puntos cargados"], "Dias na meta": ["Days on goal", "Días en la meta"], "Total": ["Total", "Total"],
+    "Ninguém encontrado.": ["Nobody found.", "No se encontró a nadie."], "{d} de {nome}": ["{d} of {nome}", "{d} de {nome}"],
+    // resumo
+    "Nas duas listas": ["On both lists", "En las dos listas"], "Doação média abaixo de 15 mil por dia e abaixo da meta do VS em pelo menos um dia.": ["Average donation below 15k per day and below the VS goal on at least one day.", "Donación media por debajo de 15 mil por día y por debajo de la meta del VS en al menos un día."],
+    "Doação média abaixo de 15 mil/dia": ["Average donation below 15k/day", "Donación media por debajo de 15 mil/día"], "Abaixo da meta do VS": ["Below the VS goal", "Por debajo de la meta del VS"],
+    "{a} de {b} com doação lançada · média = doação ÷ {d}": ["{a} of {b} with donation entered · average = donation ÷ {d}", "{a} de {b} con donación cargada · media = donación ÷ {d}"],
+    "{n} dia": ["{n} day", "{n} día"], "{n} dias": ["{n} days", "{n} días"], "Ninguém abaixo de 15 mil por dia.": ["Nobody below 15k per day.", "Nadie por debajo de 15 mil por día."], "Sem dados.": ["No data.", "Sin datos."],
+    "Dias com pontos lançados: {d}.": ["Days with points entered: {d}.", "Días con puntos cargados: {d}."], "Nenhum ponto de VS lançado nesta semana.": ["No VS points entered this week.", "Ningún punto de VS cargado esta semana."],
+    "{a} de {b} abaixo": ["{a} of {b} below", "{a} de {b} por debajo"], "Pontos": ["Points", "Puntos"], "Falta": ["Missing", "Falta"], "Todos bateram a meta.": ["Everyone hit the goal.", "Todos cumplieron la meta."], "Ninguém nas duas listas.": ["Nobody on both lists.", "Nadie en las dos listas."],
+    // desempenho
+    "Critério": ["Criterion", "Criterio"], "Nota geral": ["Overall score", "Nota general"], "Só VS": ["VS only", "Solo VS"], "Só doação": ["Donation only", "Solo donación"],
+    "Contas secundárias": ["Secondary accounts", "Cuentas secundarias"], "Quem entrou na semana": ["Joined this week", "Entraron en la semana"], "O que se destaca": ["Highlights", "Lo que destaca"],
+    "Top 10 piores": ["Bottom 10", "Los 10 peores"], "Top 10 melhores": ["Top 10", "Los 10 mejores"], "VS por dia": ["VS per day", "VS por día"], "Meta VS": ["VS goal", "Meta VS"], "Até domingo": ["Until Sunday", "Hasta el domingo"], "Nota": ["Score", "Nota"],
+    "Clique numa linha para ver os pontos de cada dia, a doação dia a dia e as mensagens no PV.": ["Click a row to see each day's points, daily donations and DMs.", "Haz clic en una fila para ver los puntos de cada día, la donación día a día y los mensajes privados."],
+    "Quem ainda recupera a doação": ["Who can still catch up on donations", "Quién aún recupera la donación"], "Notificados no PV": ["Notified by DM", "Notificados por MP"],
+    "Quando": ["When", "Cuándo"], "Antes → depois": ["Before → after", "Antes → después"], "Resultado": ["Result", "Resultado"],
+    "Quem carrega a aliança nesta semana, pelo mesmo critério.": ["Who carries the alliance this week, by the same criterion.", "Quién sostiene la alianza esta semana, con el mismo criterio."],
+    "Nota geral = média entre o VS (% da meta em cada dia fechado, no máximo 100% por dia) e a doação (% da meta de 20 mil por dia até hoje, no máximo 100%). O dia do jogo vira às 23:00; o VS de hoje só conta depois que fecha. Quem entrou na semana é cobrado a partir do dia da entrada. 🔁 = também estava entre os 10 piores na semana anterior. Contas secundárias contam normalmente, só ficam fora da cobrança no PV.": ["Overall score = average of VS (% of the goal on each closed day, at most 100% per day) and donation (% of the 20k-per-day goal up to today, at most 100%). The game day turns at 23:00 (Brasília); today's VS only counts after it closes. Members who joined during the week are counted from the day they joined. 🔁 = was also in the bottom 10 the previous week. Secondary accounts count normally; they are only left out of DM follow-ups.", "Nota general = media entre el VS (% de la meta en cada día cerrado, como máximo 100% por día) y la donación (% de la meta de 20 mil por día hasta hoy, como máximo 100%). El día del juego cambia a las 23:00 (Brasilia); el VS de hoy solo cuenta cuando cierra. Quien entró en la semana se evalúa desde el día de su entrada. 🔁 = también estaba entre los 10 peores la semana anterior. Las cuentas secundarias cuentan normalmente; solo quedan fuera de los avisos por MP."],
+    "Ordenado pela nota geral: média entre VS e doação.": ["Sorted by overall score: average of VS and donation.", "Ordenado por la nota general: media entre VS y donación."],
+    "Ordenado só pelo VS: % médio da meta nos dias fechados; desempate pela doação.": ["Sorted by VS only: average % of the goal on closed days; ties broken by donation.", "Ordenado solo por el VS: % medio de la meta en los días cerrados; desempate por la donación."],
+    "Ordenado só pela doação: % da meta até hoje; desempate pelo VS.": ["Sorted by donation only: % of the goal up to today; ties broken by VS.", "Ordenado solo por la donación: % de la meta hasta hoy; desempate por el VS."],
+    "{n} membros · VS: {d} · doação: meta de {m} até hoje": ["{n} members · VS: {d} · donation: goal of {m} up to today", "{n} miembros · VS: {d} · donación: meta de {m} hasta hoy"],
+    "{n} membros · VS: {d} · doação: meta de {m} até o fim da semana": ["{n} members · VS: {d} · donation: goal of {m} for the whole week", "{n} miembros · VS: {d} · donación: meta de {m} hasta el fin de la semana"],
+    "nenhum dia fechado": ["no closed day yet", "ningún día cerrado"], "outra conta": ["another account", "otra cuenta"], "e mais {n}": ["and {n} more", "y {n} más"],
+    "Conta secundária de {nome}": ["Secondary account of {nome}", "Cuenta secundaria de {nome}"], "sec.": ["alt", "sec."],
+    "Entrou na aliança em {d}": ["Joined the alliance on {d}", "Entró en la alianza el {d}"], "entrou {d}": ["joined {d}", "entró {d}"],
+    "Também estava entre os 10 piores na semana anterior": ["Was also in the bottom 10 the previous week", "También estaba entre los 10 peores la semana anterior"],
+    "Recebeu mensagem no PV nesta semana": ["Received a DM this week", "Recibió un MP esta semana"],
+    "{d}: ainda não estava na aliança": ["{d}: not in the alliance yet", "{d}: aún no estaba en la alianza"], "{d} em andamento: {a} de {b}": ["{d} in progress: {a} of {b}", "{d} en curso: {a} de {b}"],
+    "bateu": ["done", "cumplió"], "Faltam {v} em {d}": ["{v} missing in {d}", "Faltan {v} en {d}"], "Faltam {v}": ["{v} missing", "Faltan {v}"],
+    "não estava": ["not in the alliance", "no estaba"], "em andamento": ["in progress", "en curso"], "recebeu": ["received", "recibió"], "não recebeu": ["not received", "no recibió"],
+    "Doação por dia": ["Donation per day", "Donación por día"], "total {v}, meta até agora {m}": ["total {v}, goal so far {m}", "total {v}, meta hasta ahora {m}"], "sem leituras diárias": ["no daily readings", "sin lecturas diarias"],
+    "{b}Conta secundária{fb} de {nome}: fica fora da cobrança no PV.": ["{b}Secondary account{fb} of {nome}: left out of DM follow-ups.", "{b}Cuenta secundaria{fb} de {nome}: queda fuera de los avisos por MP."],
+    "Sem dados lançados nesta semana.": ["No data entered this week.", "Sin datos cargados esta semana."],
+    "Semana encerrada: {a} de {b} bateram a meta da semana.": ["Week closed: {a} of {b} hit the weekly goal.", "Semana cerrada: {a} de {b} cumplieron la meta de la semana."], "Semana ainda não começou.": ["The week hasn't started yet.", "La semana aún no empezó."],
+    "{a} de {b} já bateram a meta da semana. Faltam {d} até domingo, contando hoje.": ["{a} of {b} already hit the weekly goal. {d} left until Sunday, including today.", "{a} de {b} ya cumplieron la meta de la semana. Faltan {d} hasta el domingo, contando hoy."],
+    "No ritmo normal: até 20 mil por dia": ["Normal pace: up to 20k per day", "Ritmo normal: hasta 20 mil por día"], "Com esforço: de 20 a 40 mil por dia (diamantes ajudam)": ["With effort: 20k to 40k per day (diamonds help)", "Con esfuerzo: de 20 a 40 mil por día (los diamantes ayudan)"],
+    "Difícil: mais de 40 mil por dia": ["Hard: more than 40k per day", "Difícil: más de 40 mil por día"], "ninguém": ["nobody", "nadie"],
+    "{n} · quarta: VS e doação antes e depois da mensagem; sábado: nota da semana contra a semana seguinte.": ["{n} · Wednesday: VS and donation before and after the message; Saturday: week score vs. the following week.", "{n} · miércoles: VS y donación antes y después del mensaje; sábado: nota de la semana frente a la semana siguiente."],
+    "{n} mensagem": ["{n} message", "{n} mensaje"], "{n} mensagens": ["{n} messages", "{n} mensajes"], "Ninguém recebeu mensagem no PV nesta semana.": ["Nobody received a DM this week.", "Nadie recibió un MP esta semana."],
+    "nota {n} → semana seguinte": ["score {n} → next week", "nota {n} → semana siguiente"], "nota": ["score", "nota"], "parcial": ["partial", "parcial"],
+    "aguardando": ["waiting", "esperando"], "sem dados": ["no data", "sin datos"], "melhorou": ["improved", "mejoró"], "piorou": ["worse", "empeoró"], "igual": ["same", "igual"], "misto": ["mixed", "mixto"],
+    "{b}{dia} ({tema}){fb} foi o pior dia do VS: só {a} de {n} bateram a meta ({p}).": ["{b}{dia} ({tema}){fb} was the worst VS day: only {a} of {n} hit the goal ({p}).", "{b}{dia} ({tema}){fb} fue el peor día del VS: solo {a} de {n} cumplieron la meta ({p})."],
+    "O melhor foi {dia}, com {p}.": ["The best was {dia}, with {p}.", "El mejor fue el {dia}, con {p}."],
+    "{b}1 membro vai mal no VS e na doação{fb} (abaixo de 50% nos dois): {nomes}.": ["{b}1 member is doing badly in VS and donation{fb} (below 50% in both): {nomes}.", "{b}1 miembro va mal en el VS y en la donación{fb} (por debajo del 50% en ambos): {nomes}."],
+    "{b}{n} membros vão mal no VS e na doação{fb} (abaixo de 50% nos dois): {nomes}.": ["{b}{n} members are doing badly in VS and donation{fb} (below 50% in both): {nomes}.", "{b}{n} miembros van mal en el VS y en la donación{fb} (por debajo del 50% en ambos): {nomes}."],
+    "{b}Vão bem no VS, mas a doação está abaixo de 50%:{fb} {nomes}.": ["{b}Good in VS, but donation below 50%:{fb} {nomes}.", "{b}Van bien en el VS, pero la donación está por debajo del 50%:{fb} {nomes}."],
+    "{b}Doam em dia, mas o VS está fraco{fb} (meta em 40% dos dias ou menos): {nomes}.": ["{b}Donating on track, but weak VS{fb} (goal on 40% of days or less): {nomes}.", "{b}Donan al día, pero el VS está flojo{fb} (meta en el 40% de los días o menos): {nomes}."],
+    "{b}1 zerou pelo menos um dia do VS:{fb} {nomes}.": ["{b}1 scored zero on at least one VS day:{fb} {nomes}.", "{b}1 hizo cero en al menos un día del VS:{fb} {nomes}."],
+    "{b}{n} zeraram pelo menos um dia do VS:{fb} {nomes}.": ["{b}{n} scored zero on at least one VS day:{fb} {nomes}.", "{b}{n} hicieron cero en al menos un día del VS:{fb} {nomes}."],
+    "{b}🔁 1 repete a lista dos 10 piores{fb} da semana anterior: {nomes}. Vale uma conversa direta.": ["{b}🔁 1 repeats the bottom 10{fb} from the previous week: {nomes}. Worth a direct talk.", "{b}🔁 1 repite la lista de los 10 peores{fb} de la semana anterior: {nomes}. Vale una conversación directa."],
+    "{b}🔁 {n} repetem a lista dos 10 piores{fb} da semana anterior: {nomes}. Vale uma conversa direta.": ["{b}🔁 {n} repeat the bottom 10{fb} from the previous week: {nomes}. Worth a direct talk.", "{b}🔁 {n} repiten la lista de los 10 peores{fb} de la semana anterior: {nomes}. Vale una conversación directa."],
+    "{b}PV:{fb} dos {n} notificados com dados depois da mensagem, {m} com melhora e {p} com piora.": ["{b}DM:{fb} of the {n} notified members with data after the message, {m} improved and {p} got worse.", "{b}MP:{fb} de los {n} notificados con datos después del mensaje, {m} mejoraron y {p} empeoraron."],
+    "{b}Doação:{fb} {a} de {n} já bateram a meta da semana; {d} só recuperam com mais de 40 mil por dia até domingo.": ["{b}Donation:{fb} {a} of {n} already hit the weekly goal; {d} can only catch up with more than 40k per day until Sunday.", "{b}Donación:{fb} {a} de {n} ya cumplieron la meta de la semana; {d} solo recuperan con más de 40 mil por día hasta el domingo."],
+    "Entraram nesta semana: {nomes}. São cobrados a partir do dia da entrada.": ["Joined this week: {nomes}. They are counted from the day they joined.", "Entraron esta semana: {nomes}. Se evalúan desde el día de su entrada."],
+    // análises
+    "Período": ["Period", "Período"], "4 semanas": ["4 weeks", "4 semanas"], "3 meses": ["3 months", "3 meses"], "Tudo": ["All", "Todo"], "Agrupar por": ["Group by", "Agrupar por"], "Por semana": ["By week", "Por semana"], "Por mês": ["By month", "Por mes"],
+    "Total doado pela aliança": ["Total donated by the alliance", "Total donado por la alianza"], "Soma das doações lançadas em cada período. A barra clara é o período em andamento.": ["Sum of donations entered in each period. The light bar is the period in progress.", "Suma de las donaciones cargadas en cada período. La barra clara es el período en curso."],
+    "Membros na meta de doação": ["Members on the donation goal", "Miembros en la meta de donación"], "Parte dos membros lançados que bateu 20 mil por dia.": ["Share of entered members who hit 20k per day.", "Parte de los miembros cargados que cumplió 20 mil por día."],
+    "Faixas ao longo do tempo": ["Bands over time", "Franjas a lo largo del tiempo"], "Como os membros se dividem entre as faixas da meta.": ["How members split across the goal bands.", "Cómo se reparten los miembros entre las franjas de la meta."],
+    "Picos por dia da semana": ["Peaks by weekday", "Picos por día de la semana"], "Média doada pela aliança em cada dia, a partir das leituras diárias.": ["Average donated by the alliance each day, from the daily readings.", "Media donada por la alianza cada día, a partir de las lecturas diarias."],
+    "Meta batida por tema": ["Goal hit by theme", "Meta cumplida por tema"], "Parte dos membros que bateu a meta de cada dia. Quanto mais forte a cor, mais gente bateu.": ["Share of members who hit each day's goal. The stronger the color, the more people hit it.", "Parte de los miembros que cumplió la meta de cada día. Cuanto más fuerte el color, más gente la cumplió."],
+    "Termômetro das metas do VS": ["VS goal thermometer", "Termómetro de las metas del VS"],
+    "Barra: pontuação mediana do time. Traço: os 25% mais fracos. Linha: a meta. Com 3 semanas ou mais, sugere subir a meta quando mais de 90% batem nas 3 últimas, e revê-la quando menos de 60% batem no período.": ["Bar: the team's median score. Tick: the weakest 25%. Line: the goal. With 3 weeks or more, it suggests raising the goal when more than 90% hit it in the last 3, and reviewing it when fewer than 60% hit it in the period.", "Barra: puntuación mediana del equipo. Trazo: el 25% más flojo. Línea: la meta. Con 3 semanas o más, sugiere subir la meta cuando más del 90% la cumple en las 3 últimas, y revisarla cuando menos del 60% la cumple en el período."],
+    "Pontos de VS da aliança": ["Alliance VS points", "Puntos de VS de la alianza"], "Soma dos pontos de todos os dias lançados. A barra clara é o período em andamento.": ["Sum of points of all entered days. The light bar is the period in progress.", "Suma de los puntos de todos los días cargados. La barra clara es el período en curso."],
+    "Média de pontos por membro": ["Average points per member", "Media de puntos por miembro"], "Pontos da semana divididos pelos membros com pontos lançados.": ["Week points divided by members with points entered.", "Puntos de la semana divididos por los miembros con puntos cargados."],
+    "Pessoas": ["People", "Personas"], "Mais consistentes": ["Most consistent", "Más constantes"], "Quem mais bateu as metas de doação (por semana) e de VS (por dia) no período.": ["Who hit the donation (weekly) and VS (daily) goals most in the period.", "Quién más cumplió las metas de donación (por semana) y de VS (por día) en el período."],
+    "Precisam de atenção": ["Need attention", "Necesitan atención"], "Quem menos bateu as metas no período.": ["Who hit the goals least in the period.", "Quién menos cumplió las metas en el período."],
+    "Poder total da aliança": ["Alliance total power", "Poder total de la alianza"], "Soma do poder total em cada leitura da lista de membros.": ["Sum of total power in each member-list reading.", "Suma del poder total en cada lectura de la lista de miembros."],
+    "Poder de arena da aliança": ["Alliance arena power", "Poder de arena de la alianza"], "Soma do poder de arena em cada leitura.": ["Sum of arena power in each reading.", "Suma del poder de arena en cada lectura."],
+    "{n} semana": ["{n} week", "{n} semana"], "{n} semanas": ["{n} weeks", "{n} semanas"], "{s} no período · {n} com dados": ["{s} in the period · {n} with data", "{s} en el período · {n} con datos"], "Nenhum dado lançado ainda.": ["No data entered yet.", "Aún no hay datos cargados."],
+    "Sem doações lançadas no período.": ["No donations entered in the period.", "Sin donaciones cargadas en el período."], "Total doado: {v}": ["Total donated: {v}", "Total donado: {v}"], "{n} lançamentos": ["{n} entries", "{n} registros"],
+    "Total doado por período": ["Total donated per period", "Total donado por período"], "{a} de {b} na meta ({p})": ["{a} of {b} on goal ({p})", "{a} de {b} en la meta ({p})"], "Porcentagem na meta de doação": ["Percentage on the donation goal", "Porcentaje en la meta de donación"],
+    "Faixas da meta por período": ["Goal bands per period", "Franjas de la meta por período"], "{d}: sem leitura": ["{d}: no reading", "{d}: sin lectura"],
+    "{d}: média de {v} doados\n({s} com leitura)": ["{d}: average of {v} donated\n({s} with readings)", "{d}: media de {v} donados\n({s} con lectura)"],
+    "Aparece quando houver leituras diárias de doação.": ["Shows up once there are daily donation readings.", "Aparece cuando haya lecturas diarias de donación."], "Doação média por dia da semana": ["Average donation per weekday", "Donación media por día de la semana"],
+    "{a} de {b} bateram ({p})\nMediana: {m}": ["{a} of {b} hit it ({p})\nMedian: {m}", "{a} de {b} la cumplieron ({p})\nMediana: {m}"], "Sem pontos de VS lançados no período.": ["No VS points entered in the period.", "Sin puntos de VS cargados en el período."],
+    "Sem dados": ["No data", "Sin datos"], "Poucos dados · {n} de 3 semanas": ["Little data · {n} of 3 weeks", "Pocos datos · {n} de 3 semanas"], "Subir a meta": ["Raise the goal", "Subir la meta"], "Meta alta demais": ["Goal too high", "Meta demasiado alta"], "Na medida": ["About right", "A la medida"],
+    "{d}: mediana {m} · 25% mais fracos até {p}\nMeta {meta} · {a} de {b} bateram": ["{d}: median {m} · weakest 25% up to {p}\nGoal {meta} · {a} of {b} hit it", "{d}: mediana {m} · 25% más flojo hasta {p}\nMeta {meta} · {a} de {b} la cumplieron"],
+    "{p} bateram": ["{p} hit it", "{p} la cumplieron"], "Pontos: {v}": ["Points: {v}", "Puntos: {v}"], "Pontos de VS por período": ["VS points per period", "Puntos de VS por período"], "Média por membro: {v}": ["Average per member: {v}", "Media por miembro: {v}"],
+    "Sem dados no período.": ["No data in the period.", "Sin datos en el período."], "Leitura de {d}\nPoder total: {v}\n{n} membros": ["Reading of {d}\nTotal power: {v}\n{n} members", "Lectura del {d}\nPoder total: {v}\n{n} miembros"],
+    "Sem leituras de poder no período.": ["No power readings in the period.", "Sin lecturas de poder en el período."], "Leitura de {d}\nPoder de arena: {v}": ["Reading of {d}\nArena power: {v}", "Lectura del {d}\nPoder de arena: {v}"],
+    // lançar dados
+    "Colar lista do jogo": ["Paste list from the game", "Pegar lista del juego"],
+    "Uma linha por jogador: nome e valor, separados por tab, ponto e vírgula ou espaço. Aceita": ["One line per player: name and value, separated by tab, semicolon or space. Accepts", "Una línea por jugador: nombre y valor, separados por tab, punto y coma o espacio. Acepta"],
+    "e": ["and", "y"], ". Os valores vão para a semana selecionada acima e substituem o que já estava lançado para esse jogador.": [". Values go to the week selected above and replace what was already entered for that player.", ". Los valores van a la semana seleccionada arriba y reemplazan lo que ya estaba cargado para ese jugador."],
+    "Lançar em": ["Enter into", "Cargar en"], "Doação da semana": ["Week donation", "Donación de la semana"], "VS · Segunda": ["VS · Monday", "VS · Lunes"], "VS · Terça": ["VS · Tuesday", "VS · Martes"], "VS · Quarta": ["VS · Wednesday", "VS · Miércoles"],
+    "VS · Quinta": ["VS · Thursday", "VS · Jueves"], "VS · Sexta": ["VS · Friday", "VS · Viernes"], "VS · Sábado": ["VS · Saturday", "VS · Sábado"], "Conferir": ["Check", "Revisar"], "Lançar valores": ["Enter values", "Cargar valores"],
+    "Membros": ["Members", "Miembros"], "Novo membro": ["New member", "Nuevo miembro"], "Nome no jogo": ["In-game name", "Nombre en el juego"], "Adicionar": ["Add", "Agregar"],
+    "{n} membros cadastrados. Quem sair da aliança pode continuar na lista; quem entrar, adicione aqui ou pela importação.": ["{n} members registered. Those who leave can stay on the list; add newcomers here or through the import.", "{n} miembros registrados. Quien salga de la alianza puede seguir en la lista; a quien entre, agrégalo aquí o con la importación."],
+    "Nenhum membro cadastrado.": ["No members registered.", "Ningún miembro registrado."], "Valor inválido": ["Invalid value", "Valor inválido"], "Não foi possível salvar: {e}": ["Could not save: {e}", "No se pudo guardar: {e}"], "erro": ["error", "error"],
+    "sem conexão com o banco": ["no connection to the database", "sin conexión con la base de datos"], "{n} valores prontos para {alvo} em {sem}.": ["{n} values ready for {alvo} in {sem}.", "{n} valores listos para {alvo} en {sem}."],
+    "Nomes que não estão na lista de membros ({n}) — serão adicionados como membros novos:": ["Names not on the member list ({n}) — they will be added as new members:", "Nombres que no están en la lista de miembros ({n}) — se agregarán como miembros nuevos:"],
+    "Linhas ignoradas por não terem nome e valor ({n}):": ["Lines skipped for lacking a name and value ({n}):", "Líneas ignoradas por no tener nombre y valor ({n}):"], "Lançando…": ["Entering…", "Cargando…"], "{n} valores lançados.": ["{n} values entered.", "{n} valores cargados."],
+    "Parou no meio: {e}. Confira a tabela e tente de novo.": ["Stopped halfway: {e}. Check the table and try again.", "Se detuvo a la mitad: {e}. Revisa la tabla e inténtalo de nuevo."], "erro ao salvar": ["error saving", "error al guardar"],
+    "Escreva o nome como aparece no jogo.": ["Type the name as it appears in the game.", "Escribe el nombre como aparece en el juego."], "Esse nome já está na lista.": ["That name is already on the list.", "Ese nombre ya está en la lista."], "{nome} adicionado.": ["{nome} added.", "{nome} agregado."],
+    "Não foi possível adicionar: {e}": ["Could not add: {e}", "No se pudo agregar: {e}"],
+    // rodapé
+    "Poder total e poder de arena vêm da lista de membros do jogo (o poder de arena aparece ao trocar a lista para \"Combate Pessoal\"). Última leitura: 02/11/2026.": ["Total power and arena power come from the in-game member list (arena power shows when switching the list to \"Personal Combat\"). Last reading: 11/02/2026.", "El poder total y el poder de arena vienen de la lista de miembros del juego (el poder de arena aparece al cambiar la lista a \"Combate Personal\"). Última lectura: 02/11/2026."],
+    "Meta de doação: 20.000 por dia, 140.000 por semana. O jogo mostra só o total da semana, então na semana em andamento a meta conta apenas os dias que já começaram (segunda = 20 mil, terça = 40 mil…) e a média diária é o total dividido por esses dias; semanas encerradas usam os 7 dias. Faixas: na meta a partir de 100%, quase entre 50% e 99%, abaixo de 50%.": ["Donation goal: 20,000 per day, 140,000 per week. The game only shows the weekly total, so in the current week the goal counts only the days that have started (Monday = 20k, Tuesday = 40k…) and the daily average is the total divided by those days; closed weeks use all 7 days. Bands: on goal from 100%, almost between 50% and 99%, below under 50%.", "Meta de donación: 20.000 por día, 140.000 por semana. El juego muestra solo el total de la semana, así que en la semana en curso la meta cuenta solo los días que ya empezaron (lunes = 20 mil, martes = 40 mil…) y la media diaria es el total dividido por esos días; las semanas cerradas usan los 7 días. Franjas: en la meta desde 100%, casi entre 50% y 99%, por debajo con menos de 50%."],
+    "Metas do VS por dia, iguais às mensagens da aliança: segunda 4,5M (Radar + Veículo), terça 5M (Construção), quarta 3,3M (Pesquisa), quinta 6M (Heróis), sexta 7M (Exército) e sábado 6M (Combate). Soma da semana: 31,8M. Domingo não tem VS. A lista de membros veio do levantamento de migração de 28/10/2026.": ["Daily VS goals, same as the alliance messages: Monday 4.5M (Radar + Vehicle), Tuesday 5M (Construction), Wednesday 3.3M (Research), Thursday 6M (Heroes), Friday 7M (Army) and Saturday 6M (Combat). Weekly total: 31.8M. There is no VS on Sunday. The member list came from the migration survey of 10/28/2026.", "Metas del VS por día, iguales a los mensajes de la alianza: lunes 4,5M (Radar + Vehículo), martes 5M (Construcción), miércoles 3,3M (Investigación), jueves 6M (Héroes), viernes 7M (Ejército) y sábado 6M (Combate). Suma de la semana: 31,8M. El domingo no hay VS. La lista de miembros vino del relevamiento de migración del 28/10/2026."],
+  };
+  const t = (s, v) => {
+    let r = LANG === "pt" || !TR[s] ? s : TR[s][LANG === "en" ? 0 : 1];
+    if (v) r = r.replace(/\{(\w+)\}/g, (_, k) => v[k] ?? "");
+    return r;
+  };
+  const LISTAS = {
+    pt: { dias: ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"], dias7: ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"], nomes: ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"], nomesMin: ["segunda", "terça", "quarta", "quinta", "sexta", "sábado"],
+      temas: ["Radar + Veículo", "Construção", "Pesquisa", "Heróis", "Exército", "Combate"], meses: ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"] },
+    en: { dias: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], dias7: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], nomes: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"], nomesMin: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+      temas: ["Radar + Vehicle", "Construction", "Research", "Heroes", "Army", "Combat"], meses: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] },
+    es: { dias: ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"], dias7: ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"], nomes: ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"], nomesMin: ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado"],
+      temas: ["Radar + Vehículo", "Construcción", "Investigación", "Héroes", "Ejército", "Combate"], meses: ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"] },
+  };
+  // listas trocadas no lugar, para quem já guardou a referência continuar vendo o idioma atual
+  const DIAS = [], DIAS7 = [], DIAS_NOME = [], DIAS_MIN = [], TEMAS = [], MESES = [];
+  const carregarListas = () => { const L = LISTAS[LANG]; [[DIAS, L.dias], [DIAS7, L.dias7], [DIAS_NOME, L.nomes], [DIAS_MIN, L.nomesMin], [TEMAS, L.temas], [MESES, L.meses]].forEach(([a, b]) => a.splice(0, a.length, ...b)); };
+  carregarListas();
+  const plural = (n, um, varios) => t(n === 1 ? um : varios, { n });
+
+  const fmt = (n) => n == null ? "—" : Math.round(n).toLocaleString(LOC);
   const fmtK = (n) => {
     if (n == null) return "—";
     const a = Math.abs(n);
-    if (a >= 1e9) return (n / 1e9).toLocaleString("pt-BR", { maximumFractionDigits: 2 }) + "B";
-    if (a >= 1e6) return (n / 1e6).toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + "M";
-    if (a >= 1e3) return (n / 1e3).toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + "k";
+    if (a >= 1e9) return (n / 1e9).toLocaleString(LOC, { maximumFractionDigits: 2 }) + "B";
+    if (a >= 1e6) return (n / 1e6).toLocaleString(LOC, { maximumFractionDigits: 1 }) + "M";
+    if (a >= 1e3) return (n / 1e3).toLocaleString(LOC, { maximumFractionDigits: 1 }) + "k";
     return String(Math.round(n));
   };
   const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -449,7 +633,9 @@
   const parseISO = (s) => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
   const addWeeks = (s, k) => { const d = parseISO(s); d.setDate(d.getDate() + 7 * k); return iso(d); };
   const semanaAtual = iso(monday(new Date()));
-  const labelSemana = (s) => { const a = parseISO(s), b = parseISO(s); b.setDate(b.getDate() + 6); return `Semana de ${pad(a.getDate())}/${pad(a.getMonth() + 1)} a ${pad(b.getDate())}/${pad(b.getMonth() + 1)}`; };
+  // dia/mês no formato do idioma (02/11 em pt e es, 11/02 em en)
+  const diaMes = (d) => d.toLocaleDateString(LOC, { day: "2-digit", month: "2-digit" });
+  const labelSemana = (s) => { const a = parseISO(s), b = parseISO(s); b.setDate(b.getDate() + 6); return t("Semana de {a} a {b}", { a: diaMes(a), b: diaMes(b) }); };
 
   // ---- parse de números do jogo ----
   function parseNum(raw) {
@@ -507,40 +693,39 @@
 
   // ---- render ----
   function renderAll() {
-    $("wk-label").textContent = labelSemana(st.semana) + (st.semana === semanaAtual ? " · atual" : "");
+    $("wk-label").textContent = labelSemana(st.semana) + (st.semana === semanaAtual ? " · " + t("atual") : "");
     $("wk-next").disabled = st.semana >= semanaAtual;
     renderKpis(); renderDoacoes(); renderVs(); renderResumo(); renderMembrosInfo(); renderAnalises(); renderDesempenho();
   }
 
   // ---- resumo: quem precisa de atenção na semana ----
   const LIM_DOA = 15000;
-  const DIAS_NOME = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
-  const fmtM = (n) => n >= 1e9 ? fmtK(n) : n >= 1e6 ? (n / 1e6).toLocaleString("pt-BR", { maximumFractionDigits: 2 }) + "M" : fmtK(n); // 4,47M não pode virar 4,5M ao lado da meta
+  const fmtM = (n) => n >= 1e9 ? fmtK(n) : n >= 1e6 ? (n / 1e6).toLocaleString(LOC, { maximumFractionDigits: 2 }) + "M" : fmtK(n); // 4,47M não pode virar 4,5M ao lado da meta
   function renderResumo() {
     if (!st.loaded.m) return;
     const L = linhasSemana(st.semana), dias = diasSemana(st.semana);
     const doa = L.filter((x) => x.media != null && x.media < LIM_DOA).sort((a, b) => a.media - b.media || a.nome.localeCompare(b.nome, "pt-BR"));
     const lanc = L.filter((x) => x.doacao != null).length;
-    $("res-doa-s").textContent = lanc ? `${doa.length} de ${lanc} com doação lançada · média = doação ÷ ${dias} ${dias === 1 ? "dia" : "dias"}` : "Nenhuma doação lançada nesta semana.";
+    $("res-doa-s").textContent = lanc ? t("{a} de {b} com doação lançada · média = doação ÷ {d}", { a: doa.length, b: lanc, d: plural(dias, "{n} dia", "{n} dias") }) : t("Nenhuma doação lançada nesta semana.");
     $("res-doa").innerHTML = doa.length ? doa.map((x) => `<tr><td class="l nome">${esc(x.nome)}</td><td class="l muted">${esc(x.cargo)}</td><td>${fmt(x.doacao)}</td><td><span class="pill ${x.faixa}">${fmtK(x.media)}</span></td></tr>`).join("")
-      : `<tr><td class="empty" colspan="4">${lanc ? "Ninguém abaixo de 15 mil por dia." : "Sem dados."}</td></tr>`;
+      : `<tr><td class="empty" colspan="4">${lanc ? t("Ninguém abaixo de 15 mil por dia.") : t("Sem dados.")}</td></tr>`;
 
     const comVs = DIAS.map((_, i) => i).filter((i) => L.some((x) => x.vs[i] != null)).reverse(); // dia mais recente primeiro
     const abaixoVs = new Map(); // id -> [{i, v}]
-    $("res-vs-s").textContent = comVs.length ? `Dias com pontos lançados: ${comVs.slice().reverse().map((i) => DIAS[i]).join(", ")}.` : "Nenhum ponto de VS lançado nesta semana.";
+    $("res-vs-s").textContent = comVs.length ? t("Dias com pontos lançados: {d}.", { d: comVs.slice().reverse().map((i) => DIAS[i]).join(", ") }) : t("Nenhum ponto de VS lançado nesta semana.");
     $("res-vs").innerHTML = comVs.map((i) => {
       const ab = L.filter((x) => x.vs[i] != null && x.vs[i] < METAS_VS[i]).sort((a, b) => a.vs[i] - b.vs[i]);
       ab.forEach((x) => { if (!abaixoVs.has(x.id)) abaixoVs.set(x.id, []); abaixoVs.get(x.id).push({ i, v: x.vs[i] }); });
       const n = L.filter((x) => x.vs[i] != null).length;
-      return `<p class="msg"><b>${DIAS_NOME[i]}</b> · ${TEMAS[i]} · meta ${fmtK(METAS_VS[i])} · ${ab.length} de ${n} abaixo</p>
-        <div class="tablebox"><table><thead><tr><th class="l">Jogador</th><th class="l">Cargo</th><th>Pontos</th><th>Falta</th></tr></thead><tbody>${
+      return `<p class="msg"><b>${DIAS_NOME[i]}</b> · ${TEMAS[i]} · ${t("meta {m}", { m: fmtK(METAS_VS[i]) })} · ${t("{a} de {b} abaixo", { a: ab.length, b: n })}</p>
+        <div class="tablebox"><table><thead><tr><th class="l">${t("Jogador")}</th><th class="l">${t("Cargo")}</th><th>${t("Pontos")}</th><th>${t("Falta")}</th></tr></thead><tbody>${
           ab.length ? ab.map((x) => `<tr><td class="l nome">${esc(x.nome)}</td><td class="l muted">${esc(x.cargo)}</td><td>${fmtM(x.vs[i])}</td><td>${fmtM(METAS_VS[i] - x.vs[i])}</td></tr>`).join("")
-            : `<tr><td class="empty" colspan="4">Todos bateram a meta.</td></tr>`}</tbody></table></div>`;
+            : `<tr><td class="empty" colspan="4">${t("Todos bateram a meta.")}</td></tr>`}</tbody></table></div>`;
     }).join("");
 
     const ambos = doa.filter((x) => abaixoVs.has(x.id));
-    $("res-ambos").innerHTML = ambos.length ? ambos.map((x) => `<span class="chip">${esc(x.nome)} · ${fmtK(x.media)}/dia · VS ${abaixoVs.get(x.id).map((a) => `${DIAS[a.i]} ${fmtM(a.v)}`).join(", ")}</span>`).join("")
-      : `<span class="msg">Ninguém nas duas listas.</span>`;
+    $("res-ambos").innerHTML = ambos.length ? ambos.map((x) => `<span class="chip">${esc(x.nome)} · ${fmtK(x.media)}/${t("dia")} · VS ${abaixoVs.get(x.id).map((a) => `${DIAS[a.i]} ${fmtM(a.v)}`).join(", ")}</span>`).join("")
+      : `<span class="msg">${t("Ninguém nas duas listas.")}</span>`;
   }
 
   function linhasSemana(sem) {
@@ -562,29 +747,29 @@
     const abaixo = L.filter((x) => x.faixa === "mid" || x.faixa === "low").length;
     const zero = L.filter((x) => x.faixa === "zero").length;
     $("k-doa").textContent = comDoa.length ? fmtK(tot) : "—";
-    $("k-doa-s").textContent = comDoa.length ? `${comDoa.length} de ${n} lançados · média ${fmtK(tot / comDoa.length / diasSemana(st.semana))}/dia` : "Nenhuma doação lançada nesta semana";
-    const meta = `meta até agora ${fmtK(metaAte(st.semana))} (${diasSemana(st.semana)} de 7 dias)`;
+    $("k-doa-s").textContent = comDoa.length ? t("{a} de {b} lançados · média {m}/dia", { a: comDoa.length, b: n, m: fmtK(tot / comDoa.length / diasSemana(st.semana)) }) : t("Nenhuma doação lançada nesta semana");
+    const meta = t("meta até agora {m} ({d} de 7 dias)", { m: fmtK(metaAte(st.semana)), d: diasSemana(st.semana) });
     $("k-meta").innerHTML = comDoa.length ? `${ok}<span class="of">/${n}</span>` : "—";
-    $("k-meta-c").textContent = comDoa.length && n - ok ? `${n - ok} faltam` : "";
-    $("k-meta-s").textContent = comDoa.length ? `${meta} · ${abaixo} abaixo, ${zero} sem doação` : meta[0].toUpperCase() + meta.slice(1);
+    $("k-meta-c").textContent = comDoa.length && n - ok ? t("{n} faltam", { n: n - ok }) : "";
+    $("k-meta-s").textContent = comDoa.length ? `${meta} · ${t("{a} abaixo, {z} sem doação", { a: abaixo, z: zero })}` : meta[0].toUpperCase() + meta.slice(1);
     // VS do dia: o dia mais recente da semana com pontos lançados
     const dVs = DIAS.map((_, i) => i).filter((i) => L.some((x) => x.vs[i] != null)).pop();
     if (dVs == null) {
-      $("k-vsdia-t").textContent = "VS do dia"; $("k-vsdia").textContent = "—"; $("k-vsdia-c").textContent = "";
-      $("k-vsdia-s").textContent = "Nenhum ponto lançado nesta semana";
+      $("k-vsdia-t").textContent = t("VS do dia"); $("k-vsdia").textContent = "—"; $("k-vsdia-c").textContent = "";
+      $("k-vsdia-s").textContent = t("Nenhum ponto lançado nesta semana");
     } else {
       const lv = L.filter((x) => x.vs[dVs] != null), okv = lv.filter((x) => x.vs[dVs] >= METAS_VS[dVs]).length;
-      $("k-vsdia-t").textContent = `VS de ${DIAS_NOME[dVs].toLowerCase()}`;
+      $("k-vsdia-t").textContent = t("VS de {dia}", { dia: DIAS_MIN[dVs] });
       $("k-vsdia").innerHTML = `${okv}<span class="of">/${lv.length}</span>`;
-      $("k-vsdia-c").textContent = lv.length - okv ? `${lv.length - okv} faltam` : "";
-      $("k-vsdia-s").textContent = `meta ${fmtK(METAS_VS[dVs])} · ${TEMAS[dVs]}`;
+      $("k-vsdia-c").textContent = lv.length - okv ? t("{n} faltam", { n: lv.length - okv }) : "";
+      $("k-vsdia-s").textContent = `${t("meta {m}", { m: fmtK(METAS_VS[dVs]) })} · ${TEMAS[dVs]}`;
     }
     const vsL = L.filter((x) => x.temVs).sort((a, b) => b.total - a.total);
     const vsTot = vsL.reduce((a, x) => a + x.total, 0);
     $("k-vs").textContent = vsL.length ? fmtK(vsTot) : "—";
     const META_VS_SEM = METAS_VS.reduce((a, b) => a + b, 0);
     const vsOk = vsL.filter((x) => x.total >= META_VS_SEM).length;
-    $("k-vs-s").textContent = vsL.length ? `Líder: ${vsL[0].nome} · ${fmtK(vsL[0].total)} · ${vsOk} com 31,8M ou mais na semana` : "Meta da semana: 31,8M por jogador";
+    $("k-vs-s").textContent = vsL.length ? t("Líder: {nome} · {v} · {n} com {m} ou mais na semana", { nome: vsL[0].nome, v: fmtK(vsL[0].total), n: vsOk, m: fmtM(META_VS_SEM) }) : t("Meta da semana: {m} por jogador", { m: fmtM(META_VS_SEM) });
   }
 
   function renderDoacoes() {
@@ -594,14 +779,14 @@
     const max = Math.max(1, ...Object.values(cont));
     const cls = { ok: "b-ok", mid: "b-mid", low: "b-low", zero: "b-zero" };
     const txt = { ok: "Na meta (≥ 20k/dia)", mid: "Quase (10k–20k)", low: "Abaixo (< 10k)", zero: "Sem doação" };
-    $("faixas").innerHTML = ["ok", "mid", "low", "zero"].map((k) => `<span>${txt[k]}</span><span class="bar"><i class="${cls[k]}" style="width:${cont[k] / max * 100}%"></i>${cont[k]}</span>`).join("");
+    $("faixas").innerHTML = ["ok", "mid", "low", "zero"].map((k) => `<span>${t(txt[k])}</span><span class="bar"><i class="${cls[k]}" style="width:${cont[k] / max * 100}%"></i>${cont[k]}</span>`).join("");
     // histórico 6 semanas
     const sems = []; for (let i = 3; i >= 0; i--) sems.push(addWeeks(st.semana, -i));
     const hs = sems.map((s) => { const l = linhasSemana(s); const c = l.filter((x) => x.doacao != null); return { s, tot: c.reduce((a, x) => a + x.doacao, 0), ok: l.filter((x) => x.faixa === "ok").length, n: c.length }; });
     const hmax = Math.max(1, ...hs.map((h) => h.tot));
-    $("hist").innerHTML = hs.map((h) => { const d = parseISO(h.s); return `<span class="${h.s === st.semana ? "" : "msg"}">${pad(d.getDate())}/${pad(d.getMonth() + 1)}</span><span class="bar"><i class="${h.s === st.semana ? "b-ok" : "b-zero"}" style="width:${h.tot / hmax * 100}%"></i><span style="white-space:nowrap">${h.n ? `${fmtK(h.tot)} · ${h.ok} na meta` : "sem dados"}</span></span>`; }).join("");
+    $("hist").innerHTML = hs.map((h) => { const d = parseISO(h.s); return `<span class="${h.s === st.semana ? "" : "msg"}">${diaMes(d)}</span><span class="bar"><i class="${h.s === st.semana ? "b-ok" : "b-zero"}" style="width:${h.tot / hmax * 100}%"></i><span style="white-space:nowrap">${h.n ? `${fmtK(h.tot)} · ${t("{n} na meta", { n: h.ok })}` : t("sem dados")}</span></span>`; }).join("");
     // tabela
-    const cols = [{ k: "nome", t: "Jogador", l: 1 }, { k: "cargo", t: "Cargo", l: 1 }, { k: "poder", t: "Poder total" }, { k: "arena", t: "Poder arena" }, { k: "doacao", t: "Doação semana" }, { k: "media", t: "Média/dia" }, { k: "pct", t: "% da meta" }, { k: "faixa", t: "Situação", sort: false }, { k: "ant", t: "Sem. anterior" }];
+    const cols = [{ k: "nome", t: t("Jogador"), l: 1 }, { k: "cargo", t: t("Cargo"), l: 1 }, { k: "poder", t: t("Poder total") }, { k: "arena", t: t("Poder arena") }, { k: "doacao", t: t("Doação semana") }, { k: "media", t: t("Média/dia") }, { k: "pct", t: t("% da meta") }, { k: "faixa", t: t("Situação"), sort: false }, { k: "ant", t: t("Sem. anterior") }];
     head($("h-doa"), cols, st.sDoa, renderDoacoes);
     if (st.fDoa === "ok") L = L.filter((x) => x.faixa === "ok");
     if (st.fDoa === "abaixo") L = L.filter((x) => x.faixa === "mid" || x.faixa === "low");
@@ -610,16 +795,16 @@
     L.sort((a, b) => cmp(a, b, st.sDoa.k, st.sDoa.dir) || a.nome.localeCompare(b.nome, "pt-BR"));
     const body = $("b-doa");
     if (!st.loaded.m) return;
-    if (!L.length) { body.innerHTML = `<tr><td class="empty" colspan="9">${st.membros.size ? "Ninguém nesse filtro." : "Nenhum membro cadastrado ainda. Adicione em Lançar dados."}</td></tr>`; return; }
+    if (!L.length) { body.innerHTML = `<tr><td class="empty" colspan="9">${st.membros.size ? t("Ninguém nesse filtro.") : t("Nenhum membro cadastrado ainda. Adicione em Lançar dados.")}</td></tr>`; return; }
     body.innerHTML = L.map((x) => {
       const delta = x.doacao != null && x.ant != null && x.ant > 0 ? (x.doacao - x.ant) / x.ant : null;
       return `<tr data-id="${x.id}">
         <td class="l nome">${esc(x.nome)}</td><td class="l muted">${esc(x.cargo)}</td>
         <td>${fmtK(x.poder)}</td><td>${fmtK(x.arena)}</td>
-        <td><input class="num" id="d-${x.id}" inputmode="numeric" value="${x.doacao == null ? "" : fmt(x.doacao)}" placeholder="—" aria-label="Doação de ${esc(x.nome)}" ${st.canWrite ? "" : "disabled"}></td>
+        <td><input class="num" id="d-${x.id}" inputmode="numeric" value="${x.doacao == null ? "" : fmt(x.doacao)}" placeholder="—" aria-label="${t("Doação de {nome}", { nome: esc(x.nome) })}" ${st.canWrite ? "" : "disabled"}></td>
         <td>${x.media == null ? "—" : fmtK(x.media)}</td>
         <td>${x.pct == null ? "—" : `<span class="meter"><i style="width:${Math.min(100, x.pct * 100)}%"></i></span>${Math.round(x.pct * 100)}%`}</td>
-        <td><span class="pill ${x.faixa}">${FAIXA_TXT[x.faixa]}</span></td>
+        <td><span class="pill ${x.faixa}">${t(FAIXA_TXT[x.faixa])}</span></td>
         <td class="muted">${x.ant == null ? "—" : fmtK(x.ant)}${delta == null ? "" : `<span class="delta ${delta >= 0 ? "up" : "down"}">${delta >= 0 ? "▲" : "▼"}${Math.abs(Math.round(delta * 100))}%</span>`}</td>
       </tr>`;
     }).join("");
@@ -632,12 +817,12 @@
     const pos = new Map(ranked.map((x, i) => [x.id, i + 1]));
     // por dia
     const porDia = DIAS.map((_, i) => { const c = L.filter((x) => x.vs[i] != null); return { soma: c.reduce((a, x) => a + (Number(x.vs[i]) || 0), 0), n: c.length, hit: c.filter((x) => x.vs[i] >= METAS_VS[i]).length }; });
-    $("vs-dias").innerHTML = DIAS.map((d, i) => { const p = porDia[i]; return `<span>${d} <span class="msg" style="display:inline">${fmtK(METAS_VS[i])}</span></span><span class="bar"><i class="b-ok" style="width:${p.n ? p.hit / p.n * 100 : 0}%"></i><span style="white-space:nowrap">${p.n ? `${p.hit} de ${p.n} · ${fmtK(p.soma)}` : "—"}</span></span>`; }).join("");
+    $("vs-dias").innerHTML = DIAS.map((d, i) => { const p = porDia[i]; return `<span>${d} <span class="msg" style="display:inline">${fmtK(METAS_VS[i])}</span></span><span class="bar"><i class="b-ok" style="width:${p.n ? p.hit / p.n * 100 : 0}%"></i><span style="white-space:nowrap">${p.n ? `${t("{a} de {b}", { a: p.hit, b: p.n })} · ${fmtK(p.soma)}` : "—"}</span></span>`; }).join("");
     const top = ranked.slice(0, 10), tmax = Math.max(1, ...top.map((x) => x.total));
-    $("vs-top").innerHTML = top.length ? top.map((x, i) => `<span>${i + 1}. ${esc(x.nome)}</span><span class="bar"><i class="b-ok" style="width:${x.total / tmax * 100}%"></i>${fmtK(x.total)}</span>`).join("") : `<span class="msg">Sem pontos lançados</span><span></span>`;
+    $("vs-top").innerHTML = top.length ? top.map((x, i) => `<span>${i + 1}. ${esc(x.nome)}</span><span class="bar"><i class="b-ok" style="width:${x.total / tmax * 100}%"></i>${fmtK(x.total)}</span>`).join("") : `<span class="msg">${t("Sem pontos lançados")}</span><span></span>`;
     // tabela
     L.forEach((x) => { x.pos = pos.get(x.id) ?? null; DIAS.forEach((_, i) => x["d" + i] = x.vs[i] ?? null); x.totalV = x.temVs ? x.total : null; x.hits = x.temVs ? x.vs.filter((v, i) => v != null && v >= METAS_VS[i]).length : null; x.lanc = x.vs.filter((v) => v != null).length; });
-    const cols = [{ k: "pos", t: "#" }, { k: "nome", t: "Jogador", l: 1 }, { k: "poder", t: "Poder total" }, { k: "arena", t: "Poder arena" }, ...DIAS.map((d, i) => ({ k: "d" + i, t: `${d}<span class="meta" title="${TEMAS[i]}">meta ${fmtK(METAS_VS[i])}</span>` })), { k: "hits", t: "Dias na meta" }, { k: "totalV", t: "Total" }, { k: "totalAnt", t: "Sem. anterior" }];
+    const cols = [{ k: "pos", t: "#" }, { k: "nome", t: t("Jogador"), l: 1 }, { k: "poder", t: t("Poder total") }, { k: "arena", t: t("Poder arena") }, ...DIAS.map((d, i) => ({ k: "d" + i, t: `${d}<span class="meta" title="${TEMAS[i]}">${t("meta {m}", { m: fmtK(METAS_VS[i]) })}</span>` })), { k: "hits", t: t("Dias na meta") }, { k: "totalV", t: t("Total") }, { k: "totalAnt", t: t("Sem. anterior") }];
     const sort = st.sVs.k === "total" ? { k: "totalV", dir: st.sVs.dir } : st.sVs;
     st.sVs = sort;
     head($("h-vs"), cols, st.sVs, renderVs);
@@ -649,12 +834,12 @@
     });
     const body = $("b-vs");
     if (!st.loaded.m) return;
-    if (!L.length) { body.innerHTML = `<tr><td class="empty" colspan="13">Ninguém encontrado.</td></tr>`; return; }
+    if (!L.length) { body.innerHTML = `<tr><td class="empty" colspan="13">${t("Ninguém encontrado.")}</td></tr>`; return; }
     body.innerHTML = L.map((x) => `<tr data-id="${x.id}">
         <td>${x.pos ? `<span class="rank ${x.pos <= 3 ? "top" : ""}">${x.pos}</span>` : `<span class="rank">—</span>`}</td>
         <td class="l nome">${esc(x.nome)}</td>
         <td class="muted">${fmtK(x.poder)}</td><td class="muted">${fmtK(x.arena)}</td>
-        ${DIAS.map((d, i) => `<td class="${x.vs[i] == null ? "" : x.vs[i] >= METAS_VS[i] ? "hit" : "miss"}"><input class="num sm" id="v-${x.id}-${i}" data-i="${i}" inputmode="numeric" value="${x.vs[i] == null ? "" : fmtK(x.vs[i])}" placeholder="—" aria-label="${d} de ${esc(x.nome)}" ${st.canWrite ? "" : "disabled"}></td>`).join("")}
+        ${DIAS.map((d, i) => `<td class="${x.vs[i] == null ? "" : x.vs[i] >= METAS_VS[i] ? "hit" : "miss"}"><input class="num sm" id="v-${x.id}-${i}" data-i="${i}" inputmode="numeric" value="${x.vs[i] == null ? "" : fmtK(x.vs[i])}" placeholder="—" aria-label="${t("{d} de {nome}", { d, nome: esc(x.nome) })}" ${st.canWrite ? "" : "disabled"}></td>`).join("")}
         <td>${x.hits == null ? "—" : `<span class="pill ${x.hits === x.lanc ? "ok" : x.hits === 0 ? "low" : "mid"}">${x.hits}/${x.lanc}</span>`}</td>
         <td><b>${x.temVs ? fmtK(x.total) : "—"}</b></td>
         <td class="muted">${x.totalAnt == null ? "—" : fmtK(x.totalAnt)}</td>
@@ -668,18 +853,18 @@
 
   function renderMembrosInfo() {
     const n = [...st.membros.values()].filter((m) => !m.saiu).length;
-    $("mem-info").textContent = n ? `${n} membros cadastrados. Quem sair da aliança pode continuar na lista; quem entrar, adicione aqui ou pela importação.` : "Nenhum membro cadastrado.";
+    $("mem-info").textContent = n ? t("{n} membros cadastrados. Quem sair da aliança pode continuar na lista; quem entrar, adicione aqui ou pela importação.", { n }) : t("Nenhum membro cadastrado.");
   }
 
   // ---- edição ----
   function bindInput(inp, save) {
     const commit = async () => {
       const raw = inp.value.trim(); const v = raw === "" ? null : parseNum(raw);
-      if (raw !== "" && v == null) { inp.setCustomValidity("Valor inválido"); inp.reportValidity(); return; }
+      if (raw !== "" && v == null) { inp.setCustomValidity(t("Valor inválido")); inp.reportValidity(); return; }
       inp.setCustomValidity("");
       if (inp.dataset.last === raw) return; inp.dataset.last = raw;
       const tr = inp.closest("tr"); tr.classList.add("saving");
-      try { await save(v); } catch (e) { notice("Não foi possível salvar: " + (e && e.message || "erro"), true); } finally { tr.classList.remove("saving"); }
+      try { await save(v); } catch (e) { notice(t("Não foi possível salvar: {e}", { e: e && e.message || t("erro") }), true); } finally { tr.classList.remove("saving"); }
     };
     inp.dataset.last = inp.value.trim();
     inp.addEventListener("change", commit);
@@ -688,7 +873,7 @@
 
   const fila = new Map(); // uma escrita por vez por documento
   async function salvar(id, patch, sem = st.semana) {
-    if (!st.db) throw new Error("sem conexão com o banco");
+    if (!st.db) throw new Error(t("sem conexão com o banco"));
     const key = regKey(sem, id);
     const prev = st.regs.get(key) || { semana: sem, membro: id, doacao: null, vs: [null, null, null, null, null, null] };
     const next = { ...prev, ...patch, semana: sem, membro: id, at: new Date().toISOString() };
@@ -723,9 +908,9 @@
   $("imp-prev").onclick = () => {
     const a = analisar(); st.pending = a;
     const alvo = $("imp-alvo").selectedOptions[0].textContent;
-    let h = `<p class="msg">${a.ok.length} valores prontos para <b>${esc(alvo)}</b> em ${esc(labelSemana(st.semana).toLowerCase())}.</p>`;
-    if (a.semMembro.length) h += `<p class="msg">Nomes que não estão na lista de membros (${a.semMembro.length}) — serão adicionados como membros novos:</p><div class="chips">${a.semMembro.map((x) => `<span class="chip">${esc(x.nome)}</span>`).join("")}</div>`;
-    if (a.invalidas.length) h += `<p class="msg err">Linhas ignoradas por não terem nome e valor (${a.invalidas.length}): ${a.invalidas.slice(0, 5).map(esc).join(" · ")}${a.invalidas.length > 5 ? "…" : ""}</p>`;
+    let h = `<p class="msg">${t("{n} valores prontos para {alvo} em {sem}.", { n: a.ok.length, alvo: `<b>${esc(alvo)}</b>`, sem: esc(labelSemana(st.semana).toLowerCase()) })}</p>`;
+    if (a.semMembro.length) h += `<p class="msg">${t("Nomes que não estão na lista de membros ({n}) — serão adicionados como membros novos:", { n: a.semMembro.length })}</p><div class="chips">${a.semMembro.map((x) => `<span class="chip">${esc(x.nome)}</span>`).join("")}</div>`;
+    if (a.invalidas.length) h += `<p class="msg err">${t("Linhas ignoradas por não terem nome e valor ({n}):", { n: a.invalidas.length })} ${a.invalidas.slice(0, 5).map(esc).join(" · ")}${a.invalidas.length > 5 ? "…" : ""}</p>`;
     $("imp-res").innerHTML = h; $("imp-res").hidden = false;
     $("imp-go").disabled = !(a.ok.length + a.semMembro.length) || !st.canWrite;
     $("imp-msg").textContent = ""; $("imp-msg").className = "msg";
@@ -734,7 +919,7 @@
   $("imp-go").onclick = async () => {
     const a = st.pending; if (!a) return;
     const alvo = $("imp-alvo").value; const sem = st.semana;
-    $("imp-go").disabled = true; $("imp-msg").className = "msg"; $("imp-msg").textContent = "Lançando…";
+    $("imp-go").disabled = true; $("imp-msg").className = "msg"; $("imp-msg").textContent = t("Lançando…");
     try {
       for (const x of a.semMembro) { const id = await novoMembro(x.nome); a.ok.push({ id, nome: x.nome, v: x.v }); }
       let n = 0;
@@ -742,11 +927,11 @@
         const r = reg(sem, x.id);
         if (alvo === "doacao") await salvar(x.id, { doacao: x.v }, sem);
         else { const vs = r && Array.isArray(r.vs) ? r.vs.slice() : [null, null, null, null, null, null]; vs[Number(alvo)] = x.v; await salvar(x.id, { vs }, sem); }
-        n++; $("imp-msg").textContent = `Lançando… ${n}/${a.ok.length}`;
+        n++; $("imp-msg").textContent = `${t("Lançando…")} ${n}/${a.ok.length}`;
       }
-      $("imp-msg").className = "msg ok"; $("imp-msg").textContent = `${n} valores lançados.`;
+      $("imp-msg").className = "msg ok"; $("imp-msg").textContent = t("{n} valores lançados.", { n });
       $("imp-txt").value = ""; st.pending = null; renderAll();
-    } catch (e) { $("imp-msg").className = "msg err"; $("imp-msg").textContent = "Parou no meio: " + (e && e.message || "erro ao salvar") + ". Confira a tabela e tente de novo."; }
+    } catch (e) { $("imp-msg").className = "msg err"; $("imp-msg").textContent = t("Parou no meio: {e}. Confira a tabela e tente de novo.", { e: e && e.message || t("erro ao salvar") }); }
   };
 
   async function novoMembro(nome) {
@@ -759,21 +944,19 @@
   }
   $("mem-add").onclick = async () => {
     const nome = $("mem-nome").value.trim(); const msg = $("mem-msg");
-    if (!nome) { msg.className = "msg err"; msg.textContent = "Escreva o nome como aparece no jogo."; return; }
-    if ([...st.membros.values()].some((m) => norm(m.nome) === norm(nome))) { msg.className = "msg err"; msg.textContent = "Esse nome já está na lista."; return; }
-    try { await novoMembro(nome); $("mem-nome").value = ""; msg.className = "msg ok"; msg.textContent = `${nome} adicionado.`; renderAll(); }
-    catch (e) { msg.className = "msg err"; msg.textContent = "Não foi possível adicionar: " + (e && e.message || "erro"); }
+    if (!nome) { msg.className = "msg err"; msg.textContent = t("Escreva o nome como aparece no jogo."); return; }
+    if ([...st.membros.values()].some((m) => norm(m.nome) === norm(nome))) { msg.className = "msg err"; msg.textContent = t("Esse nome já está na lista."); return; }
+    try { await novoMembro(nome); $("mem-nome").value = ""; msg.className = "msg ok"; msg.textContent = t("{nome} adicionado.", { nome }); renderAll(); }
+    catch (e) { msg.className = "msg err"; msg.textContent = t("Não foi possível adicionar: {e}", { e: e && e.message || t("erro") }); }
   };
 
   // ---- análises: períodos completos, ignora a semana selecionada ----
   st.anPer = 4; st.anGrp = "semana"; st.leituras = new Map();
-  const DIAS7 = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
-  const MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
   const pct = (v) => v == null ? "—" : Math.round(v * 100) + "%";
   const somar = (a) => a.reduce((s, x) => s + x, 0);
   const quantil = (arr, q) => { if (!arr.length) return null; const a = arr.slice().sort((x, y) => x - y), p = (a.length - 1) * q, i = Math.floor(p); return a[i] + (a[Math.min(i + 1, a.length - 1)] - a[i]) * (p - i); };
   const tipA = (t) => t ? ` data-tip="${esc(t).replace(/\n/g, "&#10;")}"` : "";
-  const ddmm = (s) => { const d = parseISO(s); return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}`; };
+  const ddmm = (s) => diaMes(parseISO(s));
 
   function semanasPeriodo() {
     const ws = [...new Set([...st.regs.values()].map((r) => r.semana).filter((s) => s && s <= semanaAtual))].sort();
@@ -794,14 +977,14 @@
     return { w, L, temDoa, tot: somar(comDoa.map((x) => x.doacao)), nDoa: comDoa.length, ok: faixas.ok, faixas, vs, vsTot, vsMembros, vsMed: vsMembros ? vsTot / vsMembros : null, diaDoa };
   }
   function grupos(S) {
-    if (st.anGrp === "semana") return S.map((s) => ({ ...s, label: ddmm(s.w), nome: labelSemana(s.w) + (s.w === semanaAtual ? " · em andamento" : ""), parcial: s.w === semanaAtual, ks: [s] }));
+    if (st.anGrp === "semana") return S.map((s) => ({ ...s, label: ddmm(s.w), nome: labelSemana(s.w) + (s.w === semanaAtual ? " · " + t("em andamento") : ""), parcial: s.w === semanaAtual, ks: [s] }));
     const m = new Map(); S.forEach((s) => { const k = s.w.slice(0, 7); if (!m.has(k)) m.set(k, []); m.get(k).push(s); });
     return [...m.entries()].map(([k, ks]) => {
       const mes = MESES[Number(k.slice(5)) - 1] + "/" + k.slice(2, 4), faixas = { ok: 0, mid: 0, low: 0, zero: 0 };
       ks.forEach((s) => Object.keys(faixas).forEach((f) => faixas[f] += s.faixas[f]));
       const meds = ks.filter((s) => s.vsMed != null).map((s) => s.vsMed);
       const parcial = ks.some((s) => s.w === semanaAtual);
-      return { label: mes, nome: `${mes} (${ks.length} ${ks.length === 1 ? "semana" : "semanas"})${parcial ? " · em andamento" : ""}`, parcial, ks, temDoa: ks.some((s) => s.temDoa), tot: somar(ks.map((s) => s.tot)), nDoa: somar(ks.map((s) => s.nDoa)), ok: somar(ks.map((s) => s.ok)), faixas,
+      return { label: mes, nome: `${mes} (${plural(ks.length, "{n} semana", "{n} semanas")})${parcial ? " · " + t("em andamento") : ""}`, parcial, ks, temDoa: ks.some((s) => s.temDoa), tot: somar(ks.map((s) => s.tot)), nDoa: somar(ks.map((s) => s.nDoa)), ok: somar(ks.map((s) => s.ok)), faixas,
         vs: DIAS.map((_, i) => ({ n: somar(ks.map((s) => s.vs[i].n)), hit: somar(ks.map((s) => s.vs[i].hit)), soma: somar(ks.map((s) => s.vs[i].soma)), vals: ks.flatMap((s) => s.vs[i].vals) })),
         vsTot: somar(ks.map((s) => s.vsTot)), vsMed: meds.length ? somar(meds) / meds.length : null };
     });
@@ -873,25 +1056,27 @@
     if (!st.loaded.m || st.view !== "analises") return;
     const ws = semanasPeriodo(), S = ws.map(statSemana), G = grupos(S);
     const comDados = S.filter((s) => s.temDoa || s.vsMembros).length;
-    $("an-info").textContent = ws.length ? `${ws.length} ${ws.length === 1 ? "semana" : "semanas"} no período · ${comDados} com dados` : "Nenhum dado lançado ainda.";
+    $("an-info").textContent = ws.length ? t("{s} no período · {n} com dados", { s: plural(ws.length, "{n} semana", "{n} semanas"), n: comDados }) : t("Nenhum dado lançado ainda.");
 
     // doações
     // período em andamento ainda vai crescer: barra mais clara para não parecer queda
-    barras($("an-doa-tot"), G.map((g) => ({ label: g.label, v: g.temDoa ? g.tot : null, cor: g.parcial ? "var(--bar-soft)" : null, tip: `${g.nome}\nTotal doado: ${fmt(g.tot)}\n${g.nDoa} lançamentos` })), { fmt: fmtK, vazio: "Sem doações lançadas no período.", aria: "Total doado por período" });
-    linha($("an-doa-pct"), G.map((g) => ({ label: g.label, v: g.nDoa ? g.ok / g.nDoa : null, tip: `${g.nome}\n${g.ok} de ${g.nDoa} na meta (${pct(g.nDoa ? g.ok / g.nDoa : null)})` })), { fmt: pct, max: 1, vazio: "Sem doações lançadas no período.", aria: "Porcentagem na meta de doação" });
-    empilhado($("an-faixas"), G.map((g) => ({ label: g.label, parts: g.faixas, tip: `${g.nome}\n` + FAIXAS.map((f) => `${f.t}: ${g.faixas[f.k]}`).join("\n") })), { vazio: "Sem doações lançadas no período.", aria: "Faixas da meta por período" });
-    $("an-faixas-leg").innerHTML = FAIXAS.map((f) => `<span><i style="background:${f.cor}"></i>${f.t}</span>`).join("");
+    const semDoa = t("Sem doações lançadas no período.");
+    barras($("an-doa-tot"), G.map((g) => ({ label: g.label, v: g.temDoa ? g.tot : null, cor: g.parcial ? "var(--bar-soft)" : null, tip: `${g.nome}\n${t("Total doado: {v}", { v: fmt(g.tot) })}\n${t("{n} lançamentos", { n: g.nDoa })}` })), { fmt: fmtK, vazio: semDoa, aria: t("Total doado por período") });
+    linha($("an-doa-pct"), G.map((g) => ({ label: g.label, v: g.nDoa ? g.ok / g.nDoa : null, tip: `${g.nome}\n${t("{a} de {b} na meta ({p})", { a: g.ok, b: g.nDoa, p: pct(g.nDoa ? g.ok / g.nDoa : null) })}` })), { fmt: pct, max: 1, vazio: semDoa, aria: t("Porcentagem na meta de doação") });
+    empilhado($("an-faixas"), G.map((g) => ({ label: g.label, parts: g.faixas, tip: `${g.nome}\n` + FAIXAS.map((f) => `${t(f.t)}: ${g.faixas[f.k]}`).join("\n") })), { vazio: semDoa, aria: t("Faixas da meta por período") });
+    $("an-faixas-leg").innerHTML = FAIXAS.map((f) => `<span><i style="background:${f.cor}"></i>${t(f.t)}</span>`).join("");
     barras($("an-doa-dia"), DIAS7.map((d, i) => { const l = S.map((s) => s.diaDoa[i]).filter((x) => x.n); const v = l.length ? somar(l.map((x) => x.soma)) / l.length : null;
-      return { label: d, v, tip: v == null ? `${d}: sem leitura` : `${d}: média de ${fmtK(v)} doados\n(${l.length} ${l.length === 1 ? "semana" : "semanas"} com leitura)` }; }),
-      { fmt: fmtK, vazio: "Aparece quando houver leituras diárias de doação.", aria: "Doação média por dia da semana" });
+      return { label: d, v, tip: v == null ? t("{d}: sem leitura", { d }) : t("{d}: média de {v} doados\n({s} com leitura)", { d, v: fmtK(v), s: plural(l.length, "{n} semana", "{n} semanas") }) }; }),
+      { fmt: fmtK, vazio: t("Aparece quando houver leituras diárias de doação."), aria: t("Doação média por dia da semana") });
 
     // VS: mapa de calor período × tema
     const cel = (d) => { if (!d.n) return `<td class="muted">—</td>`; const p = d.hit / d.n, a = Math.round(15 + p * 85);
-      return `<td style="background:color-mix(in oklab, var(--accent) ${a}%, var(--panel));color:${p >= 0.55 ? "var(--accent-fg)" : "var(--fg)"}"${tipA(`${d.hit} de ${d.n} bateram (${pct(p)})\nMediana: ${fmtK(quantil(d.vals, 0.5))}`)}>${pct(p)}</td>`; };
+      return `<td style="background:color-mix(in oklab, var(--accent) ${a}%, var(--panel));color:${p >= 0.55 ? "var(--accent-fg)" : "var(--fg)"}"${tipA(t("{a} de {b} bateram ({p})\nMediana: {m}", { a: d.hit, b: d.n, p: pct(p), m: fmtK(quantil(d.vals, 0.5)) }))}>${pct(p)}</td>`; };
     const temVs = G.some((g) => g.vs.some((d) => d.n));
-    $("an-vs-mapa").innerHTML = temVs ? `<thead><tr><th class="l">Período</th>${DIAS.map((d, i) => `<th>${d}<span class="meta">${fmtK(METAS_VS[i])}</span></th>`).join("")}</tr></thead>
+    const semVs = t("Sem pontos de VS lançados no período.");
+    $("an-vs-mapa").innerHTML = temVs ? `<thead><tr><th class="l">${t("Período")}</th>${DIAS.map((d, i) => `<th>${d}<span class="meta">${fmtK(METAS_VS[i])}</span></th>`).join("")}</tr></thead>
       <tbody>${G.slice().reverse().map((g) => `<tr><td class="l">${esc(g.label)}</td>${g.vs.map(cel).join("")}</tr>`).join("")}</tbody>`
-      : `<tbody><tr><td class="empty">Sem pontos de VS lançados no período.</td></tr></tbody>`;
+      : `<tbody><tr><td class="empty">${semVs}</td></tr></tbody>`;
 
     // termômetro por tema
     const termo = DIAS.map((d, i) => {
@@ -899,22 +1084,22 @@
       const n = vals.length, hit = vals.filter((v) => v >= METAS_VS[i]).length, med = quantil(vals, 0.5), p25 = quantil(vals, 0.25);
       const ult3 = sem.slice(-3).map((s) => s.vs[i].hit / s.vs[i].n);
       let sug;
-      if (!n) sug = `<span class="pill zero">Sem dados</span>`;
-      else if (sem.length < 3) sug = `<span class="pill zero">Poucos dados · ${sem.length} de 3 semanas</span>`;
-      else if (ult3.every((p) => p > 0.9)) sug = `<span class="pill mid">Subir a meta</span>`;
-      else if (hit / n < 0.6) sug = `<span class="pill low">Meta alta demais</span>`;
-      else sug = `<span class="pill ok">Na medida</span>`;
+      if (!n) sug = `<span class="pill zero">${t("Sem dados")}</span>`;
+      else if (sem.length < 3) sug = `<span class="pill zero">${t("Poucos dados · {n} de 3 semanas", { n: sem.length })}</span>`;
+      else if (ult3.every((p) => p > 0.9)) sug = `<span class="pill mid">${t("Subir a meta")}</span>`;
+      else if (hit / n < 0.6) sug = `<span class="pill low">${t("Meta alta demais")}</span>`;
+      else sug = `<span class="pill ok">${t("Na medida")}</span>`;
       const esc_ = Math.max(METAS_VS[i], med || 0) * 1.25, x = (v) => Math.min(100, v / esc_ * 100);
-      const svg = `<svg viewBox="0 0 100 22" preserveAspectRatio="none"${tipA(n ? `${DIAS_NOME[i]}: mediana ${fmtM(med)} · 25% mais fracos até ${fmtM(p25)}\nMeta ${fmtM(METAS_VS[i])} · ${hit} de ${n} bateram` : "")}>
+      const svg = `<svg viewBox="0 0 100 22" preserveAspectRatio="none"${tipA(n ? t("{d}: mediana {m} · 25% mais fracos até {p}\nMeta {meta} · {a} de {b} bateram", { d: DIAS_NOME[i], m: fmtM(med), p: fmtM(p25), meta: fmtM(METAS_VS[i]), a: hit, b: n }) : "")}>
         <rect x="0" y="6" width="100" height="10" rx="2" fill="var(--soft)"/>
         ${n ? `<rect x="0" y="6" width="${x(med)}" height="10" rx="2" fill="var(--bar)"/><rect x="${x(p25) - 0.4}" y="3" width="0.8" height="16" fill="var(--fg)"/>` : ""}
         <rect x="${x(METAS_VS[i]) - 0.5}" y="0" width="1" height="22" fill="var(--no)"/></svg>`;
-      return `<span><b>${DIAS_NOME[i]}</b> <span class="msg" style="display:inline">${TEMAS[i]} · ${fmtK(METAS_VS[i])}</span></span>${svg}<span class="msg" style="white-space:nowrap">${n ? `${pct(hit / n)} bateram` : "—"}</span>${sug}`;
+      return `<span><b>${DIAS_NOME[i]}</b> <span class="msg" style="display:inline">${TEMAS[i]} · ${fmtK(METAS_VS[i])}</span></span>${svg}<span class="msg" style="white-space:nowrap">${n ? t("{p} bateram", { p: pct(hit / n) }) : "—"}</span>${sug}`;
     });
     $("an-termo").innerHTML = termo.join("");
 
-    barras($("an-vs-tot"), G.map((g) => ({ label: g.label, v: g.vsTot || null, cor: g.parcial ? "var(--bar-soft)" : null, tip: `${g.nome}\nPontos: ${fmtM(g.vsTot)}` })), { fmt: fmtK, vazio: "Sem pontos de VS lançados no período.", aria: "Pontos de VS por período" });
-    linha($("an-vs-med"), G.map((g) => ({ label: g.label, v: g.vsMed, tip: `${g.nome}\nMédia por membro: ${fmtM(g.vsMed)}` })), { fmt: fmtK, vazio: "Sem pontos de VS lançados no período.", aria: "Média de pontos por membro" });
+    barras($("an-vs-tot"), G.map((g) => ({ label: g.label, v: g.vsTot || null, cor: g.parcial ? "var(--bar-soft)" : null, tip: `${g.nome}\n${t("Pontos: {v}", { v: fmtM(g.vsTot) })}` })), { fmt: fmtK, vazio: semVs, aria: t("Pontos de VS por período") });
+    linha($("an-vs-med"), G.map((g) => ({ label: g.label, v: g.vsMed, tip: `${g.nome}\n${t("Média por membro: {v}", { v: fmtM(g.vsMed) })}` })), { fmt: fmtK, vazio: semVs, aria: t("Média de pontos por membro") });
 
     // pessoas: consistência no período (membros atuais)
     const atual = new Set(membrosOrd(semanaAtual).map((m) => m.id)), pessoas = new Map();
@@ -926,18 +1111,18 @@
       pessoas.set(x.id, p);
     }));
     const P_ = [...pessoas.values()].filter((p) => p.doaN + p.vsN).map((p) => ({ ...p, taxa: (p.doaOk + p.vsOk) / (p.doaN + p.vsN) }));
-    const linhaP = (p) => `<span>${esc(p.nome)}</span><span class="bar"><i class="${p.taxa >= 0.8 ? "b-ok" : p.taxa >= 0.5 ? "b-mid" : "b-low"}" style="width:${Math.max(2, p.taxa * 100)}%"></i><span style="white-space:nowrap">${pct(p.taxa)} · doação ${p.doaOk}/${p.doaN} · VS ${p.vsOk}/${p.vsN}</span></span>`;
+    const linhaP = (p) => `<span>${esc(p.nome)}</span><span class="bar"><i class="${p.taxa >= 0.8 ? "b-ok" : p.taxa >= 0.5 ? "b-mid" : "b-low"}" style="width:${Math.max(2, p.taxa * 100)}%"></i><span style="white-space:nowrap">${pct(p.taxa)} · ${t("doação")} ${p.doaOk}/${p.doaN} · VS ${p.vsOk}/${p.vsN}</span></span>`;
     const ordT = P_.slice().sort((a, b) => b.taxa - a.taxa || (b.doaOk + b.vsOk) - (a.doaOk + a.vsOk) || a.nome.localeCompare(b.nome, "pt-BR"));
     const ordB = P_.slice().sort((a, b) => a.taxa - b.taxa || (b.doaN + b.vsN) - (a.doaN + a.vsN) || a.nome.localeCompare(b.nome, "pt-BR"));
-    $("an-top").innerHTML = P_.length ? ordT.slice(0, 10).map(linhaP).join("") : `<span class="msg">Sem dados no período.</span><span></span>`;
-    $("an-bot").innerHTML = P_.length ? ordB.slice(0, 10).map(linhaP).join("") : `<span class="msg">Sem dados no período.</span><span></span>`;
+    $("an-top").innerHTML = P_.length ? ordT.slice(0, 10).map(linhaP).join("") : `<span class="msg">${t("Sem dados no período.")}</span><span></span>`;
+    $("an-bot").innerHTML = P_.length ? ordB.slice(0, 10).map(linhaP).join("") : `<span class="msg">${t("Sem dados no período.")}</span><span></span>`;
 
     // poder: uma leitura por data na coleção "leituras"
     const desde = ws[0] || semanaAtual;
     const lt = [...st.leituras.values()].filter((l) => l.data && (!st.anPer || l.data >= desde)).sort((a, b) => a.data < b.data ? -1 : 1);
     const somaP = (l, j) => somar(Object.values(l.poder || {}).map((v) => Number(v?.[j]) || 0));
-    linha($("an-poder"), lt.map((l) => ({ label: ddmm(l.data), v: somaP(l, 0), tip: `Leitura de ${ddmm(l.data)}\nPoder total: ${fmtM(somaP(l, 0))}\n${Object.keys(l.poder || {}).length} membros` })), { fmt: fmtM, zoom: true, vazio: "Sem leituras de poder no período.", aria: "Poder total da aliança" });
-    linha($("an-arena"), lt.map((l) => ({ label: ddmm(l.data), v: somaP(l, 1), tip: `Leitura de ${ddmm(l.data)}\nPoder de arena: ${fmtM(somaP(l, 1))}` })), { fmt: fmtM, zoom: true, vazio: "Sem leituras de poder no período.", aria: "Poder de arena da aliança" });
+    linha($("an-poder"), lt.map((l) => ({ label: ddmm(l.data), v: somaP(l, 0), tip: t("Leitura de {d}\nPoder total: {v}\n{n} membros", { d: ddmm(l.data), v: fmtM(somaP(l, 0)), n: Object.keys(l.poder || {}).length }) })), { fmt: fmtM, zoom: true, vazio: t("Sem leituras de poder no período."), aria: t("Poder total da aliança") });
+    linha($("an-arena"), lt.map((l) => ({ label: ddmm(l.data), v: somaP(l, 1), tip: t("Leitura de {d}\nPoder de arena: {v}", { d: ddmm(l.data), v: fmtM(somaP(l, 1)) }) })), { fmt: fmtM, zoom: true, vazio: t("Sem leituras de poder no período."), aria: t("Poder de arena da aliança") });
   }
   // tooltip único para todos os gráficos da aba
   (() => {
@@ -982,7 +1167,7 @@
       const metaD = META_DIA * Math.max(1, dd - ini), metaSemM = META_DIA * (7 - ini);
       const doacao = r.doacao ?? 0;
       const pr = m.secundariaDe ? st.membros.get(m.secundariaDe) : null;
-      return { id: m.id, nome: m.nome, cargo: m.cargo || "", sec: m.secundariaDe ? (pr ? pr.nome : "outra conta") : null, novo: ini > 0 ? m.entrou : null,
+      return { id: m.id, nome: m.nome, cargo: m.cargo || "", sec: m.secundariaDe ? (pr ? pr.nome : t("outra conta")) : null, novo: ini > 0 ? m.entrou : null,
         ini, dias, v, hits, vsMed: dias.length ? pcts.reduce((a, b) => a + b, 0) / dias.length : null,
         doacao, doaPct: dd ? 100 * doacao / metaD : null, metaD, metaSemM, ddias: Array.isArray(r.doacaoDias) ? r.doacaoDias : [], hoje };
     }).filter(Boolean);
@@ -1001,7 +1186,8 @@
   const pvMembro = (p) => p.membro || p.id;
   // doação acumulada no fim do dia i: a rotina só grava o dia quando o valor muda, então repete o último lido
   const cumDia = (x, i, sem) => { if (i >= diasDoaJogo(sem) - 1) return x.doacao; for (let j = i; j >= 0; j--) if (x.ddias[j] != null) return x.ddias[j]; return 0; };
-  const nomesTxt = (arr, max = 6) => arr.length <= max ? arr.map(esc).join(", ") : arr.slice(0, max).map(esc).join(", ") + ` e mais ${arr.length - max}`;
+  const nomesTxt = (arr, max = 6) => arr.length <= max ? arr.map(esc).join(", ") : arr.slice(0, max).map(esc).join(", ") + " " + t("e mais {n}", { n: arr.length - max });
+  const diaPv = (p) => `${DIAS[p.tipo === "sábado" ? 5 : 2]} ${ddmm(p.data)}`;
   const pctTxt = (v) => v == null ? "—" : Math.round(v) + "%";
 
   // antes e depois de uma mensagem no PV
@@ -1011,21 +1197,22 @@
       const prox = addWeeks(base, 1);
       const a = calcSemana(base).find((x) => x.id === mid), b = vsFechados(prox) || diasDoaJogo(prox) ? calcSemana(prox).find((x) => x.id === mid) : null;
       if (!a) return { txt: "—", res: "zero", rot: "sem dados" };
-      if (!b) return { txt: `nota ${Math.round(notaDe(a, "geral"))} → semana seguinte`, res: "zero", rot: "aguardando" };
+      if (!b) return { txt: t("nota {n} → semana seguinte", { n: Math.round(notaDe(a, "geral")) }), res: "zero", rot: "aguardando" };
       const na = notaDe(a, "geral"), nb = notaDe(b, "geral"), dif = nb - na;
-      return { txt: `nota ${Math.round(na)} → ${Math.round(nb)}${prox === semanaJogo() ? " (parcial)" : ""}`, res: dif >= 5 ? "ok" : dif <= -5 ? "low" : "mid", rot: dif >= 5 ? "melhorou" : dif <= -5 ? "piorou" : "igual" };
+      return { txt: `${t("nota")} ${Math.round(na)} → ${Math.round(nb)}${prox === semanaJogo() ? " (" + t("parcial") + ")" : ""}`, res: dif >= 5 ? "ok" : dif <= -5 ? "low" : "mid", rot: dif >= 5 ? "melhorou" : dif <= -5 ? "piorou" : "igual" };
     }
     const x = calcSemana(base).find((y) => y.id === mid); if (!x) return { txt: "—", res: "zero", rot: "sem dados" };
     const k = dIdx(p.data), antes = x.dias.filter((i) => i <= k), depois = x.dias.filter((i) => i > k);
     const hit = (ds) => ds.filter((i) => (Number(x.v[i]) || 0) >= METAS_VS[i]).length;
     const cum = cumDia(x, k, base), diasDepois = diasDoaJogo(base) - (k + 1);
     const doaAntes = cum != null ? cum / Math.max(1, k + 1 - x.ini) : null, doaDepois = cum != null && diasDepois > 0 ? (x.doacao - cum) / diasDepois : null;
-    if (!depois.length && doaDepois == null) return { txt: `VS ${hit(antes)}/${antes.length}${doaAntes != null ? ` · doação ${fmtK(doaAntes)}/dia` : ""} → aguardando`, res: "zero", rot: "aguardando" };
+    const porDia = (v) => `${fmtK(v)}/${t("dia")}`;
+    if (!depois.length && doaDepois == null) return { txt: `VS ${hit(antes)}/${antes.length}${doaAntes != null ? ` · ${t("doação")} ${porDia(doaAntes)}` : ""} → ${t("aguardando")}`, res: "zero", rot: "aguardando" };
     const rA = antes.length ? hit(antes) / antes.length : null, rD = depois.length ? hit(depois) / depois.length : null;
     let up = 0, down = 0;
     if (rA != null && rD != null) { if (rD > rA) up++; else if (rD < rA) down++; }
     if (doaAntes != null && doaDepois != null) { if (doaDepois > doaAntes * 1.15) up++; else if (doaDepois < doaAntes * 0.85) down++; }
-    const txt = `VS ${hit(antes)}/${antes.length} → ${depois.length ? `${hit(depois)}/${depois.length}` : "—"}` + (doaAntes != null ? ` · doação ${fmtK(doaAntes)}/dia → ${doaDepois == null ? "—" : fmtK(doaDepois) + "/dia"}` : "");
+    const txt = `VS ${hit(antes)}/${antes.length} → ${depois.length ? `${hit(depois)}/${depois.length}` : "—"}` + (doaAntes != null ? ` · ${t("doação")} ${porDia(doaAntes)} → ${doaDepois == null ? "—" : porDia(doaDepois)}` : "");
     return { txt, res: up && !down ? "ok" : down && !up ? "low" : "mid", rot: up && !down ? "melhorou" : down && !up ? "piorou" : up ? "misto" : "igual" };
   }
 
@@ -1034,8 +1221,8 @@
     const sem = st.semana, c = st.deCrit, atual = sem === semanaJogo();
     const todos = calcSemana(sem), L = filtrar(todos);
     const diasCont = [...new Set(todos.flatMap((x) => x.dias))].sort();
-    $("de-crit-txt").textContent = CRIT_TXT[c];
-    $("de-info").textContent = L.length ? `${L.length} membros · VS: ${diasCont.length ? diasCont.map((i) => DIAS[i]).join(", ") : "nenhum dia fechado"} · doação: meta de ${fmtK(META_DIA * diasDoaJogo(sem))} até ${atual ? "hoje" : "o fim da semana"}` : "";
+    $("de-crit-txt").textContent = t(CRIT_TXT[c]);
+    $("de-info").textContent = L.length ? t(atual ? "{n} membros · VS: {d} · doação: meta de {m} até hoje" : "{n} membros · VS: {d} · doação: meta de {m} até o fim da semana", { n: L.length, d: diasCont.length ? diasCont.map((i) => DIAS[i]).join(", ") : t("nenhum dia fechado"), m: fmtK(META_DIA * diasDoaJogo(sem)) }) : "";
     const ord = ordenar(L, c);
     // semana anterior: nota e se estava entre os 10 piores (mesmo critério e filtros)
     const ant = ordenar(filtrar(calcSemana(addWeeks(sem, -1))), c), notaAnt = new Map(ant.map((x) => [x.id, x.nota])), piorAnt = new Set(ant.slice(0, 10).map((x) => x.id));
@@ -1044,17 +1231,17 @@
     const falta = (x) => Math.max(0, x.metaSemM - x.doacao);
 
     const linhaDe = (x, pos, pior) => {
-      const tags = (x.sec ? `<span class="tag" title="Conta secundária de ${esc(x.sec)}">sec.</span>` : "") + (x.novo ? `<span class="tag" title="Entrou na aliança em ${ddmm(x.novo)}">entrou ${ddmm(x.novo)}</span>` : "")
-        + (pior && piorAnt.has(x.id) ? `<span class="tag re" title="Também estava entre os 10 piores na semana anterior">🔁</span>` : "") + (pvPor.has(x.id) ? `<span class="tag pv" title="Recebeu mensagem no PV nesta semana">📩</span>` : "");
+      const tags = (x.sec ? `<span class="tag" title="${esc(t("Conta secundária de {nome}", { nome: x.sec }))}">${t("sec.")}</span>` : "") + (x.novo ? `<span class="tag" title="${t("Entrou na aliança em {d}", { d: ddmm(x.novo) })}">${t("entrou {d}", { d: ddmm(x.novo) })}</span>` : "")
+        + (pior && piorAnt.has(x.id) ? `<span class="tag re" title="${t("Também estava entre os 10 piores na semana anterior")}">🔁</span>` : "") + (pvPor.has(x.id) ? `<span class="tag pv" title="${t("Recebeu mensagem no PV nesta semana")}">📩</span>` : "");
       const dias = DIAS.map((d, i) => {
-        if (i < x.ini) return `<span class="dd na" title="${d}: ainda não estava na aliança">·</span>`;
+        if (i < x.ini) return `<span class="dd na" title="${t("{d}: ainda não estava na aliança", { d })}">·</span>`;
         if (x.dias.includes(i)) { const val = Number(x.v[i]) || 0, p = val / METAS_VS[i] * 100;
-          return `<span class="dd ${val >= METAS_VS[i] ? "hit" : "miss"}" title="${d}: ${fmtM(val)} de ${fmtM(METAS_VS[i])}">${val >= METAS_VS[i] ? "✓" : Math.floor(p) + "%"}</span>`; }
-        if (x.hoje === i && x.v[i] != null) return `<span class="dd parc" title="${d} em andamento: ${fmtM(x.v[i])} de ${fmtM(METAS_VS[i])}">${Math.floor(x.v[i] / METAS_VS[i] * 100)}%</span>`;
+          return `<span class="dd ${val >= METAS_VS[i] ? "hit" : "miss"}" title="${d}: ${t("{a} de {b}", { a: fmtM(val), b: fmtM(METAS_VS[i]) })}">${val >= METAS_VS[i] ? "✓" : Math.floor(p) + "%"}</span>`; }
+        if (x.hoje === i && x.v[i] != null) return `<span class="dd parc" title="${t("{d} em andamento: {a} de {b}", { d, a: fmtM(x.v[i]), b: fmtM(METAS_VS[i]) })}">${Math.floor(x.v[i] / METAS_VS[i] * 100)}%</span>`;
         return "";
       }).join("");
       const fd = falta(x), pd = resta ? fd / resta : 0;
-      const ate = !atual ? `<span class="msg">—</span>` : !fd ? `<span class="pill ok">bateu</span>` : `<span class="pill ${pd <= 20000 ? "ok" : pd <= 40000 ? "mid" : "low"}" title="Faltam ${fmt(fd)} em ${resta} ${resta === 1 ? "dia" : "dias"}">${fmtK(pd)}/dia</span>`;
+      const ate = !atual ? `<span class="msg">—</span>` : !fd ? `<span class="pill ok">${t("bateu")}</span>` : `<span class="pill ${pd <= 20000 ? "ok" : pd <= 40000 ? "mid" : "low"}" title="${t("Faltam {v} em {d}", { v: fmt(fd), d: plural(resta, "{n} dia", "{n} dias") })}">${fmtK(pd)}/${t("dia")}</span>`;
       const na = notaAnt.get(x.id), dif = na == null ? null : Math.round(x.nota) - Math.round(na);
       const antTxt = na == null ? `<span class="msg">—</span>` : `${Math.round(na)}${dif ? ` <span class="delta ${dif > 0 ? "up" : "down"}">${dif > 0 ? "▲" : "▼"}${Math.abs(dif)}</span>` : ""}`;
       const cls = x.nota >= 80 ? "ok" : x.nota >= 50 ? "mid" : "low";
@@ -1062,14 +1249,15 @@
         <td>${x.dias.length ? `<span class="pill ${x.hits === x.dias.length ? "ok" : x.hits === 0 ? "low" : "mid"}">${x.hits}/${x.dias.length}</span>` : "—"}</td>
         <td>${fmtK(x.doacao)} <span class="msg" style="display:inline">(${pctTxt(x.doaPct)})</span></td><td>${ate}</td><td><span class="pill ${cls}">${Math.round(x.nota)}</span></td><td>${antTxt}</td></tr>`;
       if (st.deOpen.has(x.id)) {
-        const vsDet = DIAS.map((d, i) => i < x.ini ? `${d}: não estava` : x.v[i] == null ? (x.dias.includes(i) ? `${d}: 0 de ${fmtM(METAS_VS[i])}` : null) : `${d}: ${fmtM(x.v[i])} de ${fmtM(METAS_VS[i])} (${Math.floor(x.v[i] / METAS_VS[i] * 100)}%)${x.hoje === i ? " · em andamento" : ""}`).filter(Boolean);
-        let prev = 0; const doaDet = DIAS7.slice(0, diasDoaJogo(sem)).map((d, i) => { if (i < x.ini) return null; const v = cumDia(x, i, sem); const t = `${d}: +${fmtK(v - prev)}`; prev = v; return t; }).filter(Boolean);
-        const pvDet = (pvPor.get(x.id) || []).map((p) => `${p.tipo === "sábado" ? "Sáb" : "Qua"} ${ddmm(p.data)}: ${p.recebeu ? "recebeu" : "não recebeu"}${p.assunto ? ` · ${esc(p.assunto)}` : ""}`);
-        html += `<tr class="det"><td></td><td colspan="7"><div class="det-g"><div><b>VS</b><br>${vsDet.map(esc).join("<br>") || "—"}</div><div><b>Doação por dia</b> (total ${fmt(x.doacao)}, meta até agora ${fmt(x.metaD)})<br>${doaDet.join(" · ") || "sem leituras diárias"}</div>${pvDet.length ? `<div><b>PV</b><br>${pvDet.join("<br>")}</div>` : ""}${x.sec ? `<div><b>Conta secundária</b> de ${esc(x.sec)}: fica fora da cobrança no PV.</div>` : ""}</div></td></tr>`;
+        const vsDet = DIAS.map((d, i) => i < x.ini ? `${d}: ${t("não estava")}` : x.v[i] == null ? (x.dias.includes(i) ? `${d}: ${t("{a} de {b}", { a: 0, b: fmtM(METAS_VS[i]) })}` : null) : `${d}: ${t("{a} de {b}", { a: fmtM(x.v[i]), b: fmtM(METAS_VS[i]) })} (${Math.floor(x.v[i] / METAS_VS[i] * 100)}%)${x.hoje === i ? " · " + t("em andamento") : ""}`).filter(Boolean);
+        let prev = 0; const doaDet = DIAS7.slice(0, diasDoaJogo(sem)).map((d, i) => { if (i < x.ini) return null; const v = cumDia(x, i, sem); const s = `${d}: +${fmtK(v - prev)}`; prev = v; return s; }).filter(Boolean);
+        // o assunto do PV é o texto enviado ao membro, em português
+        const pvDet = (pvPor.get(x.id) || []).map((p) => `${diaPv(p)}: ${p.recebeu ? t("recebeu") : t("não recebeu")}${p.assunto ? ` · ${esc(p.assunto)}` : ""}`);
+        html += `<tr class="det"><td></td><td colspan="7"><div class="det-g"><div><b>VS</b><br>${vsDet.map(esc).join("<br>") || "—"}</div><div><b>${t("Doação por dia")}</b> (${t("total {v}, meta até agora {m}", { v: fmt(x.doacao), m: fmt(x.metaD) })})<br>${doaDet.join(" · ") || t("sem leituras diárias")}</div>${pvDet.length ? `<div><b>PV</b><br>${pvDet.join("<br>")}</div>` : ""}${x.sec ? `<div>${t("{b}Conta secundária{fb} de {nome}: fica fora da cobrança no PV.", { b: "<b>", fb: "</b>", nome: esc(x.sec) })}</div>` : ""}</div></td></tr>`;
       }
       return html;
     };
-    const vazio = `<tr><td class="empty" colspan="8">Sem dados lançados nesta semana.</td></tr>`;
+    const vazio = `<tr><td class="empty" colspan="8">${t("Sem dados lançados nesta semana.")}</td></tr>`;
     $("de-pior").innerHTML = ord.length ? ord.slice(0, 10).map((x, i) => linhaDe(x, i + 1, true)).join("") : vazio;
     const melhores = ord.slice().sort((a, b) => b.nota - a.nota || (b.doaPct ?? 0) - (a.doaPct ?? 0) || b.hits - a.hits || a.nome.localeCompare(b.nome, "pt-BR"));
     $("de-melhor").innerHTML = melhores.length ? melhores.slice(0, 10).map((x, i) => linhaDe(x, i + 1, false)).join("") : vazio;
@@ -1081,21 +1269,21 @@
     // quem ainda recupera a doação
     if (!atual) {
       const ok = L.filter((x) => x.doacao >= x.metaSemM).length;
-      $("de-rec-s").textContent = sem < semanaJogo() ? `Semana encerrada: ${ok} de ${L.length} bateram a meta da semana.` : "Semana ainda não começou.";
+      $("de-rec-s").textContent = sem < semanaJogo() ? t("Semana encerrada: {a} de {b} bateram a meta da semana.", { a: ok, b: L.length }) : t("Semana ainda não começou.");
       $("de-rec").innerHTML = "";
     } else {
       const abaixo = L.filter((x) => falta(x) > 0).map((x) => ({ ...x, f: falta(x), pd: falta(x) / resta })).sort((a, b) => a.pd - b.pd);
       const g = [["ok", "No ritmo normal: até 20 mil por dia", abaixo.filter((x) => x.pd <= 20000)], ["mid", "Com esforço: de 20 a 40 mil por dia (diamantes ajudam)", abaixo.filter((x) => x.pd > 20000 && x.pd <= 40000)], ["low", "Difícil: mais de 40 mil por dia", abaixo.filter((x) => x.pd > 40000)]];
-      $("de-rec-s").textContent = `${L.length - abaixo.length} de ${L.length} já bateram a meta da semana. Faltam ${resta} ${resta === 1 ? "dia" : "dias"} até domingo, contando hoje.`;
-      const chips = (k, arr) => `<div class="chips">${arr.length ? arr.map((x) => `<span class="chip ${k === "low" ? "" : k}" title="Faltam ${fmt(x.f)}">${esc(x.nome)} · ${fmtK(x.pd)}/dia</span>`).join("") : '<span class="msg">ninguém</span>'}</div>`;
+      $("de-rec-s").textContent = t("{a} de {b} já bateram a meta da semana. Faltam {d} até domingo, contando hoje.", { a: L.length - abaixo.length, b: L.length, d: plural(resta, "{n} dia", "{n} dias") });
+      const chips = (k, arr) => `<div class="chips">${arr.length ? arr.map((x) => `<span class="chip ${k === "low" ? "" : k}" title="${t("Faltam {v}", { v: fmt(x.f) })}">${esc(x.nome)} · ${fmtK(x.pd)}/${t("dia")}</span>`).join("") : `<span class="msg">${t("ninguém")}</span>`}</div>`;
       // a faixa "no ritmo" costuma ser longa e é a menos preocupante: fica recolhida
-      $("de-rec").innerHTML = g.map(([k, t, arr]) => k === "ok" && arr.length > 8 ? `<details><summary><b>${t} · ${arr.length}</b></summary>${chips(k, arr)}</details>` : `<h4>${t} · ${arr.length}</h4>${chips(k, arr)}`).join("");
+      $("de-rec").innerHTML = g.map(([k, rot, arr]) => k === "ok" && arr.length > 8 ? `<details><summary><b>${t(rot)} · ${arr.length}</b></summary>${chips(k, arr)}</details>` : `<h4>${t(rot)} · ${arr.length}</h4>${chips(k, arr)}`).join("");
     }
 
     // notificados no PV
     const ef = pvs.map((p) => ({ p, e: efeitoPv(p) }));
-    $("de-pv-s").textContent = pvs.length ? `${pvs.length} ${pvs.length === 1 ? "mensagem" : "mensagens"} · quarta: VS e doação antes e depois da mensagem; sábado: nota da semana contra a semana seguinte.` : "Ninguém recebeu mensagem no PV nesta semana.";
-    $("de-pv").innerHTML = ef.length ? ef.map(({ p, e }) => `<tr><td class="l nome">${esc(p.nome)}</td><td class="l">${p.tipo === "sábado" ? "Sáb" : "Qua"} ${ddmm(p.data)}${p.recebeu ? "" : ' <span class="pill low">não recebeu</span>'}</td><td class="l">${esc(e.txt)}</td><td class="l"><span class="pill ${e.res}">${e.rot}</span></td></tr>`).join("") : `<tr><td class="empty" colspan="4">—</td></tr>`;
+    $("de-pv-s").textContent = pvs.length ? t("{n} · quarta: VS e doação antes e depois da mensagem; sábado: nota da semana contra a semana seguinte.", { n: plural(pvs.length, "{n} mensagem", "{n} mensagens") }) : t("Ninguém recebeu mensagem no PV nesta semana.");
+    $("de-pv").innerHTML = ef.length ? ef.map(({ p, e }) => `<tr><td class="l nome">${esc(p.nome)}</td><td class="l">${diaPv(p)}${p.recebeu ? "" : ` <span class="pill low">${t("não recebeu")}</span>`}</td><td class="l">${esc(e.txt)}</td><td class="l"><span class="pill ${e.res}">${t(e.rot)}</span></td></tr>`).join("") : `<tr><td class="empty" colspan="4">—</td></tr>`;
 
     // o que se destaca
     const D = [];
@@ -1103,27 +1291,29 @@
       const porDia = diasCont.map((i) => { const c_ = L.filter((x) => x.dias.includes(i)); return { i, n: c_.length, hit: c_.filter((x) => (Number(x.v[i]) || 0) >= METAS_VS[i]).length }; }).filter((d) => d.n);
       if (porDia.length) {
         const pior = porDia.slice().sort((a, b) => a.hit / a.n - b.hit / b.n)[0], melhor = porDia.slice().sort((a, b) => b.hit / b.n - a.hit / a.n)[0];
-        D.push(`<b>${DIAS_NOME[pior.i]} (${TEMAS[pior.i]})</b> foi o pior dia do VS: só ${pior.hit} de ${pior.n} bateram a meta (${pct(pior.hit / pior.n)}).` + (melhor.i !== pior.i ? ` O melhor foi ${DIAS_NOME[melhor.i].toLowerCase()}, com ${pct(melhor.hit / melhor.n)}.` : ""));
+        D.push(t("{b}{dia} ({tema}){fb} foi o pior dia do VS: só {a} de {n} bateram a meta ({p}).", { b: "<b>", fb: "</b>", dia: DIAS_NOME[pior.i], tema: TEMAS[pior.i], a: pior.hit, n: pior.n, p: pct(pior.hit / pior.n) })
+          + (melhor.i !== pior.i ? " " + t("O melhor foi {dia}, com {p}.", { dia: DIAS_MIN[melhor.i], p: pct(melhor.hit / melhor.n) }) : ""));
       }
+      const B = { b: "<b>", fb: "</b>" };
       const ambos = ordenar(L.filter((x) => x.vsMed != null && x.vsMed < 50 && (x.doaPct ?? 0) < 50), "geral");
-      if (ambos.length) D.push(`<b>${ambos.length} ${ambos.length === 1 ? "membro vai mal" : "membros vão mal"} no VS e na doação</b> (abaixo de 50% nos dois): ${nomesTxt(ambos.map((x) => x.nome))}.`);
+      if (ambos.length) D.push(t(ambos.length === 1 ? "{b}1 membro vai mal no VS e na doação{fb} (abaixo de 50% nos dois): {nomes}." : "{b}{n} membros vão mal no VS e na doação{fb} (abaixo de 50% nos dois): {nomes}.", { ...B, n: ambos.length, nomes: nomesTxt(ambos.map((x) => x.nome)) }));
       const vsBomDoa = L.filter((x) => x.dias.length >= 2 && x.hits >= x.dias.length - 1 && (x.doaPct ?? 0) < 50).sort((a, b) => a.doaPct - b.doaPct);
-      if (vsBomDoa.length) D.push(`<b>Vão bem no VS, mas a doação está abaixo de 50%:</b> ${nomesTxt(vsBomDoa.map((x) => `${x.nome} (${pctTxt(x.doaPct)})`))}.`);
+      if (vsBomDoa.length) D.push(t("{b}Vão bem no VS, mas a doação está abaixo de 50%:{fb} {nomes}.", { ...B, nomes: nomesTxt(vsBomDoa.map((x) => `${x.nome} (${pctTxt(x.doaPct)})`)) }));
       const doaBomVs = L.filter((x) => (x.doaPct ?? 0) >= 100 && x.dias.length >= 2 && x.hits / x.dias.length <= 0.4);
-      if (doaBomVs.length) D.push(`<b>Doam em dia, mas o VS está fraco</b> (meta em 40% dos dias ou menos): ${nomesTxt(doaBomVs.map((x) => `${x.nome} (${x.hits}/${x.dias.length})`))}.`);
+      if (doaBomVs.length) D.push(t("{b}Doam em dia, mas o VS está fraco{fb} (meta em 40% dos dias ou menos): {nomes}.", { ...B, nomes: nomesTxt(doaBomVs.map((x) => `${x.nome} (${x.hits}/${x.dias.length})`)) }));
       const zer = L.filter((x) => x.dias.some((i) => !Number(x.v[i])));
-      if (zer.length) D.push(`<b>${zer.length} ${zer.length === 1 ? "zerou" : "zeraram"} pelo menos um dia do VS:</b> ${nomesTxt(zer.map((x) => `${x.nome} (${x.dias.filter((i) => !Number(x.v[i])).map((i) => DIAS[i].toLowerCase()).join(", ")})`))}.`);
+      if (zer.length) D.push(t(zer.length === 1 ? "{b}1 zerou pelo menos um dia do VS:{fb} {nomes}." : "{b}{n} zeraram pelo menos um dia do VS:{fb} {nomes}.", { ...B, n: zer.length, nomes: nomesTxt(zer.map((x) => `${x.nome} (${x.dias.filter((i) => !Number(x.v[i])).map((i) => DIAS[i].toLowerCase()).join(", ")})`)) }));
       const rein = ord.slice(0, 10).filter((x) => piorAnt.has(x.id));
-      if (rein.length) D.push(`<b>🔁 ${rein.length} ${rein.length === 1 ? "repete" : "repetem"} a lista dos 10 piores</b> da semana anterior: ${nomesTxt(rein.map((x) => x.nome))}. Vale uma conversa direta.`);
+      if (rein.length) D.push(t(rein.length === 1 ? "{b}🔁 1 repete a lista dos 10 piores{fb} da semana anterior: {nomes}. Vale uma conversa direta." : "{b}🔁 {n} repetem a lista dos 10 piores{fb} da semana anterior: {nomes}. Vale uma conversa direta.", { ...B, n: rein.length, nomes: nomesTxt(rein.map((x) => x.nome)) }));
       const efs = ef.filter((x) => x.p.recebeu && x.e.rot !== "aguardando" && x.e.rot !== "sem dados");
       if (efs.length) { const m = efs.filter((x) => x.e.rot === "melhorou").length, pi = efs.filter((x) => x.e.rot === "piorou").length;
-        D.push(`<b>PV:</b> dos ${efs.length} notificados com dados depois da mensagem, ${m} ${m === 1 ? "melhorou" : "melhoraram"} e ${pi} ${pi === 1 ? "piorou" : "pioraram"}.`); }
+        D.push(t("{b}PV:{fb} dos {n} notificados com dados depois da mensagem, {m} com melhora e {p} com piora.", { ...B, n: efs.length, m, p: pi })); }
       if (atual) { const ok = L.filter((x) => !falta(x)).length, dif = L.filter((x) => falta(x) / resta > 40000);
-        D.push(`<b>Doação:</b> ${ok} de ${L.length} já bateram a meta da semana; ${dif.length} só recuperam com mais de 40 mil por dia até domingo.`); }
+        D.push(t("{b}Doação:{fb} {a} de {n} já bateram a meta da semana; {d} só recuperam com mais de 40 mil por dia até domingo.", { ...B, a: ok, n: L.length, d: dif.length })); }
       const novos = L.filter((x) => x.novo);
-      if (novos.length) D.push(`Entraram nesta semana: ${nomesTxt(novos.map((x) => `${x.nome} (${ddmm(x.novo)})`))}. São cobrados a partir do dia da entrada.`);
+      if (novos.length) D.push(t("Entraram nesta semana: {nomes}. São cobrados a partir do dia da entrada.", { nomes: nomesTxt(novos.map((x) => `${x.nome} (${ddmm(x.novo)})`)) }));
     }
-    $("de-dest").innerHTML = D.length ? D.map((t) => `<li>${t}</li>`).join("") : `<li class="msg">Sem dados lançados nesta semana.</li>`;
+    $("de-dest").innerHTML = D.length ? D.map((s) => `<li>${s}</li>`).join("") : `<li class="msg">${t("Sem dados lançados nesta semana.")}</li>`;
   }
   $("de-crit").querySelectorAll("button").forEach((b) => b.onclick = () => { st.deCrit = b.dataset.c; $("de-crit").querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x === b ? "true" : "false")); renderDesempenho(); });
   $("de-sec").onchange = (e) => { st.deSec = e.target.checked; renderDesempenho(); };
@@ -1146,7 +1336,7 @@
   $("busca-doa").addEventListener("input", (e) => { st.qDoa = e.target.value; renderDoacoes(); });
   $("busca-vs").addEventListener("input", (e) => { st.qVs = e.target.value; renderVs(); });
 
-  function notice(t, err) { const n = $("notice"); n.textContent = t; n.hidden = false; n.style.background = err ? "var(--no-bg)" : ""; }
+  function notice(msg, err) { const n = $("notice"); n.textContent = msg; n.hidden = false; n.style.background = err ? "var(--no-bg)" : ""; }
 
   // Foto dos dados embutida na página: quem abre sem login (sem acesso ao banco) vê esta cópia, só leitura.
   // Logado, o banco ao vivo substitui a foto assim que conecta.
@@ -1161,26 +1351,53 @@
     $("tab-importar").hidden = true; if (st.view === "importar") st.view = "doacoes";
   } else foto = null;
 
+  // ---- textos fixos da página: guarda o português original de cada texto e atributo e troca pelo idioma escolhido ----
+  const fixos = [];
+  (() => {
+    const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, { acceptNode: (n) => n.parentElement.closest("script,style") || !n.nodeValue.trim() ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT });
+    for (let n; (n = w.nextNode());) fixos.push([n, n.nodeValue]);
+    document.querySelectorAll("[placeholder],[aria-label],[title]").forEach((el) => { if (el.closest(".langs button")) return; ["placeholder", "aria-label", "title"].forEach((a) => { if (el.hasAttribute(a)) fixos.push([el, el.getAttribute(a), a]); }); });
+  })();
+  function traduzFixos() {
+    fixos.forEach(([n, pt, a]) => {
+      if (!a && !n.isConnected) return;
+      const k = pt.trim(), v = pt.replace(k, t(k));
+      if (a) n.setAttribute(a, v); else n.nodeValue = v;
+    });
+    document.title = t("Acompanhamento DEDZ");
+    document.documentElement.lang = LOC;
+    document.querySelectorAll(".langs button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.lang === LANG ? "true" : "false"));
+  }
+  // situação da conexão, refeita a cada troca de idioma
+  st.sync = "conectando";
+  const syncTxt = () => { $("sync").textContent = st.sync === "foto" ? t("Somente leitura · dados de {d}", { d: foto.em }) : st.sync === "sem" ? t("Sem conexão") : st.sync === "vivo" ? t("Salvo para todos · ao vivo") : st.sync === "leitura" ? t("Somente leitura") : t("Conectando…"); };
+  function setLang(l) {
+    if (!LANGS[l]) return;
+    LANG = l; LOC = LANGS[l]; try { localStorage.setItem("dedz-lang", l); } catch (e) {}
+    carregarListas(); traduzFixos(); syncTxt(); renderAll();
+  }
+  document.querySelectorAll(".langs button").forEach((b) => b.onclick = () => setLang(b.dataset.lang));
+  traduzFixos();
+
   setView(st.view); renderAll();
 
   // ---- banco ----
   (async () => {
     const db = await window.claude?.use?.("db");
-    if (!db && foto) { $("sync").textContent = `Somente leitura · dados de ${foto.em}`; return; }
-    if (!db) { $("sync").textContent = "Sem conexão"; notice("Os dados salvos não estão disponíveis nesta visualização. Abra a página logado no claude.ai para ver e lançar valores."); $("b-doa").innerHTML = `<tr><td class="empty" colspan="9">Sem acesso aos dados.</td></tr>`; $("b-vs").innerHTML = `<tr><td class="empty" colspan="13">Sem acesso aos dados.</td></tr>`; return; }
+    if (!db && foto) { st.sync = "foto"; syncTxt(); return; }
+    if (!db) { st.sync = "sem"; syncTxt(); notice(t("Os dados salvos não estão disponíveis nesta visualização. Abra a página logado no claude.ai para ver e lançar valores.")); $("b-doa").innerHTML = `<tr><td class="empty" colspan="9">${t("Sem acesso aos dados.")}</td></tr>`; $("b-vs").innerHTML = `<tr><td class="empty" colspan="13">${t("Sem acesso aos dados.")}</td></tr>`; return; }
     st.db = db; st.canWrite = true; $("tab-importar").hidden = false;
     const user = await window.claude.use("user");
     if (user) { try { const c = user.can("data.write"); if (c === false) { st.canWrite = false; } } catch (e) {} }
-    let first = true;
-    const tick = () => { $("sync").textContent = st.canWrite ? "Salvo para todos · ao vivo" : "Somente leitura"; };
+    const tick = () => { st.sync = st.canWrite ? "vivo" : "leitura"; syncTxt(); };
     db.collection("membros").onSnapshot((snap) => {
       st.membros = new Map(snap.docs.map((d) => [d.id, { id: d.id, ...d.data() }]));
       st.loaded.m = true; tick(); keepFocus(renderAll);
-    }, (e) => notice("A lista de membros parou de atualizar (" + (e && e.code) + "). Recarregue a página.", true));
+    }, (e) => notice(t("A lista de membros parou de atualizar ({c}). Recarregue a página.", { c: e && e.code }), true));
     db.collection("registros").onSnapshot((snap) => {
       st.regs = new Map(snap.docs.map((d) => [d.id, d.data()]));
       st.loaded.r = true; tick(); keepFocus(renderAll);
-    }, (e) => notice("Os registros pararam de atualizar (" + (e && e.code) + "). Recarregue a página.", true));
+    }, (e) => notice(t("Os registros pararam de atualizar ({c}). Recarregue a página.", { c: e && e.code }), true));
     db.collection("leituras").onSnapshot((snap) => {
       st.leituras = new Map(snap.docs.map((d) => [d.id, { id: d.id, ...d.data() }]));
       renderAnalises();
