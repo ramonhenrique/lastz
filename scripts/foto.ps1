@@ -5,8 +5,11 @@ param([string]$Dir = 'C:\lz', [string]$Html = (Join-Path $PSScriptRoot '..\dash\
 $est = PastaEstado $Dir
 $partes = foreach ($c in 'membros', 'registros', 'leituras') { [IO.File]::ReadAllText("$est\$c.json", $script:utf8).Trim() }
 foreach ($i in 0..2) { if (-not $partes[$i].StartsWith('[')) { $partes[$i] = "[$($partes[$i])]" } }
+# histórico das mensagens no PV (aba Desempenho); vazio enquanto não houver envios
+$pv = '[]'
+if (Test-Path "$est\pv_historico.json") { $pv = [IO.File]::ReadAllText("$est\pv_historico.json", $script:utf8).Trim(); if (-not $pv.StartsWith('[')) { $pv = "[$pv]" } }
 $em = (Get-Date).ToString('dd/MM HH:mm')
-$json = ('{"em":"' + $em + '","membros":' + $partes[0] + ',"registros":' + $partes[1] + ',"leituras":' + $partes[2] + '}').Replace('<', '\u003c')
+$json = ('{"em":"' + $em + '","membros":' + $partes[0] + ',"registros":' + $partes[1] + ',"leituras":' + $partes[2] + ',"pv":' + $pv + '}').Replace('<', '\u003c')
 $null = $json | ConvertFrom-Json  # valida
 $arq = (Resolve-Path $Html).Path
 $conteudo = [IO.File]::ReadAllText($arq, $script:utf8)

@@ -75,5 +75,8 @@ if (-not $NaoSalvarHistorico) {
   $hist = @($hist | Where-Object { $_.data -ne $dataTxt })   # refazer o mesmo dia substitui o registro
   foreach ($i in $itens) { $hist += [pscustomobject][ordered]@{ data = $dataTxt; tipo = $tipo; id = $i.id; nome = $i.nome; assunto = $i.assunto; recebeu = $i.ok; motivo = $i.motivo } }
   SalvarJson $histArq @($hist)
+  # mesmas linhas para a coleção "pv" do banco da dash (aba Desempenho): mande como writes de um ArtifactData batch
+  $writes = @(foreach ($i in $itens) { if ($i.id) { [ordered]@{ op = 'set'; collection = 'pv'; doc_id = "${dataTxt}__$($i.id)"; data = [ordered]@{ data = $dataTxt; tipo = $tipo; membro = $i.id; nome = $i.nome; assunto = $i.assunto; recebeu = $i.ok; motivo = $i.motivo } } } })
+  [IO.File]::WriteAllText((Join-Path $Dir 'pv_batch.json'), (ConvertTo-Json -InputObject $writes -Depth 5 -Compress), (New-Object Text.UTF8Encoding $false))
 }
 "resumo: $($itens.Count) pessoa(s), $($okL.Count) ok, $($falhou.Count) falhou, $($rein.Count) reincidente(s) -> $(Join-Path $Dir 'pv_resumo.txt')"
