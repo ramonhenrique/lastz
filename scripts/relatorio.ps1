@@ -63,11 +63,16 @@ $pessoas = foreach ($reg in $regsSemana) {
   $antes = $null; for ($k = $refDia - 1; $k -ge 0; $k--) { if ($null -ne $dd[$k]) { $antes = [double]$dd[$k]; break } }
   if ($null -eq $antes -and $refDia -eq 0) { $antes = 0 }
   $doaNoDia = if ($null -ne $dd[$refDia] -and $null -ne $antes) { [double]$dd[$refDia] - $antes } else { $null }
-  $falhas = @($diasFechados | Where-Object { $null -ne $reg.vs[$_] -and $reg.vs[$_] -lt $metas[$_] })
-  $zerou = @($diasFechados | Where-Object { $reg.vs[$_] -eq 0 })
+  # quem entrou nesta semana só é cobrado a partir do dia da entrada (VS e doação)
+  $ini = 0; $ent = [string]$cadastro[$reg.membro].entrou
+  if ($ent -and $ent -gt $refSemana) { $ini = [math]::Min([int]([datetime]$ent - [datetime]$refSemana).TotalDays, 6) }
+  $metaDoaP = 20000 * [math]::Max($diasDoa - $ini, 1)
+  $falhas = @($diasFechados | Where-Object { $_ -ge $ini -and $null -ne $reg.vs[$_] -and $reg.vs[$_] -lt $metas[$_] })
+  $zerou = @($diasFechados | Where-Object { $_ -ge $ini -and $reg.vs[$_] -eq 0 })
   [pscustomobject]@{
     id = $reg.membro; nome = [string]$cadastro[$reg.membro].nome; reg = $reg
-    doa = $doaAtual; pctDoa = $doaAtual / $metaDoa; doaNoDia = $doaNoDia
+    ini = $ini; metaDoa = $metaDoaP; metaSem = 20000 * (7 - $ini)
+    doa = $doaAtual; pctDoa = $doaAtual / $metaDoaP; doaNoDia = $doaNoDia
     falhas = $falhas; zerou = $zerou
     vsHoje = $(if ($vsHoje -ge 0) { $reg.vs[$vsHoje] } else { $null })
     vsFechou = $(if ($vsFechou -ge 0) { $reg.vs[$vsFechou] } else { $null })
@@ -92,8 +97,8 @@ function Alertas {
     if ($p.zerou.Count) { $mot += "zerou o VS em $($p.zerou.Count) dia(s) ($(($p.zerou | ForEach-Object { $curtos[$_] }) -join ', '))"; $pts += 2 * $p.zerou.Count }
     if ($p.falhas.Count -ge 2) { $mot += "abaixo da meta do VS em $($p.falhas.Count) de $($diasFechados.Count) dias"; $pts += $p.falhas.Count }
     elseif ($p.falhas.Count -eq 1 -and -not $p.zerou.Count -and $p.pctDoa -lt 0.5) { $mot += "abaixo da meta do VS na $($nomesDia[$p.falhas[0]])"; $pts += 1 }
-    if ($p.pctDoa -lt 0.25) { $mot += "doação muito baixa ($(EmMil $p.doa) de $(EmMil $metaDoa))"; $pts += 2 }
-    elseif ($p.pctDoa -lt 0.5 -and $p.falhas.Count) { $mot += "doação baixa ($(EmMil $p.doa) de $(EmMil $metaDoa))"; $pts += 1 }
+    if ($p.pctDoa -lt 0.25) { $mot += "doação muito baixa ($(EmMil $p.doa) de $(EmMil $p.metaDoa))"; $pts += 2 }
+    elseif ($p.pctDoa -lt 0.5 -and $p.falhas.Count) { $mot += "doação baixa ($(EmMil $p.doa) de $(EmMil $p.metaDoa))"; $pts += 1 }
     $rein = Reincidencia $p.id
     if ($rein -and $mot.Count) { $mot += "também abaixo em $rein semana(s) anterior(es)"; $pts += $rein }
     if ($pts -ge 2) { [pscustomobject]@{ nome = $p.nome; pts = $pts; mot = $mot -join '; ' } }
@@ -109,7 +114,7 @@ $hist = @(); if (Test-Path $histArq) { $hist = @(LerLista $histArq) }
 function OkVS($i) { @($regsSemana | Where-Object { $_.vs[$i] -ge $metas[$i] }).Count }
 
 $titulo = "$($nomesDia[$refDia].Substring(0,1).ToUpper())$($nomesDia[$refDia].Substring(1)) ($($refData.ToString('dd/MM')))"
-$okDoa = @($pessoas | Where-Object { $_.doa -ge $metaDoa }).Count
+$okDoa = @($pessoas | Where-Object { $_.doa -ge $_.metaDoa }).Count
 $somaDoa = ($pessoas | Measure-Object doa -Sum).Sum
 $alertas = Alertas
 
@@ -183,7 +188,7 @@ function TextoPrivado($p) {
       $txt = if ($vsHoje -ge 0) { "$($p.nome), você está com $(EmMi $v) no VS de hoje, menos da metade da meta de $(MetaMi $diaCob). $prazo Precisamos que você chegue na meta hoje." }
              else { "$($p.nome), você fechou $(ArtigoDia $diaCob) com $(EmMi $v) no VS, menos da metade da meta de $(MetaMi $diaCob).$(if ($amanhaVS -le 5) { " Amanhã o tema é $($temas[$amanhaVS]) (meta $(MetaMi $amanhaVS)): precisamos que você chegue na meta." })" }
     }
-    if ($p.pctDoa -lt 0.5) { $txt += " Sua doação também está baixa: $(EmMil $p.doa) de $(EmMil $metaDoa) até agora. Dá para doar com diamantes: 30 por dia já fazem diferença." }
+    if ($p.pctDoa -lt 0.5) { $txt += " Sua doação também está baixa: $(EmMil $p.doa) de $(EmMil $p.metaDoa) até agora. Dá para doar com diamantes: 30 por dia já fazem diferença." }
     $txt
   }
 }
@@ -196,7 +201,7 @@ $diaPV = if ($Turno -eq 'alerta' -and $refDia -eq 2) { 'quarta' } elseif ($Turno
 function JuntarDias($ds) { $n = @($ds | ForEach-Object { $curtos[$_] }); if ($n.Count -le 1) { $n -join '' } else { ($n[0..($n.Count - 2)] -join ', ') + ' e ' + $n[-1] } }
 
 function TextoDoacaoPV($p) {
-  "$($p.nome), sua doação da semana está em $(EmMil $p.doa) de $(EmMil $metaDoa) até hoje. Sem doação a loja da aliança não é reabastecida. Dá para doar com diamantes: 30 por dia já fazem diferença. Contamos com você para colocar em dia até domingo."
+  "$($p.nome), sua doação da semana está em $(EmMil $p.doa) de $(EmMil $p.metaDoa) até hoje. Sem doação a loja da aliança não é reabastecida. Dá para doar com diamantes: 30 por dia já fazem diferença. Contamos com você para colocar em dia até domingo."
 }
 
 function TextoSemanaPV($p, $diasVS) {
@@ -205,7 +210,7 @@ function TextoSemanaPV($p, $diasVS) {
   $zer = @($diasVS | Where-Object { -not $p.reg.vs[$_] })
   $t = New-Object System.Collections.Generic.List[string]
   $t.Add("$($p.nome), o VS da semana fechou e quero te mostrar seu resultado:")
-  $linhaVS = "- VS: bateu a meta em $($bat.Count) de $($diasVS.Count) dias."
+  $linhaVS = "- VS: bateu a meta em $($bat.Count) de $($diasVS.Count) dias$(if ($p.ini -gt 0) { ' desde que entrou' })."
   if ($abx.Count) { $linhaVS += " Ficou abaixo na $(JuntarDias $abx)" + $(if ($zer.Count) { ", e zerou na $(JuntarDias $zer)." } else { '.' }) }
   $t.Add($linhaVS)
   $pior = $null
@@ -213,10 +218,12 @@ function TextoSemanaPV($p, $diasVS) {
     $pior = $abx | Sort-Object { (Num $p.reg.vs[$_]) / $metas[$_] } | Select-Object -First 1
     $t.Add("- Pior dia: $($nomesDia[$pior]) ($($temas[$pior])), com $(EmMi (Num $p.reg.vs[$pior])) de $(MetaMi $pior).")
   }
-  $faltaSem = [math]::Max($metaSemanaDoa - $p.doa, 0)
-  $t.Add("- Doação: $(EmMil $p.doa) de $(EmMil $metaDoa) até hoje ($(Pct $p.doa $metaDoa)).$(if ($faltaSem -gt 0) { " Para fechar os 140 mil, faltam $(EmMil $faltaSem) até amanhã." } else { ' Meta da semana batida, obrigado!' })")
+  # a doação fecha no domingo às 23h; escrito assim porque a lista é montada no sábado e enviada no sábado ou no domingo
+  $faltaSem = [math]::Max($p.metaSem - $p.doa, 0)
+  $desde = if ($p.ini -gt 0) { "desde a sua entrada na $($curtos[$p.ini])" } else { "até $($nomesDia[$refDia])" }
+  $t.Add("- Doação: $(EmMil $p.doa) de $(EmMil $p.metaDoa) $desde ($(Pct $p.doa $p.metaDoa)).$(if ($faltaSem -gt 0) { " Para fechar os $(EmMil $p.metaSem) da semana, faltam $(EmMil $faltaSem) até domingo às 23h." } else { ' Meta da semana batida, obrigado!' })")
   $t.Add('')
-  $vsBom = $abx.Count -le 1; $doaBoa = $p.doa -ge $metaDoa
+  $vsBom = $abx.Count -le 1; $doaBoa = $p.doa -ge $p.metaDoa
   if ($vsBom -and -not $doaBoa) { $t.Add("Seu VS foi bom ($($bat.Count) de $($diasVS.Count) dias na meta). O ponto agora é a doação.") }
   elseif ($doaBoa -and -not $vsBom) { $t.Add('Sua doação está em dia, obrigado. O foco é o VS.') }
   $t.Add('Pontos de melhoria:')
@@ -234,7 +241,7 @@ function TextoSemanaPV($p, $diasVS) {
 # Motivo da notificação com os números da semana (segunda até o dia analisado), para o resumo da liderança.
 function MotivoPV($p) {
   $partes = @()
-  $dias = @(0..[math]::Min($refDia, 5) | Where-Object { $null -ne $p.reg.vs[$_] })
+  $dias = @(0..[math]::Min($refDia, 5) | Where-Object { $_ -ge $p.ini -and $null -ne $p.reg.vs[$_] })
   $abx = @($dias | Where-Object { (Num $p.reg.vs[$_]) -lt $metas[$_] })
   $zer = @($dias | Where-Object { -not (Num $p.reg.vs[$_]) })
   if ($abx.Count) {
@@ -243,7 +250,7 @@ function MotivoPV($p) {
     if ($vsHoje -ge 0 -and $abx -contains $vsHoje) { $txt += "; hoje $(EmMi (Num $p.vsHoje)) de $(MetaMi $vsHoje)" }
     $partes += $txt
   }
-  if ($p.pctDoa -lt 0.5) { $partes += "doação $(EmMil $p.doa) de $(EmMil $metaDoa) na semana ($(Pct $p.doa $metaDoa))" }
+  if ($p.pctDoa -lt 0.5) { $partes += "doação $(EmMil $p.doa) de $(EmMil $p.metaDoa) $(if ($p.ini -gt 0) { "desde a entrada ($($curtos[$p.ini]))" } else { 'na semana' }) ($(Pct $p.doa $p.metaDoa))" }
   if (-not $partes.Count) { $partes += "VS e doação abaixo do esperado na semana" }
   $partes -join ' · '
 }
@@ -253,12 +260,12 @@ function MotivoPV($p) {
 function ReincPV($p) {
   $dd = @($p.reg.doacaoDias); while ($dd.Count -lt 7) { $dd += $null }
   $prev = 0; $doaBaixa = @()
-  for ($k = 0; $k -le $refDia; $k++) {
+  for ($k = $p.ini; $k -le $refDia; $k++) {
     $cur = if ($null -ne $dd[$k]) { [double]$dd[$k] } elseif ($k -eq $refDia) { [double]$p.doa } else { $prev }
     if (($cur - $prev) -lt 20000) { $doaBaixa += $k }
     $prev = $cur
   }
-  $vsAbx = @(0..[math]::Min($refDia, 5) | Where-Object { $null -ne $p.reg.vs[$_] -and (Num $p.reg.vs[$_]) -lt $metas[$_] })
+  $vsAbx = @(0..[math]::Min($refDia, 5) | Where-Object { $_ -ge $p.ini -and $null -ne $p.reg.vs[$_] -and (Num $p.reg.vs[$_]) -lt $metas[$_] })
   $partes = @()
   if ($vsAbx.Count -ge 2) { $partes += "VS abaixo da meta em $($vsAbx.Count) dias ($(JuntarDias $vsAbx))" }
   if ($doaBaixa.Count -ge 2) { $partes += "doou menos de 20 mil em $($doaBaixa.Count) dias ($(JuntarDias $doaBaixa))" }
@@ -268,7 +275,7 @@ function ReincPV($p) {
 # Linha curta para o resumo da liderança: VS dia a dia (✅/❌ e o % dos dias que falhou) e a doação da semana.
 function CompactoPV($p) {
   $partes = @()
-  $dias = @(0..[math]::Min($refDia, 5) | Where-Object { $null -ne $p.reg.vs[$_] })
+  $dias = @(0..[math]::Min($refDia, 5) | Where-Object { $_ -ge $p.ini -and $null -ne $p.reg.vs[$_] })
   $falhos = @($dias | Where-Object { (Num $p.reg.vs[$_]) -lt $metas[$_] })
   if ($falhos.Count) {
     $icones = ($dias | ForEach-Object { if ((Num $p.reg.vs[$_]) -ge $metas[$_]) { '✅' } else { '❌' } }) -join ''
@@ -276,7 +283,7 @@ function CompactoPV($p) {
     $partes += "VS $icones ($pcts)"
   }
   $rein = ReincPV $p
-  if ($p.pctDoa -lt 0.5 -or $rein -like '*doou menos*') { $partes += "Doação $([math]::Round($p.doa / 1000))/$([math]::Round($metaDoa / 1000)) mil ($(Pct $p.doa $metaDoa))" }
+  if ($p.pctDoa -lt 0.5 -or $rein -like '*doou menos*') { $partes += "Doação $([math]::Round($p.doa / 1000))/$([math]::Round($p.metaDoa / 1000)) mil ($(Pct $p.doa $p.metaDoa))" }
   if (-not $partes.Count) { $partes += 'abaixo do esperado na semana' }
   $partes -join ' · '
 }
@@ -285,7 +292,7 @@ function ListaPV {
   $itens = @()
   if ($diaPV -eq 'quarta') {
     foreach ($p in $pessoas) {
-      if ($secundarias.ContainsKey($p.id)) { continue }
+      if ($secundarias.ContainsKey($p.id) -or $p.ini -ge $refDia) { continue }   # quem entrou hoje não é cobrado
       $v = Num $p.vsHoje; $mt = $metas[$vsHoje]
       $vsRuim = $v -lt $mt / 2; $doaRuim = $p.pctDoa -lt 0.5
       if (-not $vsRuim -and -not $doaRuim) { continue }
@@ -299,12 +306,13 @@ function ListaPV {
   } elseif ($diaPV -eq 'sabado') {
     $diasVS = @(0..5 | Where-Object { $d = $_; @($regsSemana | Where-Object { $null -ne $_.vs[$d] }).Count })
     foreach ($p in $pessoas) {
-      if ($secundarias.ContainsKey($p.id)) { continue }
-      $bat = @($diasVS | Where-Object { $p.reg.vs[$_] -ge $metas[$_] }).Count
-      $zer = @($diasVS | Where-Object { -not $p.reg.vs[$_] }).Count
-      if ($bat -gt [math]::Floor($diasVS.Count / 2) -and $p.pctDoa -ge 0.5) { continue }   # 3 de 6 dias ou menos, ou doação abaixo de 50%
-      $s = ($diasVS.Count - $bat) + 2 * $zer + $(if ($p.pctDoa -lt 0.25) { 3 } elseif ($p.pctDoa -lt 0.5) { 2 } else { 0 })
-      $itens += [pscustomobject]@{ nome = $p.nome; s = $s; txt = (TextoSemanaPV $p $diasVS); mot = (MotivoPV $p); rein = (ReincPV $p); curto = (CompactoPV $p) }
+      if ($secundarias.ContainsKey($p.id) -or $p.ini -ge $refDia) { continue }   # quem entrou hoje não é cobrado
+      $dvs = @($diasVS | Where-Object { $_ -ge $p.ini })                          # só os dias desde a entrada
+      $bat = @($dvs | Where-Object { $p.reg.vs[$_] -ge $metas[$_] }).Count
+      $zer = @($dvs | Where-Object { -not $p.reg.vs[$_] }).Count
+      if ($bat -gt [math]::Floor($dvs.Count / 2) -and $p.pctDoa -ge 0.5) { continue }   # metade dos dias ou menos, ou doação abaixo de 50%
+      $s = ($dvs.Count - $bat) + 2 * $zer + $(if ($p.pctDoa -lt 0.25) { 3 } elseif ($p.pctDoa -lt 0.5) { 2 } else { 0 })
+      $itens += [pscustomobject]@{ nome = $p.nome; s = $s; txt = (TextoSemanaPV $p $dvs); mot = (MotivoPV $p); rein = (ReincPV $p); curto = (CompactoPV $p) }
     }
   }
   @($itens | Sort-Object @{e = 's'; Descending = $true }, nome | Select-Object -First 10)
@@ -474,7 +482,7 @@ elseif ($Turno -eq 'meio') {
               elseif (-not $p.vsHoje) { 'lembrar do tema de hoje e da doação' }
               else { 'conversa direta' }
       $dica = (@($probVS) + @($probDoa | Where-Object { $_ }) -join ', ') + ": $acao"
-      [pscustomobject]@{ nome = $p.nome; s = $s; txt = "$($p.nome): VS hoje $(EmMi $p.vsHoje) · doação $(EmMil $p.doa) ($(Pct $p.doa $metaDoa)) → $dica" }
+      [pscustomobject]@{ nome = $p.nome; s = $s; txt = "$($p.nome): VS hoje $(EmMi $p.vsHoje) · doação $(EmMil $p.doa) ($(Pct $p.doa $p.metaDoa)) → $dica" }
     }
     $fila = @($fila | Sort-Object @{e = 's'; Descending = $true }, nome | Select-Object -First 10)
     $lid.Add(''); $lid.Add("COBRAR NO PRIVADO AGORA (prioridade, até 10)")
