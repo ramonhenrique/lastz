@@ -235,7 +235,8 @@ function TextoSemanaPV($p, $diasVS) {
   if (-not $doaBoa) { $t.Add('- Doe todo dia. Não dependa só da recarga: 30 diamantes por dia já fazem diferença.') }
   $t.Add('')
   $t.Add('Contamos com você na próxima semana para virar esse jogo.')
-  $t -join "`n"
+  # o filtro do chat do jogo censura "sex" (vira ***): no PV escreva "sexta"
+  [regex]::Replace(($t -join "`n"), '\bsex\b', 'sexta')
 }
 
 # Motivo da notificação com os números da semana (segunda até o dia analisado), para o resumo da liderança.

@@ -257,6 +257,11 @@ Usado só pelo passo 7c do `ROTINA.md`, depois do "pode enviar" do usuário. Pri
 8. **Enviou:** aparece um balão verde à direita, com o horário acima e o nome da nossa conta, e o título passa a `(DEDZ)<nome>`. **Não enviou** (o membro só aceita mensagem de amigos, ou outro bloqueio): o balão não aparece. Registre como "não recebeu" e siga.
 9. Para sair do chat use **`ESC`** (o botão de voltar da tela de chat não respondeu em 04/11). Volta para a cidade; refaça a partir do passo 1 para o próximo nome.
 
+Aprendido no envio de 08/11 (10 membros, todos receberam):
+- O filtro do chat censura a palavra "sex" (vira `***`), então escreva "sexta" por extenso. O `relatorio.ps1` já troca na lista de sábado.
+- Em algumas conversas o título demora a aparecer ou fica escondido pela faixa de aviso do jogo. Espere uns 20 segundos e tire outro print antes de colar. Sem o nome no título, não envie.
+- No R2 e no R1, role 12 vezes até o fim da lista, abra a faixa pela seta e role mais 1 a 3 vezes. O R3 é grande: role 1 vez por print até achar o nome.
+
 Se o `lz.ps1` reclamar "Janela do jogo nao ficou em primeiro plano" logo depois de um clique em enviar, o clique já foi dado: tire outro print para conferir o balão antes de tentar de novo (não envie duas vezes).
 
 ### Registro da aliança (mapeado em 05/11/2026, janela 623x993)
