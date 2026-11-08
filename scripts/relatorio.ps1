@@ -165,7 +165,7 @@ function CobrancaGeral {
 function MensagensPrivado {
   $l = New-Object System.Collections.Generic.List[string]
   if ($diaCob -lt 0) { return $l }
-  $alvo = @(@($cobZerados) + @($cobMetade) | Where-Object { -not $secundarias.ContainsKey($_.id) })   # contas secundárias da liderança não recebem cobrança no privado
+  $alvo = @(@($cobZerados) + @($cobMetade) | Where-Object { -not $secundarias.ContainsKey($_.id) -and $_.ini -eq 0 })   # contas secundárias da liderança não recebem cobrança no privado
   foreach ($p in $alvo) { $l.Add("> $(TextoPrivado $p)") }
   $l
 }
@@ -292,7 +292,7 @@ function ListaPV {
   $itens = @()
   if ($diaPV -eq 'quarta') {
     foreach ($p in $pessoas) {
-      if ($secundarias.ContainsKey($p.id) -or $p.ini -ge $refDia) { continue }   # quem entrou hoje não é cobrado
+      if ($secundarias.ContainsKey($p.id) -or $p.ini -gt 0) { continue }   # quem entrou nesta semana só é cobrado a partir da semana seguinte
       $v = Num $p.vsHoje; $mt = $metas[$vsHoje]
       $vsRuim = $v -lt $mt / 2; $doaRuim = $p.pctDoa -lt 0.5
       if (-not $vsRuim -and -not $doaRuim) { continue }
@@ -306,7 +306,7 @@ function ListaPV {
   } elseif ($diaPV -eq 'sabado') {
     $diasVS = @(0..5 | Where-Object { $d = $_; @($regsSemana | Where-Object { $null -ne $_.vs[$d] }).Count })
     foreach ($p in $pessoas) {
-      if ($secundarias.ContainsKey($p.id) -or $p.ini -ge $refDia) { continue }   # quem entrou hoje não é cobrado
+      if ($secundarias.ContainsKey($p.id) -or $p.ini -gt 0) { continue }   # quem entrou nesta semana só é cobrado a partir da semana seguinte
       $dvs = @($diasVS | Where-Object { $_ -ge $p.ini })                          # só os dias desde a entrada
       $bat = @($dvs | Where-Object { $p.reg.vs[$_] -ge $metas[$_] }).Count
       $zer = @($dvs | Where-Object { -not $p.reg.vs[$_] }).Count

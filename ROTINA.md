@@ -69,6 +69,7 @@ Faça sempre que a leitura tiver nome novo ou membro sumido; nas outras coletas 
 - Entrada (ícone verde, porta com seta para dentro): "X aceitou a aplicação de NOME, NOME entrou com sucesso na aliança" ou "NOME recebeu um convite de X e entrou na aliança".
 - Saída (ícone vermelho): "NOME saiu da aliança" ou "X removeu NOME da aliança" (expulsão).
 - Também aparecem as mudanças de cargo ("X ajustou o nível de membro de NOME de R1 para R2"). Só leitura: não clique em nada da lista.
+- Quem entrou na semana corrente (campo `entrou` do membro) não recebe mensagem no PV: a cobrança começa na semana seguinte (regra do Ramon, 08/11/2026). O `relatorio.ps1` já tira essas pessoas das listas de quarta e sábado.
 - Uso: "nome do jogo sem membro no banco" com entrada no registro é **membro novo**; sem entrada no registro, é provável **troca de nome**. Membro sumido dos dois rankings com saída no registro confirma a saída. Saiu e voltou (ex.: Motoboy fodinha) continua o mesmo membro. Cite no aviso de erro o que o registro mostrou (nome, data, hora, quem aceitou).
 
 Volte para a cidade com `ESC`.
