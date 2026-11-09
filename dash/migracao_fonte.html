@@ -141,6 +141,9 @@
   .slot-foot { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
   .slot.over .slot-foot { color: var(--no); font-weight: 600; }
   .slot.over .slot-track i { background: var(--no) !important; }
+  td select.vsel { font: inherit; font-size: 13px; padding: 3px 6px; border: 1px solid transparent; border-radius: 4px; background: transparent; color: var(--fg); cursor: pointer; }
+  td select.vsel:hover { border-color: var(--line); }
+  td select.vsel:focus { border-color: var(--accent); background: var(--panel); }
   .season-box { display: inline-flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; }
   .season-box .seg button { padding: 4px 10px; font-size: 13px; }
   .season-box .seg button:disabled { cursor: default; }
@@ -630,6 +633,13 @@
     catch (e) { m.ativo = prev; render(); fail(e); }
   };
 
+  // tipo de veículo direto na tabela: salva ao escolher e recalcula score e tier na hora
+  const saveVtipo = async (m, v) => {
+    if (state.readOnly || !db || (m.veiculoTipo || '') === v) return;
+    const prev = m.veiculoTipo; m.veiculoTipo = v || null; prep(m); render();
+    try { await db.doc('membros/' + m.id).update({ veiculoTipo: v || null }); }
+    catch (e) { m.veiculoTipo = prev; prep(m); render(); fail(e); }
+  };
   const saveObs = async (m, text) => {
     if (state.readOnly || !db || (m.obs || '') === text) return;
     m.obs = text;
@@ -672,6 +682,13 @@
             seg2.appendChild(b);
           });
           td.appendChild(seg2);
+        } else if (c.k === 'vtipo' && !state.readOnly) {
+          const sel = document.createElement('select'); sel.className = 'vsel';
+          sel.setAttribute('aria-label', t('c_vtipo') + ' · ' + (m.nome || ''));
+          [['', '—'], ...VTIPOS.map((k) => [k, t('v_' + k)])].forEach(([k, l]) => { const o = document.createElement('option'); o.value = k; o.textContent = l; sel.appendChild(o); });
+          sel.value = VTIPOS.includes(m.veiculoTipo) ? m.veiculoTipo : '';
+          sel.addEventListener('change', () => saveVtipo(m, sel.value));
+          td.appendChild(sel);
         } else if (c.k === 'obs') {
           const inp = document.createElement('input'); inp.className = 'obs'; inp.value = m.obs || ''; inp.disabled = state.readOnly;
           inp.setAttribute('aria-label', t('obs_of', { n: m.nome || '' })); inp.placeholder = state.readOnly ? '' : t('obs_ph');
