@@ -40,6 +40,14 @@ Caminho: Chat → Chat privado → Bate-papo em grupo → "REGULAR 609" → engr
 4. Na dash de migração, cada conta de fora é um documento `g_<nome sem símbolos>`, com nome, alianca, zona, sede, poder, cargo (R4 se tiver a insígnia), status "vai", ativo, origem "grupo" e obs "grupo REGULAR 609". Use `set` para criar e `update` para atualizar sede e poder das que já existem. O `sync_migracao.ps1` não toca nessas contas.
 5. Conta de fora que saiu do grupo: cite para o Ramon, não apague sozinho.
 
+## 3b. Detalhamento do PC (o que o Migration Score precisa)
+
+Sem edifício, tecnologia, herói e veículo o membro fica sem score e sem tier na dash de migração. Leia o detalhamento de **todo membro da dash de migração que estiver sem esses campos** (contas de fora e quem entrou depois da última leitura). No cartão do jogador, tocar em **PC** (160,265) abre "Detalhes": Edifício, Tecnologia, Tropas, Herói e Veículo modificado, além do PC e da Matança exatos. Feche os Detalhes no X (486,232) e o cartão no X (487,82).
+
+- **Conta do grupo REGULAR 609** (na tela "Lista de membros do chat em grupo"): `scripts\detalhe_pc.ps1 -Busca "<pedaço do nome>" -Out C:\lz\pc\<id>.png`. O script busca, abre o cartão, toca em PC e salva o print. Use `-Linha 2` quando a conta for o segundo resultado. Confira o nome no print.
+- **Membro da DEDZ fora do grupo**: Aliança → Membros, ache o membro (a faixa R3 vem aberta; R2 e R1 abrem pela seta). Toque no retrato e, no menu, **só em "Detalhes"**: ele fica uns 44 px abaixo do toque, em x 155 na coluna da esquerda e x 283 na da direita, ou acima quando o membro está no fim da tela. Tire o print do menu antes quando não tiver certeza. **Nunca toque em "Ajuste de classe"**, que fica logo abaixo de "Detalhes". Depois toque em PC e tire o print.
+- Grave com `ArtifactData` `batch` (`update` com `if_version`): `edificio`, `tecnologia`, `tropas`, `heroi`, `veiculo`, `poder` (o PC exato) e `matanca`. Depois baixe de novo, gere a lista pública (`mig_snapshot.ps1`) e publique.
+
 ## 4. Publicar e avisar
 
 1. `scripts\foto.ps1`, depois `Artifact` `read` e publish da dash de acompanhamento (passo 6 do `ROTINA.md`). A migração já foi publicada no passo 3.

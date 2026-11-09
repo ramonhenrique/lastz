@@ -19,7 +19,7 @@ if (-not $tpl.Contains($tag)) { throw 'fonte.html sem o marcador __SNAPSHOT__' }
 $txt = [IO.File]::ReadAllText($Versoes, $script:utf8)
 $ids = @{}
 foreach ($m in [regex]::Matches($txt, '"([^"]+)"\s+\d+ bytes\s+version \d+')) { $ids[$m.Groups[1].Value] = 1 }
-foreach ($m in [regex]::Matches($txt, '"([^"]+)" \d+(?=[,\]])')) { $ids[$m.Groups[1].Value] = 1 }
+foreach ($m in [regex]::Matches($txt, '"([^"]+)" \d+(?=\s*[,\]]|\s*$)')) { $ids[$m.Groups[1].Value] = 1 }
 
 # só os arquivos do último download (os de documentos apagados ficam na pasta, sem versão no resultado)
 $rows = foreach ($a in (Get-ChildItem $Pasta -Filter *.json | Sort-Object Name)) {
