@@ -103,6 +103,19 @@ Depois de cada `atualiza.ps1`:
 - Para os lotes aceitos: `scripts\confirma.ps1 -Lotes 0` (ou `0,1`…).
 - **Lote recusado por versão** (alguém lançou dados pela dash): nada foi gravado. Baixe os registros da semana com `ArtifactData` `query` (`where semana == <semana>`, `limit` 1000, `out_dir` `C:\lz\dl`), salve o texto do resultado em `C:\lz\versoes.txt`, rode `scripts\sincroniza.ps1 -Colecao registros -Pasta C:\lz\dl\registros -Esperado <quantidade> -Versoes C:\lz\versoes.txt` e repita o `atualiza.ps1`.
 
+## 5a. Sincronizar a dash de migração (toda execução, depois do passo 5)
+
+A dash de migração (https://claude.ai/artifact/TdiYGf4RT4jYT7LrAYC6cW) usa os mesmos ids do acompanhamento e segue o cadastro dele. A regra do Ramon, de 09/11/2026:
+- quem entra na DEDZ é criado lá como "Sem resposta";
+- nome, cargo e poder de arena acompanham;
+- quem sai é apagado de lá;
+- situação, T10, observação, atividade, componentes e membros cadastrados à mão na página nunca são mexidos.
+
+1. `ArtifactData` `list` no URL da migração, `collection` `membros`, `query` `{"limit": 1000}`, `out_dir` `C:\lz\mig`. Salve o texto do resultado (os pares id/versão) em `C:\lz\mig_versoes.txt`.
+2. `scripts\sync_migracao.ps1`. Se ele disser "0 escrita(s)", acabou.
+3. Senão, mande cada `C:\lz\mig_batchN.json` como `writes` de um `ArtifactData` `batch` no URL da migração. Se um lote for recusado por versão (alguém editou pela página), repita do 1.
+4. Cite no relatório da liderança só o que mudou de estrutura: entrou, saiu ou trocou de nome. Atualização de poder de arena não precisa.
+
 ## 6. Atualizar a dash
 
 1. `scripts\foto.ps1` (regera a foto em `dash\index.html` a partir do espelho).
