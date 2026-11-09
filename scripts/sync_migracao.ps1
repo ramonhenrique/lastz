@@ -10,8 +10,8 @@
 #
 # Regras:
 # - Membro ativo da DEDZ que não está na migração: cria com situação "Sem resposta" (status pendente).
-# - Membro ativo que já está: atualiza nome, cargo e poder de arena quando mudaram. O poder total fica
-#   (na migração ele vem de Detalhes > PC, junto com os componentes; o do acompanhamento é o da lista).
+# - Membro ativo que já está: atualiza nome, cargo, poder de arena, poder total e nível da sede quando mudaram
+#   (poder total e sede vêm da lista de membros, rotina manual; os componentes do poder não são tocados).
 # - Quem saiu da DEDZ (campo saiu no acompanhamento): apaga da migração (decisão do Ramon em 09/11/2026).
 # - Nunca mexe em situação, T10, observação, atividade, componentes, nem em membros cadastrados à mão
 #   na página (origem "manual" ou id que não existe no acompanhamento).
@@ -45,6 +45,7 @@ foreach ($mb in (LerLista "$est\membros.json")) {
     $doc = [ordered]@{ nome = [string]$mb.nome; cargo = $cargo; alianca = 'DEDZ'; origem = 'jogo'; status = 'pendente'; ativo = $true; obs = $obs }
     if ($mb.poder) { $doc.poder = [long]$mb.poder }
     if ($arena) { $doc.arena = $arena }
+    if ($mb.sede) { $doc.sede = [int]$mb.sede }
     $writes.Add([ordered]@{ op = 'set'; collection = 'membros'; doc_id = $id; data = $doc }); $log.Add("cria $($mb.nome)")
     continue
   }
@@ -52,9 +53,12 @@ foreach ($mb in (LerLista "$est\membros.json")) {
   if ([string]$atual.nome -cne [string]$mb.nome) { $mud.nome = [string]$mb.nome }
   if ($cargo -and [string]$atual.cargo -ne $cargo) { $mud.cargo = $cargo }
   if ($arena -and [long]$atual.arena -ne $arena) { $mud.arena = $arena }
+  # poder total e sede vêm da lista de membros (membros_lista.ps1); os componentes (edifício, herói…) ficam
+  if ($mb.poder -and [long]$atual.poder -ne [long]$mb.poder) { $mud.poder = [long]$mb.poder }
+  if ($mb.sede -and [int]$atual.sede -ne [int]$mb.sede) { $mud.sede = [int]$mb.sede }
   if ($mud.Count) {
     $writes.Add([ordered]@{ op = 'update'; collection = 'membros'; doc_id = $id; data = $mud; if_version = $vers[$id] })
-    $log.Add("atualiza $($atual.nome): $(($mud.Keys | ForEach-Object { if ($_ -eq 'nome') { "nome -> $($mud.nome)" } elseif ($_ -eq 'cargo') { "cargo $($atual.cargo) -> $($mud.cargo)" } else { 'poder de arena' } }) -join ', ')")
+    $log.Add("atualiza $($atual.nome): $(($mud.Keys | ForEach-Object { if ($_ -eq 'nome') { "nome -> $($mud.nome)" } elseif ($_ -eq 'cargo') { "cargo $($atual.cargo) -> $($mud.cargo)" } elseif ($_ -eq 'arena') { 'poder de arena' } elseif ($_ -eq 'sede') { "sede $($atual.sede) -> $($mud.sede)" } else { 'poder total' } }) -join ', ')")
   }
 }
 

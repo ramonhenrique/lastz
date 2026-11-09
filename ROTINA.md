@@ -103,6 +103,10 @@ Depois de cada `atualiza.ps1`:
 - Para os lotes aceitos: `scripts\confirma.ps1 -Lotes 0` (ou `0,1`…).
 - **Lote recusado por versão** (alguém lançou dados pela dash): nada foi gravado. Baixe os registros da semana com `ArtifactData` `query` (`where semana == <semana>`, `limit` 1000, `out_dir` `C:\lz\dl`), salve o texto do resultado em `C:\lz\versoes.txt`, rode `scripts\sincroniza.ps1 -Colecao registros -Pasta C:\lz\dl\registros -Esperado <quantidade> -Versoes C:\lz\versoes.txt` e repita o `atualiza.ps1`.
 
+## Lista de membros (manual)
+
+Poder total, cargo e nível da sede só são lidos pela rotina manual do `LISTA_MEMBROS.md`, quando o Ramon pede. As coletas automáticas não leem a lista de membros.
+
 ## 5a. Sincronizar a dash de migração (toda execução, depois do passo 5)
 
 A dash de migração (https://claude.ai/artifact/TdiYGf4RT4jYT7LrAYC6cW) usa os mesmos ids do acompanhamento e segue o cadastro dele. A regra do Ramon, de 09/11/2026:
