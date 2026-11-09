@@ -115,6 +115,12 @@ A dash de migração (https://claude.ai/artifact/TdiYGf4RT4jYT7LrAYC6cW) usa os 
 2. `scripts\sync_migracao.ps1`. Se ele disser "0 escrita(s)", acabou.
 3. Senão, mande cada `C:\lz\mig_batchN.json` como `writes` de um `ArtifactData` `batch` no URL da migração. Se um lote for recusado por versão (alguém editou pela página), repita do 1.
 4. Cite no relatório da liderança só o que mudou de estrutura: entrou, saiu ou trocou de nome. Atualização de poder de arena não precisa.
+5. **Lista pública:** quem abre a migração sem acesso ao banco vê uma cópia da lista gravada dentro da página ("Você está vendo a lista publicada em…"). Depois de gravar lotes, atualize essa cópia:
+   1. Repita o download do 1.
+   2. `Artifact` `read` no URL da migração com `path` `fonte.html` (o modelo com `__SNAPSHOT__`).
+   3. `scripts\mig_snapshot.ps1 -Fonte <arquivo salvo pelo read> -Out dash\migracao.html`.
+   4. `Artifact` publish de `dash\migracao.html` no URL da migração. Leia a página antes (`read`) se for uma sessão nova. Não passe `capabilities`.
+   5. Inclua `dash/migracao.html` no commit.
 
 ## 6. Atualizar a dash
 

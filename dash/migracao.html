@@ -1,0 +1,953 @@
+<title>Migração DEDZ</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: roster sheet — status strip on top, toolbar, one dense table that scrolls inside its own box */
+  :root {
+    --bg: #f3f4ef; --panel: #ffffff; --fg: #1d211a; --muted: #5d6656; --line: #d9dcd0; --soft: #e8eadf;
+    --accent: #4f6b2c; --accent-fg: #ffffff;
+    --go: #2f7a3b; --go-bg: #e2f1e2; --no: #a33a2c; --no-bg: #f6e1dd; --wait: #8a6d1b; --wait-bg: #f4ecd2;
+    --t-adv: #2e5f9e; --t-int: #8a6d1b; --t-reg: #6b7363;
+    --me: #eef4e2;
+    --f-display: "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
+    --f-body: "Barlow", "Segoe UI", Arial, sans-serif;
+    --f-mono: "JetBrains Mono", Consolas, monospace;
+    --r: 6px;
+    --c-elite: #7a4fa8; --c-adv: #c8612d; --c-int: #2f8f6b; --c-reg: #3f7fd1;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg: #151813; --panel: #1d211a; --fg: #e7eadf; --muted: #9aa392; --line: #343a2f; --soft: #262b22;
+    --accent: #9cbf5f; --accent-fg: #151813;
+    --go: #7fcf86; --go-bg: #1f3522; --no: #ee8c7d; --no-bg: #3c211d; --wait: #e2c26a; --wait-bg: #3a321a;
+    --t-adv: #8ab4ec; --t-int: #e2c26a; --t-reg: #9aa392; --me: #26301c;
+    --c-elite: #a985d6; --c-adv: #e07a45; --c-int: #3fb08a; --c-reg: #5b9be8; color-scheme: dark } }
+  :root[data-theme="dark"] {
+    --bg: #151813; --panel: #1d211a; --fg: #e7eadf; --muted: #9aa392; --line: #343a2f; --soft: #262b22;
+    --accent: #9cbf5f; --accent-fg: #151813;
+    --go: #7fcf86; --go-bg: #1f3522; --no: #ee8c7d; --no-bg: #3c211d; --wait: #e2c26a; --wait-bg: #3a321a;
+    --t-adv: #8ab4ec; --t-int: #e2c26a; --t-reg: #9aa392; --me: #26301c;
+    --c-elite: #a985d6; --c-adv: #e07a45; --c-int: #3fb08a; --c-reg: #5b9be8; color-scheme: dark }
+  body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 15px; line-height: 1.45; }
+  .wrap { max-width: 1280px; margin: 0 auto; padding-block: 24px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 18px; }
+  header { display: grid; gap: 4px; }
+  .eyebrow { font-family: var(--f-mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  h1 { font-family: var(--f-display); font-weight: 700; font-size: clamp(28px, 4vw, 40px); line-height: 1.05; margin: 0; letter-spacing: .01em; text-wrap: balance; }
+  .lede { margin: 0; color: var(--muted); max-width: 70ch; }
+  .notice { padding: 10px 14px; border-radius: var(--r); background: var(--wait-bg); color: var(--fg); border: 1px solid var(--line); }
+
+  .strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 12px; }
+  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px; display: grid; gap: 6px; min-width: 0; }
+  .stat h2 { margin: 0; font-family: var(--f-display); font-weight: 600; font-size: 15px; letter-spacing: .04em; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+  .stat.go .dot { background: var(--go); } .stat.no .dot { background: var(--no); } .stat.wait .dot { background: var(--wait); }
+  .big { font-family: var(--f-display); font-weight: 600; font-size: 38px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .sub { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .tiers { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tchip { font-family: var(--f-mono); font-size: 12px; padding: 2px 7px; border-radius: 4px; background: var(--soft); }
+
+  .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; background: var(--panel); }
+  .seg button { font: inherit; font-size: 14px; border: 0; background: transparent; color: var(--fg); padding: 7px 12px; cursor: pointer; border-right: 1px solid var(--line); }
+  .seg button:last-child { border-right: 0; }
+  .seg button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+  input[type="search"], .field input, .field select { font: inherit; font-size: 14px; padding: 7px 10px; border: 1px solid var(--line); border-radius: var(--r); background: var(--panel); color: var(--fg); min-width: 0; }
+  input[type="search"] { flex: 1 1 180px; max-width: 280px; }
+  .btn { font: inherit; font-size: 14px; font-weight: 500; padding: 7px 14px; border-radius: var(--r); border: 1px solid var(--line); background: var(--panel); color: var(--fg); cursor: pointer; }
+  .btn.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+  .btn[aria-expanded="true"] { background: var(--soft); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .spacer { flex: 1 1 auto; }
+  button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px; display: grid; gap: 12px; }
+  .panel h3 { margin: 0; font-family: var(--f-display); font-weight: 600; font-size: 18px; }
+  .cols { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px 14px; }
+  .cols label { display: flex; gap: 8px; align-items: center; font-size: 14px; cursor: pointer; }
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 160px), 1fr)); gap: 10px; }
+  .field { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+  .field.wide { grid-column: span 2; }
+  .row-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .msg { font-size: 13px; color: var(--muted); }
+  .msg.err { color: var(--no); }
+
+  .tablebox { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); overflow: auto; max-height: 72vh; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+  th, td { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+  th { position: sticky; top: 0; z-index: 2; background: var(--panel); font-family: var(--f-display); font-weight: 600; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+  th button { all: unset; cursor: pointer; }
+  th button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  th[aria-sort="ascending"] button::after { content: " ↑"; } th[aria-sort="descending"] button::after { content: " ↓"; }
+  .l { text-align: left; }
+  td.nome { font-weight: 600; }
+  td.nome .tag { font-family: var(--f-mono); font-weight: 400; font-size: 11px; color: var(--muted); margin-left: 6px; }
+  tr.me td { background: var(--me); }
+  .tier-Advanced { color: var(--t-adv); font-weight: 600; } .tier-Intermediate { color: var(--t-int); font-weight: 600; } .tier-Regular { color: var(--t-reg); } .tier-Elite { color: var(--t-adv); font-weight: 700; }
+  .st { display: inline-flex; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; }
+  .st button { font: inherit; font-size: 12px; border: 0; padding: 4px 9px; background: transparent; color: var(--muted); cursor: pointer; border-right: 1px solid var(--line); }
+  .st button:last-child { border-right: 0; }
+  .st button[data-v="vai"][aria-pressed="true"] { background: var(--go-bg); color: var(--go); font-weight: 600; }
+  .st button[data-v="nao"][aria-pressed="true"] { background: var(--no-bg); color: var(--no); font-weight: 600; }
+  .st button[data-v="pendente"][aria-pressed="true"] { background: var(--wait-bg); color: var(--wait); font-weight: 600; }
+  .st button:disabled { cursor: not-allowed; }
+  .st button[data-v="on"][aria-pressed="true"] { background: var(--go-bg); color: var(--go); font-weight: 600; }
+  .st button[data-v="off"][aria-pressed="true"] { background: var(--soft); color: var(--fg); font-weight: 600; }
+  td input.obs { font: inherit; font-size: 13px; border: 1px solid transparent; background: transparent; color: var(--fg); padding: 3px 6px; border-radius: 4px; width: 14rem; max-width: 40vw; }
+  td input.obs:hover { border-color: var(--line); }
+  td input.obs:focus { border-color: var(--accent); background: var(--panel); }
+  .del { font: inherit; font-size: 12px; border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: 4px; padding: 3px 8px; cursor: pointer; }
+  .del.armed { color: var(--no); border-color: var(--no); }
+  .acts { display: inline-flex; gap: 6px; }
+  .ally { margin-left: auto; font-family: var(--f-mono); font-size: 11px; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--muted); white-space: nowrap; }
+  .ally b { font-weight: 500; color: var(--fg); }
+  .view { display: grid; gap: 18px; }
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); }
+  .tabs button { font: inherit; font-family: var(--f-display); font-weight: 600; font-size: 17px; letter-spacing: .02em; padding: 8px 16px; border: 0; border-bottom: 3px solid transparent; background: transparent; color: var(--muted); cursor: pointer; margin-bottom: -1px; }
+  .tabs button[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent); }
+  .agrid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); align-items: start; }
+  .bars { display: grid; grid-template-columns: max-content 1fr; gap: 10px 12px; align-items: center; font-size: 14px; }
+  .bar { display: flex; align-items: center; gap: 8px; min-width: 0; font-variant-numeric: tabular-nums; }
+  .bar i { display: block; height: 22px; border-radius: 4px; min-width: 0; }
+  .c-Elite { background: var(--c-elite); } .c-Advanced { background: var(--c-adv); } .c-Intermediate { background: var(--c-int); } .c-Regular { background: var(--c-reg); }
+  .tscroll { overflow-x: auto; }
+  .atable th { position: static; }
+  .atable td:first-child, .atable th:first-child { text-align: left; }
+  .atable tfoot td { font-weight: 600; border-bottom: 0; }
+  tr.editing td { background: var(--wait-bg); }
+  .empty { padding: 32px 16px; text-align: center; color: var(--muted); }
+  footer p { margin: 0; font-size: 13px; color: var(--muted); max-width: 95ch; }
+  footer { display: grid; gap: 6px; }
+</style>
+
+<style>
+  .headrow { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; justify-content: space-between; }
+  .headrow > .headtext { display: grid; gap: 4px; min-width: 0; flex: 1 1 320px; }
+  .lang { display: flex; gap: 6px; align-items: center; flex: 0 0 auto; padding-top: 2px; }
+  .lang button { display: block; padding: 0; width: 24px; height: 16px; border: 0; border-radius: 3px; overflow: hidden; background: transparent; cursor: pointer; opacity: .4; filter: grayscale(.6); transition: opacity .15s, filter .15s; box-shadow: 0 0 0 1px var(--line); }
+  .lang button svg { display: block; width: 100%; height: 100%; }
+  .lang button:hover { opacity: .8; filter: none; }
+  .lang button[aria-pressed="true"] { opacity: 1; filter: none; box-shadow: 0 0 0 1px var(--bg), 0 0 0 2px var(--accent); }
+  .lang button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { .lang button { transition: none; } }
+  .slots { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px; display: grid; gap: 10px; }
+  .slots-head { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: baseline; justify-content: space-between; }
+  .slots-head h2 { margin: 0; font-family: var(--f-display); font-weight: 600; font-size: 15px; letter-spacing: .04em; text-transform: uppercase; }
+  .slots-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px 20px; }
+  .slot { display: grid; gap: 5px; min-width: 0; }
+  .slot-top { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; font-variant-numeric: tabular-nums; }
+  .slot-top b { font-weight: 600; }
+  .slot-track { height: 8px; border-radius: 4px; background: var(--soft); overflow: hidden; }
+  .slot-track i { display: block; height: 100%; border-radius: 4px; }
+  .slot-foot { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .slot.over .slot-foot { color: var(--no); font-weight: 600; }
+  .slot.over .slot-track i { background: var(--no) !important; }
+</style>
+
+<div class="wrap">
+  <header class="headrow">
+    <div class="headtext">
+      <span class="eyebrow" data-i18n="eyebrow">New Deadz [DEDZ] · Zona de guerra #614</span>
+      <h1 data-i18n="title">Levantamento de migração</h1>
+      <p class="lede" data-i18n="lede">Marque quem vai migrar de servidor, adicione jogadores que não estão na lista, corrija os dados de qualquer membro em "Editar" e escolha as colunas que aparecem na tabela. As marcações ficam salvas para todos que abrirem esta página.</p>
+    </div>
+    <div class="lang" role="group" aria-label="Idioma / Language" id="lang">
+      <button type="button" data-lang="pt" aria-pressed="true" title="Português" aria-label="Português"><svg viewBox="0 0 24 16" aria-hidden="true"><rect width="24" height="16" fill="#229e45"/><path d="M12 2.2 21.4 8 12 13.8 2.6 8z" fill="#f8e509"/><circle cx="12" cy="8" r="3.4" fill="#2b49a3"/><path d="M8.8 7.2c2.2-.6 4.6-.3 6.4.9" stroke="#fff" stroke-width=".7" fill="none"/></svg></button>
+      <button type="button" data-lang="es" aria-pressed="false" title="Español" aria-label="Español"><svg viewBox="0 0 24 16" aria-hidden="true"><rect width="24" height="16" fill="#c60b1e"/><rect y="4" width="24" height="8" fill="#ffc400"/></svg></button>
+      <button type="button" data-lang="en" aria-pressed="false" title="English" aria-label="English"><svg viewBox="0 0 24 16" aria-hidden="true"><rect width="24" height="16" fill="#fff"/><g fill="#b22234"><rect width="24" height="1.23"/><rect y="2.46" width="24" height="1.23"/><rect y="4.92" width="24" height="1.23"/><rect y="7.38" width="24" height="1.23"/><rect y="9.85" width="24" height="1.23"/><rect y="12.31" width="24" height="1.23"/><rect y="14.77" width="24" height="1.23"/></g><rect width="10.4" height="8.6" fill="#3c3b6e"/></svg></button>
+    </div>
+  </header>
+
+  <div class="notice" id="notice" hidden></div>
+
+  <section class="strip" data-i18n-aria="summary" aria-label="Resumo">
+    <div class="stat go">
+      <h2><span class="dot"></span><span data-i18n="st_vai">Vão migrar</span><span class="ally" id="al-vai"></span></h2>
+      <div class="big" id="n-vai">—</div>
+      <div class="sub" id="s-vai">—</div>
+      <div class="tiers" id="t-vai"></div>
+    </div>
+    <div class="stat no">
+      <h2><span class="dot"></span><span data-i18n="st_nao">Não vão</span><span class="ally" id="al-nao"></span></h2>
+      <div class="big" id="n-nao">—</div>
+      <div class="sub" id="s-nao">—</div>
+    </div>
+    <div class="stat wait">
+      <h2><span class="dot"></span><span data-i18n="st_pendente">Sem resposta</span><span class="ally" id="al-pendente"></span></h2>
+      <div class="big" id="n-pendente">—</div>
+      <div class="sub" id="s-pendente">—</div>
+    </div>
+  </section>
+
+  <section class="slots" aria-labelledby="slots-title">
+    <div class="slots-head">
+      <h2 id="slots-title"></h2>
+      <span class="msg" id="slots-note"></span>
+    </div>
+    <div class="slots-grid" id="slots"></div>
+  </section>
+
+  <nav class="tabs" role="tablist" data-i18n-aria="sections" aria-label="Seções">
+    <button type="button" role="tab" id="tab-lista" data-view="lista" aria-selected="true" aria-controls="v-lista" data-i18n="tab_lista">Lista</button>
+    <button type="button" role="tab" id="tab-analise" data-view="analise" aria-selected="false" aria-controls="v-analise" data-i18n="tab_analise">Análise</button>
+  </nav>
+
+  <div class="view" id="v-lista" role="tabpanel" aria-labelledby="tab-lista">
+  <div class="toolbar">
+    <div class="seg" role="group" data-i18n-aria="filter_aria" aria-label="Filtrar por situação">
+      <button type="button" data-f="" aria-pressed="true" data-i18n="all">Todos</button>
+      <button type="button" data-f="vai" aria-pressed="false" data-i18n="sit_vai">Vão</button>
+      <button type="button" data-f="nao" aria-pressed="false" data-i18n="sit_nao">Não vão</button>
+      <button type="button" data-f="pendente" aria-pressed="false" data-i18n="sit_pendente">Sem resposta</button>
+    </div>
+    <input type="search" id="busca" placeholder="Buscar jogador" aria-label="Buscar jogador" data-i18n-ph="search" data-i18n-aria="search">
+    <span class="spacer"></span>
+    <button type="button" class="btn" id="btn-cols" aria-expanded="false" aria-controls="p-cols" data-i18n="btn_cols">Colunas</button>
+    <button type="button" class="btn" id="btn-pub" hidden data-i18n="btn_pub" data-i18n-title="btn_pub_title">Atualizar versão pública</button>
+    <button type="button" class="btn" id="btn-csv" data-i18n="btn_csv">Baixar CSV</button>
+    <button type="button" class="btn primary" id="btn-add" aria-expanded="false" aria-controls="p-add" data-i18n="btn_add">Adicionar membro</button>
+  </div>
+
+  <section class="panel" id="p-cols" hidden>
+    <h3 data-i18n="cols_title">Colunas da tabela</h3>
+    <div class="cols" id="cols"></div>
+    <p class="msg" data-i18n="cols_note">Jogador e Situação aparecem sempre. A escolha vale para todos que abrirem a página.</p>
+  </section>
+
+  <section class="panel" id="p-add" hidden>
+    <h3 id="f-title">Adicionar membro</h3>
+    <div class="form-grid">
+      <label class="field wide"><span data-i18n="f_nome">Nome no jogo</span><input id="f-nome" autocomplete="off" required></label>
+      <label class="field"><span data-i18n="c_cargo">Cargo</span><select id="f-cargo"><option value="">—</option><option>R5</option><option>R4</option><option>R3</option><option>R2</option><option>R1</option></select></label>
+      <label class="field"><span data-i18n="c_alianca">Aliança</span><select id="f-alianca"><option value="DEDZ" selected>DEDZ</option><option value="KURT">KURT</option><option value="BXG">BXG</option></select></label>
+      <label class="field"><span data-i18n="h_status">Situação</span><select id="f-status"><option value="vai" data-i18n="opt_vai">Vai</option><option value="pendente" selected data-i18n="sit_pendente">Sem resposta</option><option value="nao" data-i18n="opt_nao">Não vai</option></select></label>
+      <label class="field"><span data-i18n="c_ativo">Atividade</span><select id="f-ativo"><option value="1" selected data-i18n="act_on">Ativo</option><option value="0" data-i18n="act_off">Inativo</option></select></label>
+      <label class="field"><span data-i18n="f_sede">Nível da sede</span><input id="f-sede" inputmode="numeric"></label>
+      <label class="field"><span data-i18n="c_poder">Poder total</span><input id="f-poder" inputmode="numeric"></label>
+      <label class="field"><span data-i18n="c_edificio">Edifício</span><input id="f-edificio" inputmode="numeric"></label>
+      <label class="field"><span data-i18n="c_tecnologia">Tecnologia</span><input id="f-tecnologia" inputmode="numeric"></label>
+      <label class="field"><span data-i18n="c_tropas">Tropas</span><input id="f-tropas" inputmode="numeric"></label>
+      <label class="field"><span data-i18n="c_heroi">Herói</span><input id="f-heroi" inputmode="numeric"></label>
+      <label class="field"><span data-i18n="f_veiculo">Veículo modificado</span><input id="f-veiculo" inputmode="numeric"></label>
+      <label class="field"><span data-i18n="f_arena">Poder de arena</span><input id="f-arena" inputmode="numeric" data-i18n-ph="ph_arena" placeholder="ex.: 123,3M"></label>
+      <label class="field"><span>T10 (%)</span><input id="f-t10" inputmode="numeric" data-i18n-ph="ph_t10" placeholder="ex.: 45"></label>
+      <label class="field wide"><span data-i18n="c_obs">Observação</span><input id="f-obs" autocomplete="off"></label>
+    </div>
+    <div class="row-actions">
+      <button type="button" class="btn primary" id="f-save">Salvar membro</button>
+      <button type="button" class="btn" id="f-cancel" data-i18n="cancel">Cancelar</button>
+      <span class="msg" id="f-msg"></span>
+    </div>
+  </section>
+
+  <div class="tablebox">
+    <table>
+      <thead><tr id="head"></tr></thead>
+      <tbody id="body"><tr><td class="empty" colspan="12" data-i18n="loading">Carregando membros…</td></tr></tbody>
+    </table>
+  </div>
+  </div>
+
+  <div class="view" id="v-analise" role="tabpanel" aria-labelledby="tab-analise" hidden>
+    <div class="toolbar">
+      <span class="msg" data-i18n="consider">Considerar:</span>
+      <div class="seg" role="group" data-i18n-aria="scope_aria" aria-label="Quem entra na análise">
+        <button type="button" data-scope="" aria-pressed="true" data-i18n="all">Todos</button>
+        <button type="button" data-scope="vai" aria-pressed="false" data-i18n="scope_vai">Só quem vai</button>
+        <button type="button" data-scope="nao" aria-pressed="false" data-i18n="scope_nao">Só quem não vai</button>
+        <button type="button" data-scope="pendente" aria-pressed="false" data-i18n="sit_pendente">Sem resposta</button>
+      </div>
+      <span class="msg" id="a-count"></span>
+    </div>
+    <div class="agrid">
+      <section class="panel">
+        <h3 data-i18n="a_al_t">Membros por aliança</h3>
+        <p class="msg" data-i18n="a_al_d">Quantos jogadores de cada aliança, com a situação de migração e o tier.</p>
+        <div class="tscroll"><table class="atable" id="a-aliancas"></table></div>
+      </section>
+      <section class="panel">
+        <h3 data-i18n="a_tier_t">Membros por tier</h3>
+        <p class="msg" data-i18n="a_tier_d">Quantos jogadores caem em cada faixa do Migration Score.</p>
+        <div class="bars" id="a-tiers"></div>
+      </section>
+      <section class="panel">
+        <h3 data-i18n="a_cargo_t">Tier por cargo</h3>
+        <p class="msg" data-i18n="a_cargo_d">Quantidade de membros em cada tier, separada por cargo na aliança.</p>
+        <div class="tscroll"><table class="atable" id="a-cargos"></table></div>
+      </section>
+      <section class="panel">
+        <h3 data-i18n="a_sit_t">Situação por tier</h3>
+        <p class="msg" data-i18n="a_sit_d">Quantos de cada tier já confirmaram a migração. Considera todos os membros.</p>
+        <div class="tscroll"><table class="atable" id="a-situacao"></table></div>
+      </section>
+      <section class="panel">
+        <h3 data-i18n="a_pow_t">Poder somado por tier</h3>
+        <p class="msg" data-i18n="a_pow_d">Poder total e poder de arena que cada tier leva.</p>
+        <div class="tscroll"><table class="atable" id="a-poder"></table></div>
+      </section>
+    </div>
+  </div>
+
+  <footer>
+    <p id="pub-at"></p>
+    <p data-i18n="foot1">Poder e componentes lidos no jogo em 28/10/2026 (Detalhes &gt; PC). Poder de arena da lista no modo "combate da arena" (atualizado em 29/10/2026), arredondado em 0,1M. T10 da lista manual da aliança.</p>
+    <p data-i18n="foot2">Migration Score estimado pela calculadora da comunidade lastzguides.com: Edifício e Tecnologia pesam 0,06, Herói 1,2 e Veículo modificado 1,1, menos 43M; Tropas não entram. Tier: Intermediate a partir de 40M, Advanced a partir de 80M, Elite acima de 160M. Não conta bônus de T10 nem de Destroyer.</p>
+  </footer>
+</div>
+
+<script type="application/json" id="snapshot">{"at":"2026-11-09T16:22:16.031Z","colunas":["ativo","alianca","cargo","sede","poder","score","tier","arena","t10","obs"],"rows":[{"id":"m001","arena":423300000,"cargo":"R5","edificio":107967546,"funcao":"Líder","heroi":90325614,"matanca":9774444,"nome":"Marcelo QAF","obs":"","origem":"jogo","poder":399451607,"sede":34,"status":"vai","t10":1,"tecnologia":34748425,"tropas":148755000,"veiculo":17655022},{"id":"m002","arena":305700000,"cargo":"R4","edificio":83416634,"funcao":"","heroi":75973973,"matanca":4640549,"nome":"Mané 07","obs":"","origem":"jogo","poder":283155977,"sede":33,"status":"vai","t10":1,"tecnologia":28748833,"tropas":83280240,"veiculo":11736297},{"id":"m003","arena":305200000,"cargo":"R3","edificio":91357514,"funcao":"","heroi":70680124,"matanca":7544486,"nome":"Vini²²","obs":"","origem":"jogo","poder":299198716,"sede":34,"status":"vai","t10":1,"tecnologia":29057236,"tropas":95050920,"veiculo":13052922},{"id":"m004","arena":202400000,"cargo":"R3","edificio":76541418,"funcao":"Recrutador","heroi":69429401,"matanca":5834079,"nome":"Victtor","obs":"","origem":"jogo","poder":219252186,"sede":32,"status":"vai","t10":0.5,"tecnologia":24125816,"tropas":37488920,"veiculo":11666631},{"id":"m005","arena":200400000,"cargo":"R4","edificio":64062729,"funcao":"Deus da Guerra","heroi":68440973,"matanca":4684881,"nome":"Deepstriker55","obs":"","origem":"jogo","poder":259299436,"sede":34,"status":"vai","t10":0.82,"tecnologia":19836893,"tropas":96890500,"veiculo":10068341},{"id":"m006","arena":131000000,"cargo":"R3","edificio":74949364,"funcao":"","heroi":64241474,"matanca":3464038,"nome":"LeonardoMartini","obs":"","origem":"jogo","poder":230619922,"sede":32,"status":"vai","t10":0.75,"tecnologia":20614263,"tropas":59423280,"veiculo":11391541},{"id":"m007","arena":182700000,"cargo":"R3","edificio":74336963,"funcao":"","heroi":65335520,"matanca":3196688,"nome":"Demon Tazz","obs":"","origem":"jogo","poder":248179403,"sede":33,"status":"vai","t10":0.85,"tecnologia":18801799,"tropas":80020920,"veiculo":9684201},{"id":"m008","arena":177200000,"cargo":"R3","edificio":70101369,"funcao":"","heroi":61409573,"matanca":3247201,"nome":"Big Cojones","obs":"","origem":"jogo","poder":259199191,"sede":33,"status":"vai","t10":0.73,"tecnologia":18912856,"tropas":98704620,"veiculo":10070773},{"id":"m009","arena":161600000,"cargo":"R3","edificio":74393047,"funcao":"","heroi":60182893,"matanca":2949872,"nome":"motoboy fodão","obs":"","origem":"jogo","poder":268871024,"sede":33,"status":"vai","t10":0.54,"tecnologia":20025375,"tropas":104437760,"veiculo":9831949},{"id":"m010","arena":151300000,"cargo":"R3","edificio":68627492,"funcao":"","heroi":58964019,"matanca":2344447,"nome":"Arcanjo Miguel","obs":"","origem":"jogo","poder":234873543,"sede":33,"status":"vai","t10":0.5,"tecnologia":16304851,"tropas":81010440,"veiculo":9966741},{"id":"m011","arena":180500000,"cargo":"R4","edificio":63353534,"funcao":"","heroi":58072052,"matanca":2245891,"nome":"C0r1nga","obs":"","origem":"jogo","poder":197046230,"sede":33,"status":"vai","t10":0.61,"tecnologia":16535503,"tropas":49128800,"veiculo":9956341},{"id":"m012","arena":169600000,"cargo":"R3","edificio":61896378,"funcao":"","heroi":57957664,"matanca":3467088,"nome":"Leony BOLSONARO","obs":"","origem":"jogo","poder":202668421,"sede":31,"status":"vai","t10":0.66,"tecnologia":19459388,"tropas":54375860,"veiculo":8979131},{"id":"m013","arena":181600000,"cargo":"R4","edificio":69324656,"funcao":"","heroi":56855118,"matanca":3599651,"nome":"UserTheOne","obs":"","origem":"jogo","poder":266304707,"sede":33,"status":"vai","t10":0.68,"tecnologia":19590479,"tropas":111624800,"veiculo":8909654},{"id":"m014","arena":177000000,"cargo":"R4","edificio":67207896,"funcao":"","heroi":55593790,"matanca":2199949,"nome":"E L T Ø N Z","obs":"","origem":"jogo","poder":226167789,"sede":32,"status":"vai","t10":0.55,"tecnologia":18577124,"tropas":74617620,"veiculo":10171359},{"id":"m015","arena":157500000,"cargo":"R3","edificio":65055145,"funcao":"","heroi":56622509,"matanca":4128530,"nome":"Altayr","obs":"","origem":"jogo","poder":196408390,"sede":32,"status":"vai","t10":null,"tecnologia":18421227,"tropas":48486480,"veiculo":7823029},{"id":"m016","arena":94600000,"cargo":"R3","edificio":41580756,"funcao":"","heroi":56219616,"matanca":481063,"nome":"Dudamoss","obs":"","origem":"jogo","poder":209254306,"sede":30,"status":"pendente","t10":null,"tecnologia":14274774,"tropas":87711400,"veiculo":9467760},{"id":"m017","arena":166800000,"cargo":"R3","edificio":66781393,"funcao":"","heroi":54903786,"matanca":3073421,"nome":"Ąmaral","obs":"","origem":"jogo","poder":221371167,"sede":33,"status":"vai","t10":0.71,"tecnologia":18370287,"tropas":72386860,"veiculo":8928841},{"id":"m018","arena":159200000,"cargo":"R3","edificio":73972282,"funcao":"","heroi":54757569,"matanca":3321754,"nome":"Assofra","obs":"","origem":"jogo","poder":232168357,"sede":33,"status":"vai","t10":0.78,"tecnologia":18906467,"tropas":76587980,"veiculo":7944059},{"id":"m019","arena":160200000,"cargo":"R3","edificio":60744887,"funcao":"","heroi":54102067,"matanca":2050481,"nome":"Fuzer","obs":"","origem":"jogo","poder":232407763,"sede":32,"status":"vai","t10":0.62,"tecnologia":15509468,"tropas":92685040,"veiculo":9366301},{"id":"m020","arena":134500000,"cargo":"R3","edificio":51438589,"funcao":"","heroi":53684899,"matanca":705014,"nome":"BrunoMariano","obs":"","origem":"jogo","poder":223504749,"sede":32,"status":"vai","t10":0.51,"tecnologia":15928325,"tropas":93492280,"veiculo":8960656},{"id":"m021","arena":110700000,"cargo":"R3","edificio":59928816,"funcao":"","heroi":53118757,"matanca":1165125,"nome":"Felipe Moraes","obs":"","origem":"jogo","poder":238828520,"sede":31,"status":"vai","t10":0.1,"tecnologia":16916386,"tropas":100418920,"veiculo":8445641},{"id":"m022","arena":111400000,"cargo":"R3","edificio":65129774,"funcao":"","heroi":52002257,"matanca":611462,"nome":"Napoleon bel","obs":"","origem":"jogo","poder":234291021,"sede":30,"status":"pendente","t10":null,"tecnologia":16021325,"tropas":92250910,"veiculo":8886755},{"id":"m023","arena":154200000,"cargo":"R4","edificio":61678837,"funcao":"","heroi":51868361,"matanca":1893432,"nome":"Maikynhoo","obs":"","origem":"jogo","poder":209287116,"sede":32,"status":"vai","t10":0.53,"tecnologia":16900126,"tropas":70633500,"veiculo":8206292},{"id":"m024","arena":148300000,"cargo":"R3","edificio":54441716,"funcao":"","heroi":51784610,"matanca":3412106,"nome":"CBSALLES","obs":"","origem":"jogo","poder":232930902,"sede":32,"status":"nao","t10":null,"tecnologia":17112255,"tropas":101013500,"veiculo":8578821},{"id":"m026","arena":117600000,"cargo":"R3","edificio":61630560,"funcao":"","heroi":48031117,"matanca":1066342,"nome":"Gcorrea","obs":"","origem":"jogo","poder":227950008,"sede":31,"status":"vai","t10":0.32,"tecnologia":17352085,"tropas":92042720,"veiculo":8893526},{"id":"m027","arena":142900000,"cargo":"R4","edificio":63617883,"funcao":"","heroi":49036129,"matanca":3077721,"nome":"Bredaaa","obs":"nome anterior: ab1102","origem":"jogo","poder":205105608,"sede":33,"status":"vai","t10":null,"tecnologia":17765931,"tropas":66853360,"veiculo":7832305},{"id":"m028","arena":131100000,"cargo":"R3","edificio":57252455,"funcao":"","heroi":48507672,"matanca":861344,"nome":"Betuca","obs":"","origem":"jogo","poder":164765964,"sede":32,"status":"vai","t10":0.5,"tecnologia":14814252,"tropas":35496860,"veiculo":8694725},{"id":"m029","arena":166200000,"cargo":"R3","edificio":55630959,"funcao":"","heroi":48575966,"matanca":3355216,"nome":"Petrópolis-Rj","obs":"","origem":"jogo","poder":219586444,"sede":34,"status":"vai","t10":0.71,"tecnologia":14480861,"tropas":92376900,"veiculo":8521758},{"id":"m030","arena":133200000,"cargo":"R3","edificio":42730331,"funcao":"","heroi":50583379,"matanca":1738472,"nome":"iova²²","obs":"","origem":"jogo","poder":204729518,"sede":31,"status":"vai","t10":0.59,"tecnologia":13727455,"tropas":90701660,"veiculo":6986693},{"id":"m031","arena":106100000,"cargo":"R3","edificio":53067866,"funcao":"","heroi":47949338,"matanca":1167923,"nome":"NÊMESIS HAWK¹","obs":"","origem":"jogo","poder":193398294,"sede":30,"status":"vai","t10":0,"tecnologia":14605040,"tropas":71076180,"veiculo":6699870},{"id":"m032","arena":96000000,"cargo":"R3","edificio":70708066,"funcao":"","heroi":45216367,"matanca":791398,"nome":"Motoboy fodinha","obs":"","origem":"jogo","poder":224002355,"sede":27,"status":"pendente","t10":0,"tecnologia":16298222,"tropas":83592740,"veiculo":8186960},{"id":"m033","arena":104500000,"cargo":"R3","edificio":37679703,"funcao":"","heroi":46442322,"matanca":460715,"nome":"Forte Black","obs":"","origem":"jogo","poder":174553993,"sede":31,"status":"pendente","t10":null,"tecnologia":10936905,"tropas":71076180,"veiculo":8418883},{"id":"m034","arena":115400000,"cargo":"R3","edificio":48649297,"funcao":"","heroi":47004104,"matanca":1311833,"nome":"DaCruz15","obs":"","origem":"jogo","poder":169057741,"sede":31,"status":"nao","t10":null,"tecnologia":14775590,"tropas":51919420,"veiculo":6709330},{"id":"m035","arena":108600000,"cargo":"R3","edificio":64985027,"funcao":"","heroi":45068673,"matanca":496402,"nome":"CTF2026","obs":"","origem":"jogo","poder":225125679,"sede":31,"status":"vai","t10":0.21,"tecnologia":14931378,"tropas":92381240,"veiculo":7759361},{"id":"m037","arena":145100000,"cargo":"R3","edificio":52635145,"funcao":"","heroi":46052352,"matanca":1242141,"nome":"Tinky-Furioso","obs":"","origem":"jogo","poder":215685243,"sede":30,"status":"pendente","t10":null,"tecnologia":12203991,"tropas":98110040,"veiculo":6683715},{"id":"m038","arena":123800000,"cargo":"R3","edificio":44766301,"funcao":"","heroi":45752532,"matanca":938632,"nome":"HeraBlood","obs":"","origem":"jogo","poder":202461862,"sede":31,"status":"pendente","t10":null,"tecnologia":14192329,"tropas":90688640,"veiculo":7062060},{"id":"m039","arena":88400000,"cargo":"R3","edificio":52331680,"funcao":"","heroi":44877433,"matanca":443570,"nome":"Gama Sennin","obs":"","origem":"jogo","poder":192249862,"sede":31,"status":"pendente","t10":null,"tecnologia":16270248,"tropas":71462440,"veiculo":7308061},{"id":"m040","arena":145000000,"cargo":"R4","edificio":50065359,"funcao":"","heroi":45219895,"matanca":1301510,"nome":"Xambre","obs":"","origem":"jogo","poder":199483516,"sede":31,"status":"vai","t10":0.06,"tecnologia":12545041,"tropas":84413000,"veiculo":7240221},{"id":"m042","arena":136300000,"cargo":"R3","edificio":50051293,"funcao":"","heroi":43805100,"matanca":489539,"nome":"Roknrolla","obs":"","origem":"jogo","poder":214431194,"sede":30,"status":"pendente","t10":null,"tecnologia":15399215,"tropas":96907860,"veiculo":8267726},{"id":"m043","arena":133700000,"cargo":"R3","edificio":44130421,"funcao":"","heroi":45228709,"matanca":2292822,"nome":"X Warrior","obs":"","origem":"jogo","poder":189309910,"sede":30,"status":"vai","t10":null,"tecnologia":11131861,"tropas":81565960,"veiculo":7252959},{"id":"m044","arena":134600000,"cargo":"R3","edificio":56372432,"funcao":"","heroi":44701404,"matanca":1493475,"nome":"meioloko","obs":"","origem":"jogo","poder":165003255,"sede":31,"status":"vai","t10":0.43,"tecnologia":14901098,"tropas":42575400,"veiculo":6452921},{"id":"m045","arena":73100000,"cargo":"R3","edificio":49268935,"funcao":"","heroi":44685036,"matanca":920107,"nome":"Coronell","obs":"","origem":"jogo","poder":214356059,"sede":30,"status":"vai","t10":null,"tecnologia":15539389,"tropas":98170800,"veiculo":6691899},{"id":"m046","arena":130900000,"cargo":"R3","edificio":60494983,"funcao":"","heroi":43334462,"matanca":1325349,"nome":"Grisalho","obs":"","origem":"jogo","poder":209218219,"sede":31,"status":"vai","t10":0.08,"tecnologia":15178035,"tropas":82646620,"veiculo":7564119},{"id":"m047","arena":130300000,"cargo":"R3","edificio":51651558,"funcao":"","heroi":43426058,"matanca":868014,"nome":"·AVIGO·","obs":"","origem":"jogo","poder":219071452,"sede":30,"status":"pendente","t10":null,"tecnologia":13740343,"tropas":102250400,"veiculo":8003093},{"id":"m048","arena":73800000,"cargo":"R2","edificio":44127124,"funcao":"","heroi":42681403,"matanca":193849,"nome":"SKO15KZ","obs":"","origem":"jogo","poder":206747607,"sede":29,"status":"pendente","t10":null,"tecnologia":10314415,"tropas":100301740,"veiculo":9322925},{"id":"m049","arena":112000000,"cargo":"R3","edificio":52834807,"funcao":"","heroi":43702414,"matanca":977370,"nome":"EightSpleens","obs":"","origem":"jogo","poder":183025420,"sede":31,"status":"pendente","t10":null,"tecnologia":17610696,"tropas":61840660,"veiculo":7036843},{"id":"m050","arena":90400000,"cargo":"R3","edificio":52050917,"funcao":"","heroi":44249326,"matanca":1090197,"nome":"RicardoMoraes","obs":"","origem":"jogo","poder":192732777,"sede":31,"status":"pendente","t10":null,"tecnologia":13709187,"tropas":76223420,"veiculo":6499927},{"id":"m051","arena":118500000,"cargo":"R3","edificio":46147929,"funcao":"","heroi":43799758,"matanca":652816,"nome":"Boiadeiro3r","obs":"","origem":"jogo","poder":197996143,"sede":30,"status":"pendente","t10":null,"tecnologia":11757906,"tropas":89217380,"veiculo":7073170},{"id":"m052","arena":89200000,"cargo":"R3","edificio":44242722,"funcao":"","heroi":44387246,"matanca":1044636,"nome":"Yngrid98","obs":"","origem":"jogo","poder":137644137,"sede":30,"status":"pendente","t10":null,"tecnologia":14523467,"tropas":28314160,"veiculo":6176542},{"id":"m053","arena":93000000,"cargo":"R3","edificio":52475325,"funcao":"","heroi":43072356,"matanca":997575,"nome":"Vai-Corinthians","obs":"","origem":"jogo","poder":199103616,"sede":31,"status":"vai","t10":0,"tecnologia":13413058,"tropas":83328000,"veiculo":6814877},{"id":"m054","arena":127000000,"cargo":"R3","edificio":50339728,"funcao":"","heroi":43263162,"matanca":1153132,"nome":"C0r1nga³","obs":"","origem":"jogo","poder":205554030,"sede":31,"status":"vai","t10":0.1,"tecnologia":13130068,"tropas":92342180,"veiculo":6478892},{"id":"m055","arena":87800000,"cargo":"R3","edificio":45287042,"funcao":"","heroi":42577440,"matanca":459552,"nome":"Jot1nh4","obs":"","origem":"jogo","poder":203996970,"sede":31,"status":"vai","t10":0.07,"tecnologia":11752928,"tropas":97129200,"veiculo":7250360},{"id":"m056","arena":122400000,"cargo":"R3","edificio":47269247,"funcao":"","heroi":42633680,"matanca":1251496,"nome":"Reiiis","obs":"","origem":"jogo","poder":182261604,"sede":30,"status":"vai","t10":0.03,"tecnologia":14831377,"tropas":70880880,"veiculo":6646420},{"id":"m057","arena":69300000,"cargo":"R2","edificio":55660311,"funcao":"","heroi":41693318,"matanca":161349,"nome":"Gorilla town","obs":"","origem":"jogo","poder":212628865,"sede":29,"status":"pendente","t10":null,"tecnologia":11914706,"tropas":96000800,"veiculo":7359730},{"id":"m058","arena":115500000,"cargo":"R3","edificio":36838082,"funcao":"","heroi":42899161,"matanca":344278,"nome":"AndersonAlmeida","obs":"","origem":"jogo","poder":178058416,"sede":30,"status":"pendente","t10":null,"tecnologia":13760062,"tropas":77798840,"veiculo":6762271},{"id":"m059","arena":101300000,"cargo":"R3","edificio":39864891,"funcao":"","heroi":43202860,"matanca":1412987,"nome":"SMRSAM","obs":"","origem":"jogo","poder":171188554,"sede":32,"status":"pendente","t10":null,"tecnologia":10854476,"tropas":70854840,"veiculo":6411487},{"id":"m060","arena":124600000,"cargo":"R3","edificio":46742168,"funcao":"","heroi":41268239,"matanca":684257,"nome":"Penelope Ø","obs":"","origem":"jogo","poder":200124669,"sede":31,"status":"pendente","t10":null,"tecnologia":13821069,"tropas":91183400,"veiculo":7109793},{"id":"m061","arena":90900000,"cargo":"R3","edificio":38198307,"funcao":"","heroi":41765372,"matanca":126012,"nome":"Explorerxx","obs":"","origem":"jogo","poder":175466571,"sede":30,"status":"pendente","t10":null,"tecnologia":10264021,"tropas":78033200,"veiculo":7205671},{"id":"m062","arena":105500000,"cargo":"R3","edificio":45364362,"funcao":"","heroi":40976258,"matanca":516062,"nome":"SAMUKA SC","obs":"","origem":"jogo","poder":201448063,"sede":30,"status":"pendente","t10":null,"tecnologia":13025121,"tropas":94664080,"veiculo":7418242},{"id":"m063","arena":64700000,"cargo":"R2","edificio":42131563,"funcao":"","heroi":41523400,"matanca":520127,"nome":"AzzzS","obs":"","origem":"jogo","poder":179053536,"sede":29,"status":"pendente","t10":null,"tecnologia":11674779,"tropas":76839700,"veiculo":6884094},{"id":"m064","arena":101400000,"cargo":"R3","edificio":46825324,"funcao":"","heroi":40837746,"matanca":319409,"nome":"kratos22222","obs":"","origem":"jogo","poder":185846088,"sede":30,"status":"pendente","t10":null,"tecnologia":13861895,"tropas":77091420,"veiculo":7229703},{"id":"m065","arena":86500000,"cargo":"R3","edificio":40420093,"funcao":"","heroi":39817258,"matanca":180099,"nome":"Exterminador11","obs":"","origem":"jogo","poder":189248142,"sede":31,"status":"pendente","t10":null,"tecnologia":13196832,"tropas":87754800,"veiculo":8059159},{"id":"m066","arena":111200000,"cargo":"R3","edificio":43417808,"funcao":"","heroi":40342336,"matanca":961603,"nome":"JUNIORJUNEE","obs":"","origem":"jogo","poder":168618663,"sede":32,"status":"vai","t10":0.41,"tecnologia":13374760,"tropas":64210300,"veiculo":7273459},{"id":"m067","arena":136400000,"cargo":"R3","edificio":51026548,"funcao":"","heroi":39756203,"matanca":794658,"nome":"DedePC","obs":"","origem":"jogo","poder":205845174,"sede":32,"status":"vai","t10":0.44,"tecnologia":13750630,"tropas":94464440,"veiculo":6847353},{"id":"m068","arena":82900000,"cargo":"R3","edificio":36319634,"funcao":"","heroi":41369069,"matanca":116866,"nome":"Pokemon88","obs":"","origem":"jogo","poder":180473746,"sede":30,"status":"pendente","t10":null,"tecnologia":13663056,"tropas":83436500,"veiculo":5685487},{"id":"m069","arena":68800000,"cargo":"R2","edificio":35621366,"funcao":"","heroi":39985917,"matanca":505654,"nome":"RWB2026","obs":"","origem":"jogo","poder":130174189,"sede":30,"status":"pendente","t10":null,"tecnologia":10458421,"tropas":38183320,"veiculo":5925165},{"id":"m070","arena":125400000,"cargo":"R3","edificio":43741947,"funcao":"","heroi":38396199,"matanca":612873,"nome":"Sr Fantini","obs":"","origem":"jogo","poder":181512721,"sede":31,"status":"pendente","t10":null,"tecnologia":11017360,"tropas":81674460,"veiculo":6682755},{"id":"m071","arena":85900000,"cargo":"R3","edificio":41219741,"funcao":"","heroi":38542615,"matanca":458442,"nome":"C0r1nga²","obs":"","origem":"jogo","poder":192637682,"sede":30,"status":"vai","t10":0,"tecnologia":11337496,"tropas":94954860,"veiculo":6582970},{"id":"m073","arena":113400000,"cargo":"R3","edificio":41981017,"funcao":"","heroi":37965505,"matanca":557712,"nome":"Bredaa","obs":"","origem":"jogo","poder":130717769,"sede":30,"status":"nao","t10":0,"tecnologia":12901068,"tropas":31278380,"veiculo":6591799},{"id":"m074","arena":81000000,"cargo":"R3","edificio":49151031,"funcao":"","heroi":37213106,"matanca":387332,"nome":"José58","obs":"","origem":"jogo","poder":195850392,"sede":30,"status":"pendente","t10":null,"tecnologia":10360708,"tropas":92064420,"veiculo":7061127},{"id":"m075","arena":81000000,"cargo":"R3","edificio":46354808,"funcao":"","heroi":37403393,"matanca":674884,"nome":"Faveras","obs":"","origem":"jogo","poder":178562746,"sede":30,"status":"pendente","t10":null,"tecnologia":12536031,"tropas":75676580,"veiculo":6591934},{"id":"m076","arena":108700000,"cargo":"R3","edificio":47065537,"funcao":"","heroi":37498204,"matanca":357269,"nome":"Bruno F","obs":"","origem":"jogo","poder":189741120,"sede":30,"status":"pendente","t10":null,"tecnologia":11147494,"tropas":87572520,"veiculo":6457365},{"id":"m077","arena":100700000,"cargo":"R3","edificio":46728812,"funcao":"","heroi":36127730,"matanca":1036233,"nome":"BobFox","obs":"","origem":"jogo","poder":173271403,"sede":29,"status":"vai","t10":0,"tecnologia":13926803,"tropas":69934760,"veiculo":6553298},{"id":"m078","arena":62300000,"cargo":"R2","edificio":38457219,"funcao":"","heroi":36453434,"matanca":197121,"nome":"camar15","obs":"","origem":"jogo","poder":159798974,"sede":30,"status":"pendente","t10":null,"tecnologia":10021313,"tropas":68723900,"veiculo":6143108},{"id":"m079","arena":43300000,"cargo":"R1","edificio":31394288,"funcao":"","heroi":37184041,"matanca":366347,"nome":"THE BRUXO","obs":"","origem":"jogo","poder":176334076,"sede":30,"status":"pendente","t10":null,"tecnologia":6572961,"tropas":95293380,"veiculo":5889406},{"id":"m080","arena":70700000,"cargo":"R2","edificio":38004910,"funcao":"","heroi":36494119,"matanca":420057,"nome":"LARI •","obs":"","origem":"jogo","poder":179849163,"sede":30,"status":"pendente","t10":null,"tecnologia":10540228,"tropas":89048120,"veiculo":5761786},{"id":"m081","arena":84600000,"cargo":"R3","edificio":43418652,"funcao":"","heroi":35093561,"matanca":286893,"nome":"Tiago almeida","obs":"","origem":"jogo","poder":171176950,"sede":30,"status":"vai","t10":0,"tecnologia":9486835,"tropas":77946400,"veiculo":5231502},{"id":"m082","arena":106500000,"cargo":"R3","edificio":43979720,"funcao":"","heroi":34549544,"matanca":596826,"nome":"Glonek","obs":"","origem":"jogo","poder":178236135,"sede":30,"status":"pendente","t10":null,"tecnologia":11824577,"tropas":82429620,"veiculo":5452674},{"id":"m083","arena":77600000,"cargo":"R2","edificio":38802146,"funcao":"","heroi":33785027,"matanca":171153,"nome":"DOMVS","obs":"","origem":"jogo","poder":165568593,"sede":30,"status":"pendente","t10":null,"tecnologia":10724310,"tropas":76140960,"veiculo":6116150},{"id":"m084","arena":89200000,"cargo":"R3","edificio":34504469,"funcao":"","heroi":33807681,"matanca":697570,"nome":"-LEE-","obs":"","origem":"jogo","poder":150141292,"sede":30,"status":"pendente","t10":null,"tecnologia":7703771,"tropas":68554640,"veiculo":5570731},{"id":"m085","arena":72700000,"cargo":"R2","edificio":36670798,"funcao":"","heroi":33319827,"matanca":213996,"nome":"BETUCA DEDZ","obs":"","origem":"jogo","poder":132459699,"sede":30,"status":"pendente","t10":0,"tecnologia":10442720,"tropas":46282440,"veiculo":5743914},{"id":"m086","arena":62500000,"cargo":"R2","edificio":48388050,"funcao":"","heroi":32438042,"matanca":823532,"nome":"Natalicio","obs":"","origem":"jogo","poder":150743427,"sede":30,"status":"pendente","t10":null,"tecnologia":8682475,"tropas":55282920,"veiculo":5951940},{"id":"m087","arena":39500000,"cargo":"R1","edificio":36662423,"funcao":"","heroi":33334920,"matanca":573901,"nome":"hahaTAngel","obs":"","origem":"jogo","poder":122576199,"sede":28,"status":"pendente","t10":0,"tecnologia":10411738,"tropas":36881320,"veiculo":5285798},{"id":"m088","arena":68600000,"cargo":"R2","edificio":36092554,"funcao":"","heroi":33259610,"matanca":259859,"nome":"Srichterr","obs":"","origem":"jogo","poder":116836172,"sede":29,"status":"vai","t10":null,"tecnologia":8408822,"tropas":33730480,"veiculo":5344706},{"id":"m089","arena":58600000,"cargo":"R2","edificio":42149891,"funcao":"","heroi":33332137,"matanca":145986,"nome":"RUIZAO TOP","obs":"","origem":"jogo","poder":187031397,"sede":30,"status":"pendente","t10":null,"tecnologia":11119772,"tropas":95900980,"veiculo":4528617},{"id":"m090","arena":67600000,"cargo":"R2","edificio":36608593,"funcao":"","heroi":32776791,"matanca":178089,"nome":"Ztyper","obs":"","origem":"jogo","poder":184033837,"sede":30,"status":"pendente","t10":null,"tecnologia":8727385,"tropas":100852920,"veiculo":5068148},{"id":"m091","arena":56100000,"cargo":"R2","edificio":43556718,"funcao":"","heroi":31871427,"matanca":105723,"nome":"GuigoVkG","obs":"","origem":"jogo","poder":124868650,"sede":28,"status":"pendente","t10":null,"tecnologia":7010838,"tropas":37352200,"veiculo":5077467},{"id":"m093","arena":66700000,"cargo":"R2","edificio":31191110,"funcao":"","heroi":31961600,"matanca":151293,"nome":"razvans","obs":"","origem":"jogo","poder":154796224,"sede":30,"status":"pendente","t10":null,"tecnologia":5598652,"tropas":81435760,"veiculo":4609102},{"id":"m094","arena":67600000,"cargo":"R2","edificio":33413649,"funcao":"","heroi":31665037,"matanca":314855,"nome":"P4ND0R4","obs":"","origem":"jogo","poder":163886780,"sede":29,"status":"pendente","t10":null,"tecnologia":10169932,"tropas":84135240,"veiculo":4502922},{"id":"m095","arena":29300000,"cargo":"R1","edificio":44603905,"funcao":"","heroi":29646814,"matanca":28909,"nome":"MACA7","obs":"","origem":"jogo","poder":178465620,"sede":28,"status":"pendente","t10":null,"tecnologia":10612883,"tropas":88062940,"veiculo":5539078},{"id":"n99gxb99","alianca":"DEDZ","arena":30900000,"ativo":true,"cargo":"R1","nome":"99GXB99","obs":"entrou na DEDZ em 31/10","origem":"jogo","poder":84800000,"status":"pendente"},{"id":"nadaminbiri","alianca":"DEDZ","arena":147200000,"ativo":true,"cargo":"R3","nome":"adamınbiri","obs":"entrou na DEDZ em 31/10","origem":"jogo","poder":231400000,"status":"pendente"},{"id":"ndraugz","alianca":"DEDZ","arena":72800000,"ativo":true,"cargo":"R2","nome":"Draugz","obs":"entrou na DEDZ em 31/10","origem":"jogo","poder":164000000,"status":"pendente"},{"id":"nhorst747","alianca":"DEDZ","ativo":true,"cargo":"R1","nome":"Horst747","obs":"entrou na DEDZ em 07/11","origem":"jogo","status":"pendente"},{"id":"nmago","alianca":"DEDZ","arena":135200000,"ativo":true,"cargo":"R3","nome":"MAGO亥","obs":"entrou na DEDZ em 31/10","origem":"jogo","poder":192600000,"status":"pendente"},{"id":"nodiata","alianca":"DEDZ","arena":77200000,"ativo":true,"cargo":"R2","nome":"odiata","obs":"entrou na DEDZ em 31/10","origem":"jogo","poder":128300000,"status":"pendente"},{"id":"nodinmizo","alianca":"DEDZ","arena":108000000,"ativo":true,"cargo":"R3","nome":"Odin Mizo","obs":"entrou na DEDZ em 01/11","origem":"jogo","poder":193000000,"status":"pendente"},{"id":"nsabutay","alianca":"DEDZ","ativo":true,"cargo":"R1","nome":"SABUTAY","obs":"entrou na DEDZ em 05/11","origem":"jogo","status":"pendente"},{"id":"nvrone","alianca":"DEDZ","ativo":true,"cargo":"R1","nome":"VR-ONE","obs":"entrou na DEDZ em 07/11","origem":"jogo","status":"pendente"}]}</script>
+<script>
+(() => {
+  const ME = 'C0r1nga';
+  // snapshot of the list baked into the page, for visitors without a signed-in account
+  let SNAP = null;
+  try { SNAP = JSON.parse(document.getElementById('snapshot').textContent); } catch (_) { SNAP = null; }
+  const SKEL = '<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,sans-serif}img{max-width:100%}[hidden]{display:none!important}<\/style><\/head><body>';
+
+  // ---- language
+  const I18N = {
+    pt: {
+      eyebrow: 'New Deadz [DEDZ] · Zona de guerra #614', title: 'Levantamento de migração',
+      lede: 'Marque quem vai migrar de servidor, adicione jogadores que não estão na lista, corrija os dados de qualquer membro em "Editar" e escolha as colunas que aparecem na tabela. As marcações ficam salvas para todos que abrirem esta página.',
+      summary: 'Resumo', sections: 'Seções', st_vai: 'Vão migrar', st_nao: 'Não vão', st_pendente: 'Sem resposta',
+      tab_lista: 'Lista', tab_analise: 'Análise', all: 'Todos', sit_vai: 'Vão', sit_nao: 'Não vão', sit_pendente: 'Sem resposta',
+      filter_aria: 'Filtrar por situação', search: 'Buscar jogador', btn_cols: 'Colunas', btn_pub: 'Atualizar versão pública',
+      btn_pub_title: 'Grava a lista atual na página para quem abre sem login', btn_csv: 'Baixar CSV', btn_add: 'Adicionar membro',
+      cols_title: 'Colunas da tabela', cols_note: 'Jogador e Situação aparecem sempre. A escolha vale para todos que abrirem a página.',
+      f_nome: 'Nome no jogo', f_sede: 'Nível da sede', f_veiculo: 'Veículo modificado', f_arena: 'Poder de arena',
+      opt_vai: 'Vai', opt_nao: 'Não vai', ph_arena: 'ex.: 123,3M', ph_t10: 'ex.: 45', cancel: 'Cancelar',
+      f_title_add: 'Adicionar membro', f_title_edit: 'Editar {n}', f_save_add: 'Salvar membro', f_save_edit: 'Salvar alterações',
+      f_hint: 'Números podem ser digitados completos (205.554.030) ou em milhões (205,5M). O Migration Score é calculado quando Edifício, Tecnologia, Herói e Veículo estão preenchidos.',
+      loading: 'Carregando membros…', empty_filter: 'Nenhum jogador com esse filtro.', empty_none: 'Nenhum membro na lista ainda. Use "Adicionar membro" para começar.',
+      consider: 'Considerar:', scope_aria: 'Quem entra na análise', scope_vai: 'Só quem vai', scope_nao: 'Só quem não vai',
+      players: '{n} jogadores', player: '1 jogador',
+      a_al_t: 'Membros por aliança', a_al_d: 'Quantos jogadores de cada aliança, com a situação de migração e o tier.',
+      a_tier_t: 'Membros por tier', a_tier_d: 'Quantos jogadores caem em cada faixa do Migration Score.',
+      a_cargo_t: 'Tier por cargo', a_cargo_d: 'Quantidade de membros em cada tier, separada por cargo na aliança.',
+      a_sit_t: 'Situação por tier', a_sit_d: 'Quantos de cada tier já confirmaram a migração. Considera todos os membros.',
+      a_pow_t: 'Poder somado por tier', a_pow_d: 'Poder total e poder de arena que cada tier leva.',
+      foot1: 'Poder e componentes lidos no jogo em 28/10/2026 (Detalhes > PC). Poder de arena da lista no modo "combate da arena" (atualizado em 29/10/2026), arredondado em 0,1M. T10 da lista manual da aliança.',
+      foot2: 'Migration Score estimado pela calculadora da comunidade lastzguides.com: Edifício e Tecnologia pesam 0,06, Herói 1,2 e Veículo modificado 1,1, menos 43M; Tropas não entram. Tier: Intermediate a partir de 40M, Advanced a partir de 80M, Elite acima de 160M. Não conta bônus de T10 nem de Destroyer.',
+      pub_at: 'Versão pública da lista atualizada em {d}.',
+      h_player: 'Jogador', h_status: 'Situação', c_alianca: 'Aliança', c_cargo: 'Cargo', c_sede: 'Sede', c_poder: 'Poder total',
+      c_score: 'Migration Score', c_tier: 'Tier', c_arena: 'Arena', c_t10: 'T10', c_heroi: 'Herói', c_veiculo: 'Veículo', c_tropas: 'Tropas',
+      c_edificio: 'Edifício', c_tecnologia: 'Tecnologia', c_matanca: 'Matança', c_obs: 'Observação', c_ativo: 'Atividade', act_on: 'Ativo', act_off: 'Inativo', act_of: 'Atividade de {n}',
+      members: 'Membros', avg_score: 'Score médio', total: 'Total', no_score: 'Sem score', missing_power: '{n} (faltam dados de poder)',
+      no_cargo: 'Sem cargo', pct_conf: '% confirmados', power_total: 'Poder total', power_avg: 'Poder médio', arena_total: 'Arena total',
+      power: 'Poder', avg_score_s: 'score médio', nobody: 'Ninguém ainda', bi: ' bi',
+      added: 'adicionado', sit_of: 'Situação de {n}', obs_of: 'Observação de {n}', obs_ph: 'anotar…', edit: 'Editar', edit_of: 'Editar {n}',
+      remove: 'Remover', remove_of: 'Remover {n} da lista', confirm_remove: 'Confirmar remoção', b_vai: 'Vai', b_nao: 'Não', b_pend: '?',
+      t_vai: 'Vai migrar', t_nao: 'Não vai', t_pend: 'Sem resposta',
+      ro: 'Você pode ver a lista, mas não alterar. Peça ao dono da página acesso de Colaborador para marcar quem vai.',
+      quota: 'O limite de registros da página foi atingido. Remova membros adicionados que não são mais necessários.',
+      savefail: 'Não foi possível salvar agora. Tente de novo em alguns segundos.', stopped: 'A lista parou de atualizar. Recarregue a página.',
+      public_view: 'Você está vendo a lista publicada{at}. Para marcar quem vai, entre com uma conta que tenha acesso de edição.', public_at: ' em {d}',
+      dl_unavail: 'O download não está disponível nesta visualização.', dl_fail: 'Não foi possível baixar o arquivo agora.',
+      updating: 'Atualizando…', pub_fail: 'Não foi possível atualizar a versão pública agora. Tente de novo em alguns minutos.',
+      err_name: 'Digite o nome do jogador.', err_dup: '{n} já está na lista.', err_num: 'Não entendi o valor de {f}. Use 205.554.030 ou 205,5M.',
+      err_t10: 'T10 deve ser um número de 0 a 100.', err_sede: 'Nível da sede deve ser um número.', err_notloaded: 'A lista ainda não carregou.',
+      added_ok: '{n} adicionado à lista.', err_save: 'Não foi possível salvar.',
+      slots_title: 'Vagas no servidor {s}', slots_note: 'Conta quem está marcado como "Vai", pelo tier estimado.',
+      slots_of: '{a} de {b}', slots_left: '{n} vagas livres', slots_left1: '1 vaga livre', slots_full: 'Vagas preenchidas', slots_over: '{n} acima do limite',
+      slots_none: 'Sem vagas para este tier'
+    },
+    es: {
+      eyebrow: 'New Deadz [DEDZ] · Zona de guerra #614', title: 'Relevamiento de migración',
+      lede: 'Marca quién va a migrar de servidor, agrega jugadores que no están en la lista, corrige los datos de cualquier miembro en "Editar" y elige las columnas que aparecen en la tabla. Las marcas quedan guardadas para todos los que abran esta página.',
+      summary: 'Resumen', sections: 'Secciones', st_vai: 'Van a migrar', st_nao: 'No van', st_pendente: 'Sin respuesta',
+      tab_lista: 'Lista', tab_analise: 'Análisis', all: 'Todos', sit_vai: 'Van', sit_nao: 'No van', sit_pendente: 'Sin respuesta',
+      filter_aria: 'Filtrar por situación', search: 'Buscar jugador', btn_cols: 'Columnas', btn_pub: 'Actualizar versión pública',
+      btn_pub_title: 'Guarda la lista actual en la página para quien la abre sin iniciar sesión', btn_csv: 'Descargar CSV', btn_add: 'Agregar miembro',
+      cols_title: 'Columnas de la tabla', cols_note: 'Jugador y Situación aparecen siempre. La elección vale para todos los que abran la página.',
+      f_nome: 'Nombre en el juego', f_sede: 'Nivel del cuartel', f_veiculo: 'Vehículo modificado', f_arena: 'Poder de arena',
+      opt_vai: 'Va', opt_nao: 'No va', ph_arena: 'ej.: 123,3M', ph_t10: 'ej.: 45', cancel: 'Cancelar',
+      f_title_add: 'Agregar miembro', f_title_edit: 'Editar {n}', f_save_add: 'Guardar miembro', f_save_edit: 'Guardar cambios',
+      f_hint: 'Los números se pueden escribir completos (205.554.030) o en millones (205,5M). El Migration Score se calcula cuando Edificio, Tecnología, Héroe y Vehículo están completos.',
+      loading: 'Cargando miembros…', empty_filter: 'Ningún jugador con ese filtro.', empty_none: 'Todavía no hay miembros en la lista. Usa "Agregar miembro" para empezar.',
+      consider: 'Considerar:', scope_aria: 'Quién entra en el análisis', scope_vai: 'Solo los que van', scope_nao: 'Solo los que no van',
+      players: '{n} jugadores', player: '1 jugador',
+      a_al_t: 'Miembros por alianza', a_al_d: 'Cuántos jugadores de cada alianza, con la situación de migración y el tier.',
+      a_tier_t: 'Miembros por tier', a_tier_d: 'Cuántos jugadores caen en cada rango del Migration Score.',
+      a_cargo_t: 'Tier por rango', a_cargo_d: 'Cantidad de miembros en cada tier, separada por rango en la alianza.',
+      a_sit_t: 'Situación por tier', a_sit_d: 'Cuántos de cada tier ya confirmaron la migración. Considera a todos los miembros.',
+      a_pow_t: 'Poder sumado por tier', a_pow_d: 'Poder total y poder de arena que suma cada tier.',
+      foot1: 'Poder y componentes leídos en el juego el 28/10/2026 (Detalles > PC). Poder de arena de la lista en modo "combate de arena", redondeado a 0,1M. T10 de la lista manual de la alianza.',
+      foot2: 'Migration Score estimado con la calculadora de la comunidad lastzguides.com: Edificio y Tecnología pesan 0,06, Héroe 1,2 y Vehículo modificado 1,1, menos 43M; las Tropas no cuentan. Tier: Intermediate desde 40M, Advanced desde 80M, Elite por encima de 160M. No incluye bonos de T10 ni de Destroyer.',
+      pub_at: 'Versión pública de la lista actualizada el {d}.',
+      h_player: 'Jugador', h_status: 'Situación', c_alianca: 'Alianza', c_cargo: 'Rango', c_sede: 'Cuartel', c_poder: 'Poder total',
+      c_score: 'Migration Score', c_tier: 'Tier', c_arena: 'Arena', c_t10: 'T10', c_heroi: 'Héroe', c_veiculo: 'Vehículo', c_tropas: 'Tropas',
+      c_edificio: 'Edificio', c_tecnologia: 'Tecnología', c_matanca: 'Bajas', c_obs: 'Observación', c_ativo: 'Actividad', act_on: 'Activo', act_off: 'Inactivo', act_of: 'Actividad de {n}',
+      members: 'Miembros', avg_score: 'Score promedio', total: 'Total', no_score: 'Sin score', missing_power: '{n} (faltan datos de poder)',
+      no_cargo: 'Sin rango', pct_conf: '% confirmados', power_total: 'Poder total', power_avg: 'Poder promedio', arena_total: 'Arena total',
+      power: 'Poder', avg_score_s: 'score promedio', nobody: 'Nadie todavía', bi: ' mil M',
+      added: 'agregado', sit_of: 'Situación de {n}', obs_of: 'Observación de {n}', obs_ph: 'anotar…', edit: 'Editar', edit_of: 'Editar {n}',
+      remove: 'Quitar', remove_of: 'Quitar a {n} de la lista', confirm_remove: 'Confirmar', b_vai: 'Va', b_nao: 'No', b_pend: '?',
+      t_vai: 'Va a migrar', t_nao: 'No va', t_pend: 'Sin respuesta',
+      ro: 'Puedes ver la lista, pero no cambiarla. Pide al dueño de la página acceso de Colaborador para marcar quién va.',
+      quota: 'Se alcanzó el límite de registros de la página. Quita miembros agregados que ya no se necesiten.',
+      savefail: 'No se pudo guardar ahora. Intenta de nuevo en unos segundos.', stopped: 'La lista dejó de actualizarse. Recarga la página.',
+      public_view: 'Estás viendo la lista publicada{at}. Para marcar quién va, inicia sesión con una cuenta que tenga acceso de edición.', public_at: ' el {d}',
+      dl_unavail: 'La descarga no está disponible en esta vista.', dl_fail: 'No se pudo descargar el archivo ahora.',
+      updating: 'Actualizando…', pub_fail: 'No se pudo actualizar la versión pública ahora. Intenta de nuevo en unos minutos.',
+      err_name: 'Escribe el nombre del jugador.', err_dup: '{n} ya está en la lista.', err_num: 'No entendí el valor de {f}. Usa 205.554.030 o 205,5M.',
+      err_t10: 'T10 debe ser un número de 0 a 100.', err_sede: 'El nivel del cuartel debe ser un número.', err_notloaded: 'La lista todavía no cargó.',
+      added_ok: '{n} agregado a la lista.', err_save: 'No se pudo guardar.',
+      slots_title: 'Cupos en el servidor {s}', slots_note: 'Cuenta a quienes están marcados como "Va", según el tier estimado.',
+      slots_of: '{a} de {b}', slots_left: '{n} cupos libres', slots_left1: '1 cupo libre', slots_full: 'Cupos completos', slots_over: '{n} por encima del límite',
+      slots_none: 'Sin cupos para este tier'
+    },
+    en: {
+      eyebrow: 'New Deadz [DEDZ] · War zone #614', title: 'Migration roster',
+      lede: 'Mark who is migrating to the new server, add players who are not on the list, fix any member\'s data with "Edit" and choose which columns the table shows. Your marks are saved for everyone who opens this page.',
+      summary: 'Summary', sections: 'Sections', st_vai: 'Migrating', st_nao: 'Not going', st_pendente: 'No answer',
+      tab_lista: 'List', tab_analise: 'Analysis', all: 'All', sit_vai: 'Going', sit_nao: 'Not going', sit_pendente: 'No answer',
+      filter_aria: 'Filter by status', search: 'Search player', btn_cols: 'Columns', btn_pub: 'Update public version',
+      btn_pub_title: 'Saves the current list into the page for people who open it without signing in', btn_csv: 'Download CSV', btn_add: 'Add member',
+      cols_title: 'Table columns', cols_note: 'Player and Status are always shown. Your choice applies to everyone who opens the page.',
+      f_nome: 'In-game name', f_sede: 'HQ level', f_veiculo: 'Modified vehicle', f_arena: 'Arena power',
+      opt_vai: 'Going', opt_nao: 'Not going', ph_arena: 'e.g. 123.3M', ph_t10: 'e.g. 45', cancel: 'Cancel',
+      f_title_add: 'Add member', f_title_edit: 'Edit {n}', f_save_add: 'Save member', f_save_edit: 'Save changes',
+      f_hint: 'Type numbers in full (205,554,030) or in millions (205.5M). The Migration Score is calculated when Building, Tech, Hero and Vehicle are filled in.',
+      loading: 'Loading members…', empty_filter: 'No players match this filter.', empty_none: 'No members on the list yet. Use "Add member" to start.',
+      consider: 'Include:', scope_aria: 'Who the analysis includes', scope_vai: 'Only going', scope_nao: 'Only not going',
+      players: '{n} players', player: '1 player',
+      a_al_t: 'Members by alliance', a_al_d: 'How many players from each alliance, with migration status and tier.',
+      a_tier_t: 'Members by tier', a_tier_d: 'How many players fall into each Migration Score band.',
+      a_cargo_t: 'Tier by rank', a_cargo_d: 'Members in each tier, split by alliance rank.',
+      a_sit_t: 'Status by tier', a_sit_d: 'How many in each tier have confirmed. Counts every member.',
+      a_pow_t: 'Power by tier', a_pow_d: 'Total power and arena power each tier brings.',
+      foot1: 'Power and components read in game on 10/28/2026 (Details > PC). Arena power from the member list in "arena combat" mode, rounded to 0.1M. T10 from the alliance\'s manual list.',
+      foot2: 'Migration Score estimated with the lastzguides.com community calculator: Building and Tech weigh 0.06, Hero 1.2 and Modified Vehicle 1.1, minus 43M; Troops do not count. Tier: Intermediate from 40M, Advanced from 80M, Elite above 160M. T10 and Destroyer bonuses are not included.',
+      pub_at: 'Public version of the list updated on {d}.',
+      h_player: 'Player', h_status: 'Status', c_alianca: 'Alliance', c_cargo: 'Rank', c_sede: 'HQ', c_poder: 'Total power',
+      c_score: 'Migration Score', c_tier: 'Tier', c_arena: 'Arena', c_t10: 'T10', c_heroi: 'Hero', c_veiculo: 'Vehicle', c_tropas: 'Troops',
+      c_edificio: 'Building', c_tecnologia: 'Tech', c_matanca: 'Kills', c_obs: 'Notes', c_ativo: 'Activity', act_on: 'Active', act_off: 'Inactive', act_of: 'Activity of {n}',
+      members: 'Members', avg_score: 'Avg. score', total: 'Total', no_score: 'No score', missing_power: '{n} (missing power data)',
+      no_cargo: 'No rank', pct_conf: '% confirmed', power_total: 'Total power', power_avg: 'Avg. power', arena_total: 'Arena total',
+      power: 'Power', avg_score_s: 'avg. score', nobody: 'Nobody yet', bi: 'B',
+      added: 'added', sit_of: 'Status of {n}', obs_of: 'Notes for {n}', obs_ph: 'add note…', edit: 'Edit', edit_of: 'Edit {n}',
+      remove: 'Remove', remove_of: 'Remove {n} from the list', confirm_remove: 'Confirm removal', b_vai: 'Go', b_nao: 'No', b_pend: '?',
+      t_vai: 'Migrating', t_nao: 'Not going', t_pend: 'No answer',
+      ro: 'You can view the list but not change it. Ask the page owner for Contributor access to mark who is going.',
+      quota: 'The page has reached its record limit. Remove added members you no longer need.',
+      savefail: 'Could not save right now. Try again in a few seconds.', stopped: 'The list stopped updating. Reload the page.',
+      public_view: 'You are viewing the published list{at}. To mark who is going, sign in with an account that has edit access.', public_at: ' from {d}',
+      dl_unavail: 'Downloads are not available in this view.', dl_fail: 'Could not download the file right now.',
+      updating: 'Updating…', pub_fail: 'Could not update the public version right now. Try again in a few minutes.',
+      err_name: 'Enter the player\'s name.', err_dup: '{n} is already on the list.', err_num: 'Could not read the value of {f}. Use 205,554,030 or 205.5M.',
+      err_t10: 'T10 must be a number from 0 to 100.', err_sede: 'HQ level must be a number.', err_notloaded: 'The list has not loaded yet.',
+      added_ok: '{n} added to the list.', err_save: 'Could not save.',
+      slots_title: 'Slots on server {s}', slots_note: 'Counts players marked "Going", by estimated tier.',
+      slots_of: '{a} of {b}', slots_left: '{n} slots left', slots_left1: '1 slot left', slots_full: 'All slots taken', slots_over: '{n} over the limit',
+      slots_none: 'No slots for this tier'
+    }
+  };
+  const LOCALE = { pt: 'pt-BR', es: 'es-ES', en: 'en-US' };
+  let lang = 'pt';
+  try { const saved = localStorage.getItem('migracao-lang'); if (I18N[saved]) lang = saved; else { const n = (navigator.language || '').slice(0, 2); if (I18N[n]) lang = n; } } catch (_) {}
+  const t = (k, vars) => { let s = (I18N[lang] && I18N[lang][k]) ?? I18N.pt[k] ?? k; if (vars) Object.keys(vars).forEach((v) => { s = s.split('{' + v + '}').join(String(vars[v])); }); return s; };
+  const loc = () => LOCALE[lang];
+  const nfmt = (v) => new Intl.NumberFormat(loc()).format(v);
+  const mi = (v) => (v / 1e6).toLocaleString(loc(), { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + 'M';
+  const bi = (v) => (v / 1e9).toLocaleString(loc(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + t('bi');
+
+  const W = { edificio: 0.06, tecnologia: 0.06, heroi: 1.2, veiculo: 1.1, base: -43e6 };
+  const LIMIT = { elite: 160e6, advanced: 80e6, intermediate: 40e6 };
+  const STATUS = [['vai', 'b_vai', 't_vai'], ['nao', 'b_nao', 't_nao'], ['pendente', 'b_pend', 't_pend']];
+
+  const score = (m) => ['edificio', 'tecnologia', 'heroi', 'veiculo'].every((k) => typeof m[k] === 'number')
+    ? W.edificio * m.edificio + W.tecnologia * m.tecnologia + W.heroi * m.heroi + W.veiculo * m.veiculo + W.base : null;
+  const tierOf = (s) => s == null ? null : s <= 0 ? 'Regular' : s > LIMIT.elite ? 'Elite' : s >= LIMIT.advanced ? 'Advanced' : s >= LIMIT.intermediate ? 'Intermediate' : 'Regular';
+
+  // every column the table can show; nome and status are always on
+  const ALIANCAS = ['DEDZ', 'KURT', 'BXG'];
+  const COLS = [
+    { k: 'ativo', l: true, on: true, v: (m) => m.ativo === false ? t('act_off') : t('act_on'), sort: (m) => (m.ativo === false ? 1 : 0) },
+    { k: 'alianca', l: true, on: true, v: (m) => m.alianca, sort: (m) => m.alianca },
+    { k: 'cargo', l: true, on: true, v: (m) => m.cargo || '', sort: (m) => ['R5', 'R4', 'R3', 'R2', 'R1'].indexOf(m.cargo) },
+    { k: 'sede', on: true, v: (m) => m.sede ?? '' },
+    { k: 'poder', on: true, v: (m) => m.poder == null ? '' : nfmt(m.poder) },
+    { k: 'score', on: true, v: (m) => m._score == null ? '' : mi(m._score), sort: (m) => m._score },
+    { k: 'tier', l: true, on: true, v: (m) => m._tier || '', sort: (m) => m._score, cls: (m) => m._tier ? 'tier-' + m._tier : '' },
+    { k: 'arena', on: true, v: (m) => m.arena == null ? '' : mi(m.arena) },
+    { k: 't10', on: true, v: (m) => m.t10 == null ? '' : Math.round(m.t10 * 100) + '%' },
+    { k: 'heroi', on: false, v: (m) => m.heroi == null ? '' : nfmt(m.heroi) },
+    { k: 'veiculo', on: false, v: (m) => m.veiculo == null ? '' : nfmt(m.veiculo) },
+    { k: 'tropas', on: false, v: (m) => m.tropas == null ? '' : nfmt(m.tropas) },
+    { k: 'edificio', on: false, v: (m) => m.edificio == null ? '' : nfmt(m.edificio) },
+    { k: 'tecnologia', on: false, v: (m) => m.tecnologia == null ? '' : nfmt(m.tecnologia) },
+    { k: 'matanca', on: false, v: (m) => m.matanca == null ? '' : nfmt(m.matanca) },
+    { k: 'obs', l: true, on: true, v: (m) => m.obs || '', sort: (m) => m.obs || '' },
+  ];
+  const colLabel = (c) => t('c_' + c.k);
+
+  const state = { rows: [], visible: COLS.filter((c) => c.on).map((c) => c.k), filter: '', q: '', sort: 'score', dir: -1, readOnly: false, loaded: false, editing: null, scope: '', publicView: false };
+  let db = null, dl = null;
+  const $ = (id) => document.getElementById(id);
+
+  // notices are stored as a key so they re-translate when the language changes
+  let noticeKey = null, noticeVars = null;
+  const notice = (key, vars) => { noticeKey = key || null; noticeVars = vars || null; const n = $('notice'); n.textContent = key ? t(key, vars) : ''; n.hidden = !key; };
+  const setReadOnly = () => {
+    if (state.readOnly) return;
+    state.readOnly = true;
+    notice('ro');
+    $('btn-add').disabled = true; render();
+  };
+  const fail = (e) => {
+    if (e && (e.code === 'invalid_argument' || e.code === 'not_granted')) setReadOnly();
+    else if (e && e.code === 'quota_exceeded') notice('quota');
+    else notice('savefail');
+  };
+
+  // ---- summary
+  const renderStrip = () => {
+    const by = { vai: [], nao: [], pendente: [] };
+    state.rows.forEach((m) => (by[m.status] || by.pendente).push(m));
+    for (const k of Object.keys(by)) {
+      const g = by[k];
+      $('n-' + k).textContent = state.loaded ? String(g.length) : '—';
+      const poder = g.reduce((s, m) => s + (m.poder || 0), 0);
+      const sc = g.filter((m) => m._score != null);
+      const media = sc.length ? sc.reduce((s, m) => s + m._score, 0) / sc.length : null;
+      const al = $('al-' + k); al.replaceChildren();
+      if (state.loaded) ALIANCAS.forEach((a, i) => {
+        if (i) al.appendChild(document.createTextNode(' · '));
+        al.appendChild(document.createTextNode(a + ' '));
+        const b = document.createElement('b'); b.textContent = String(g.filter((m) => m.alianca === a).length); al.appendChild(b);
+      });
+      $('s-' + k).textContent = state.loaded ? (g.length ? t('power') + ' ' + bi(poder) + (media != null ? ' · ' + t('avg_score_s') + ' ' + mi(media) : '') : t('nobody')) : '—';
+    }
+    const box = $('t-vai'); box.replaceChildren();
+    if (state.loaded && by.vai.length) {
+      ['Elite', 'Advanced', 'Intermediate', 'Regular'].forEach((tier) => {
+        const n = by.vai.filter((m) => m._tier === tier).length;
+        if (!n) return;
+        const s = document.createElement('span'); s.className = 'tchip tier-' + tier; s.textContent = n + ' ' + tier; box.appendChild(s);
+      });
+    }
+  };
+
+  // ---- columns panel
+  const renderCols = () => {
+    const box = $('cols'); box.replaceChildren();
+    COLS.forEach((c) => {
+      const lab = document.createElement('label');
+      const cb = document.createElement('input'); cb.type = 'checkbox'; cb.id = 'col-' + c.k; cb.checked = state.visible.includes(c.k); cb.disabled = state.readOnly;
+      cb.addEventListener('change', async () => {
+        const next = COLS.filter((x) => x.k === c.k ? cb.checked : state.visible.includes(x.k)).map((x) => x.k);
+        state.visible = next; render();
+        if (!db) return;
+        try { await db.doc('config/tabela').set({ colunas: next }); } catch (e) { fail(e); }
+      });
+      lab.append(cb, document.createTextNode(colLabel(c)));
+      box.appendChild(lab);
+    });
+  };
+
+  // ---- table
+  const visibleCols = () => COLS.filter((c) => state.visible.includes(c.k));
+  const renderHead = () => {
+    const tr = $('head'); tr.replaceChildren();
+    const mk = (key, label, left) => {
+      const th = document.createElement('th'); if (left) th.className = 'l';
+      if (key) {
+        const b = document.createElement('button'); b.type = 'button'; b.textContent = label;
+        b.addEventListener('click', () => { if (state.sort === key) state.dir = -state.dir; else { state.sort = key; state.dir = (key === 'nome' || key === 'cargo' || key === 'obs' || key === 'alianca') ? 1 : -1; } render(); });
+        th.appendChild(b);
+        if (state.sort === key) th.setAttribute('aria-sort', state.dir > 0 ? 'ascending' : 'descending');
+      } else th.textContent = label;
+      tr.appendChild(th);
+    };
+    mk('nome', t('h_player'), true); mk('status', t('h_status'), true);
+    visibleCols().forEach((c) => mk(c.k, colLabel(c), c.l));
+    if (!state.readOnly) mk(null, '', false);
+  };
+
+  const sortVal = (m, key) => {
+    if (key === 'nome') return (m.nome || '').toLowerCase();
+    if (key === 'status') return ['vai', 'pendente', 'nao'].indexOf(m.status);
+    const c = COLS.find((x) => x.k === key);
+    if (c && c.sort) return c.sort(m);
+    return m[key];
+  };
+
+  const filtered = () => {
+    const q = state.q.trim().toLowerCase();
+    const rows = state.rows.filter((m) => (!state.filter || m.status === state.filter) && (!q || (m.nome || '').toLowerCase().includes(q)));
+    rows.sort((a, b) => {
+      const va = sortVal(a, state.sort), vb = sortVal(b, state.sort);
+      if (va == null && vb == null) return 0; if (va == null || va === '') return 1; if (vb == null || vb === '') return -1;
+      return (typeof va === 'string' ? va.localeCompare(vb, loc()) : va - vb) * state.dir;
+    });
+    return rows;
+  };
+
+  const setStatus = async (m, v) => {
+    if (state.readOnly || !db || m.status === v) return;
+    const prev = m.status; m.status = v; render();
+    try { await db.doc('membros/' + m.id).update({ status: v }); }
+    catch (e) { m.status = prev; render(); fail(e); }
+  };
+
+  // a member without the field counts as active
+  const setAtivo = async (m, v) => {
+    if (state.readOnly || !db || (m.ativo !== false) === v) return;
+    const prev = m.ativo; m.ativo = v; render();
+    try { await db.doc('membros/' + m.id).update({ ativo: v }); }
+    catch (e) { m.ativo = prev; render(); fail(e); }
+  };
+
+  const saveObs = async (m, text) => {
+    if (state.readOnly || !db || (m.obs || '') === text) return;
+    m.obs = text;
+    try { await db.doc('membros/' + m.id).update({ obs: text }); } catch (e) { fail(e); }
+  };
+
+  const renderBody = () => {
+    const body = $('body'); body.replaceChildren();
+    const span = 2 + visibleCols().length + (state.readOnly ? 0 : 1);
+    const rows = filtered();
+    if (!rows.length) {
+      const tr = document.createElement('tr'); const td = document.createElement('td');
+      td.className = 'empty'; td.colSpan = span;
+      td.textContent = !state.loaded ? t('loading') : state.rows.length ? t('empty_filter') : t('empty_none');
+      tr.appendChild(td); body.appendChild(tr); return;
+    }
+    rows.forEach((m) => {
+      const tr = document.createElement('tr'); if (m.nome === ME) tr.className = 'me'; if (state.editing === m.id) tr.className = 'editing';
+      const tdn = document.createElement('td'); tdn.className = 'l nome'; tdn.textContent = m.nome || '';
+      if (m.origem === 'manual') { const tg = document.createElement('span'); tg.className = 'tag'; tg.textContent = t('added'); tdn.appendChild(tg); }
+      tr.appendChild(tdn);
+      const tds = document.createElement('td'); tds.className = 'l';
+      const seg = document.createElement('div'); seg.className = 'st'; seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', t('sit_of', { n: m.nome || '' }));
+      STATUS.forEach(([v, label, title]) => {
+        const b = document.createElement('button'); b.type = 'button'; b.dataset.v = v; b.textContent = t(label);
+        b.title = t(title);
+        b.setAttribute('aria-pressed', String(m.status === v)); b.disabled = state.readOnly;
+        b.addEventListener('click', () => setStatus(m, v));
+        seg.appendChild(b);
+      });
+      tds.appendChild(seg); tr.appendChild(tds);
+      visibleCols().forEach((c) => {
+        const td = document.createElement('td'); if (c.l) td.className = 'l';
+        if (c.k === 'ativo') {
+          const seg2 = document.createElement('div'); seg2.className = 'st'; seg2.setAttribute('role', 'group'); seg2.setAttribute('aria-label', t('act_of', { n: m.nome || '' }));
+          [[true, 'on', 'act_on'], [false, 'off', 'act_off']].forEach(([val, key, label]) => {
+            const b = document.createElement('button'); b.type = 'button'; b.dataset.v = key; b.textContent = t(label);
+            b.setAttribute('aria-pressed', String((m.ativo !== false) === val)); b.disabled = state.readOnly;
+            b.addEventListener('click', () => setAtivo(m, val));
+            seg2.appendChild(b);
+          });
+          td.appendChild(seg2);
+        } else if (c.k === 'obs') {
+          const inp = document.createElement('input'); inp.className = 'obs'; inp.value = m.obs || ''; inp.disabled = state.readOnly;
+          inp.setAttribute('aria-label', t('obs_of', { n: m.nome || '' })); inp.placeholder = state.readOnly ? '' : t('obs_ph');
+          inp.addEventListener('change', () => saveObs(m, inp.value.trim()));
+          inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') inp.blur(); });
+          td.appendChild(inp);
+        } else {
+          td.textContent = String(c.v(m));
+          const extra = c.cls ? c.cls(m) : ''; if (extra) td.classList.add(extra);
+        }
+        tr.appendChild(td);
+      });
+      if (!state.readOnly) {
+        const td = document.createElement('td');
+        const acts = document.createElement('div'); acts.className = 'acts'; td.appendChild(acts);
+        const ed = document.createElement('button'); ed.type = 'button'; ed.className = 'del'; ed.textContent = t('edit');
+        ed.setAttribute('aria-label', t('edit_of', { n: m.nome || '' }));
+        ed.addEventListener('click', () => openEdit(m));
+        acts.appendChild(ed);
+        {
+          const b = document.createElement('button'); b.type = 'button'; b.className = 'del'; b.textContent = t('remove');
+          b.setAttribute('aria-label', t('remove_of', { n: m.nome || '' }));
+          let armed = false, timer = null;
+          b.addEventListener('click', async () => {
+            if (!armed) { armed = true; b.classList.add('armed'); b.textContent = t('confirm_remove'); timer = setTimeout(() => { armed = false; b.classList.remove('armed'); b.textContent = t('remove'); }, 4000); return; }
+            clearTimeout(timer); b.disabled = true;
+            try { await db.doc('membros/' + m.id).delete(); } catch (e) { b.disabled = false; fail(e); }
+          });
+          acts.appendChild(b);
+        }
+        tr.appendChild(td);
+      }
+      body.appendChild(tr);
+    });
+  };
+
+  // ---- analysis tab
+  const TIERS = ['Elite', 'Advanced', 'Intermediate', 'Regular'];
+  const CARGOS = ['R5', 'R4', 'R3', 'R2', 'R1'];
+  const SIT = ['vai', 'nao', 'pendente'];
+  const sitLabel = (k) => t('sit_' + k);
+  const fillTable = (id, head, rows, foot) => {
+    const tb0 = $(id); tb0.replaceChildren();
+    const th = document.createElement('thead'); const hr = document.createElement('tr');
+    head.forEach((h) => { const c = document.createElement('th'); c.textContent = h; hr.appendChild(c); });
+    th.appendChild(hr); tb0.appendChild(th);
+    const tb = document.createElement('tbody');
+    const row = (vals, parent) => { const tr = document.createElement('tr'); vals.forEach((v) => { const td = document.createElement('td'); td.textContent = String(v); tr.appendChild(td); }); parent.appendChild(tr); };
+    rows.forEach((r) => row(r, tb)); tb0.appendChild(tb);
+    if (foot) { const tf = document.createElement('tfoot'); row(foot, tf); tb0.appendChild(tf); }
+  };
+  const avgScore = (g) => { const s = g.filter((m) => m._score != null); return s.length ? mi(s.reduce((a, m) => a + m._score, 0) / s.length) : '—'; };
+  const pct = (n, d) => d ? Math.round(n / d * 100) + '%' : '—';
+  const renderAnalise = () => {
+    if ($('v-analise').hidden) return;
+    const all = state.rows;
+    const rows = state.scope ? all.filter((m) => m.status === state.scope) : all;
+    $('a-count').textContent = state.loaded ? (rows.length === 1 ? t('player') : t('players', { n: rows.length })) : '';
+    // by alliance
+    const alRow = (label, g) => [label, g.length, ...SIT.map((k) => g.filter((m) => m.status === k).length), ...TIERS.slice(1).map((tier) => g.filter((m) => m._tier === tier).length), avgScore(g)];
+    fillTable('a-aliancas', [t('c_alianca'), t('members'), ...SIT.map(sitLabel), 'Advanced', 'Intermediate', 'Regular', t('avg_score')],
+      ALIANCAS.map((a) => alRow(a, rows.filter((m) => m.alianca === a))), alRow(t('total'), rows));
+    // tier bars
+    const box = $('a-tiers'); box.replaceChildren();
+    const counts = TIERS.map((tier) => rows.filter((m) => m._tier === tier).length);
+    const semScore = rows.filter((m) => !m._tier).length;
+    const max = Math.max(1, ...counts);
+    TIERS.forEach((tier, i) => {
+      const lab = document.createElement('span'); lab.textContent = tier;
+      const bar = document.createElement('span'); bar.className = 'bar';
+      const fill = document.createElement('i'); fill.className = 'c-' + tier; fill.style.width = (counts[i] ? Math.max(1.5, counts[i] / max * 85) : 0) + '%';
+      const n = document.createElement('span'); n.textContent = String(counts[i]);
+      bar.append(fill, n); box.append(lab, bar);
+    });
+    if (semScore) { const lab = document.createElement('span'); lab.className = 'msg'; lab.textContent = t('no_score'); const n = document.createElement('span'); n.className = 'msg'; n.textContent = t('missing_power', { n: semScore }); box.append(lab, n); }
+    // tier by rank
+    const cargoRows = CARGOS.map((c) => { const g = rows.filter((m) => m.cargo === c); return [c, g.length, ...TIERS.slice(1).map((tier) => g.filter((m) => m._tier === tier).length), avgScore(g)]; });
+    const semCargo = rows.filter((m) => !CARGOS.includes(m.cargo));
+    if (semCargo.length) cargoRows.push([t('no_cargo'), semCargo.length, ...TIERS.slice(1).map((tier) => semCargo.filter((m) => m._tier === tier).length), avgScore(semCargo)]);
+    fillTable('a-cargos', [t('c_cargo'), t('members'), 'Advanced', 'Intermediate', 'Regular', t('avg_score')], cargoRows,
+      [t('total'), rows.length, ...TIERS.slice(1).map((tier) => rows.filter((m) => m._tier === tier).length), avgScore(rows)]);
+    // status by tier (always all members)
+    const sitRows = TIERS.map((tier) => { const g = all.filter((m) => m._tier === tier); return [tier, g.length, ...SIT.map((k) => g.filter((m) => m.status === k).length), pct(g.filter((m) => m.status === 'vai').length, g.length)]; });
+    fillTable('a-situacao', [t('c_tier'), t('members'), ...SIT.map(sitLabel), t('pct_conf')], sitRows,
+      [t('total'), all.length, ...SIT.map((k) => all.filter((m) => m.status === k).length), pct(all.filter((m) => m.status === 'vai').length, all.length)]);
+    // power by tier
+    const sum = (g, k) => g.reduce((a, m) => a + (m[k] || 0), 0);
+    const pRows = TIERS.map((tier) => { const g = rows.filter((m) => m._tier === tier); return [tier, g.length, bi(sum(g, 'poder')), g.length ? mi(sum(g, 'poder') / g.length) : '—', bi(sum(g, 'arena'))]; });
+    fillTable('a-poder', [t('c_tier'), t('members'), t('power_total'), t('power_avg'), t('arena_total')], pRows,
+      [t('total'), rows.length, bi(sum(rows, 'poder')), rows.length ? mi(sum(rows, 'poder') / rows.length) : '—', bi(sum(rows, 'arena'))]);
+  };
+
+  // ---- slots on the destination server (given by the alliance leadership)
+  const DESTINO = 609;
+  const VAGAS = { Advanced: 3, Intermediate: 30, Regular: 60 };
+  const renderSlots = () => {
+    $('slots-title').textContent = t('slots_title', { s: DESTINO });
+    $('slots-note').textContent = t('slots_note');
+    const box = $('slots'); box.replaceChildren();
+    const going = state.rows.filter((m) => m.status === 'vai');
+    const tiers = TIERS.filter((tier) => VAGAS[tier] != null || going.some((m) => m._tier === tier));
+    tiers.forEach((tier) => {
+      const cap = VAGAS[tier] || 0;
+      const n = going.filter((m) => m._tier === tier).length;
+      const el = document.createElement('div'); el.className = 'slot' + (n > cap ? ' over' : '');
+      const top = document.createElement('div'); top.className = 'slot-top';
+      const name = document.createElement('span'); name.className = 'tier-' + tier; name.textContent = tier;
+      const val = document.createElement('b'); val.textContent = state.loaded ? t('slots_of', { a: n, b: cap }) : '—';
+      top.append(name, val);
+      const track = document.createElement('div'); track.className = 'slot-track';
+      const fill = document.createElement('i'); fill.className = 'c-' + tier; fill.style.width = (cap ? Math.min(100, n / cap * 100) : (n ? 100 : 0)) + '%';
+      track.appendChild(fill);
+      const foot = document.createElement('div'); foot.className = 'slot-foot';
+      foot.textContent = !state.loaded ? '' : !cap ? t('slots_none') : n > cap ? t('slots_over', { n: n - cap }) : n === cap ? t('slots_full') : (cap - n === 1 ? t('slots_left1') : t('slots_left', { n: cap - n }));
+      el.append(top, track, foot); box.appendChild(el);
+    });
+  };
+
+  const render = () => { renderStrip(); renderSlots(); renderHead(); renderBody(); renderAnalise(); };
+
+  const showView = (v) => {
+    const views = { lista: 'v-lista', analise: 'v-analise' };
+    if (!views[v]) v = 'lista';
+    Object.entries(views).forEach(([k, id]) => { $(id).hidden = k !== v; $('tab-' + k).setAttribute('aria-selected', String(k === v)); });
+    try { history.replaceState(null, '', '#' + v); } catch (_) {}
+    renderAnalise();
+  };
+  document.querySelectorAll('.tabs [data-view]').forEach((b) => b.addEventListener('click', () => showView(b.dataset.view)));
+  document.querySelectorAll('[data-scope]').forEach((b) => b.addEventListener('click', () => {
+    state.scope = b.dataset.scope;
+    document.querySelectorAll('[data-scope]').forEach((o) => o.setAttribute('aria-pressed', String(o === b)));
+    renderAnalise();
+  }));
+
+  // ---- toolbar
+  document.querySelectorAll('.seg [data-f]').forEach((b) => b.addEventListener('click', () => {
+    state.filter = b.dataset.f;
+    document.querySelectorAll('.seg [data-f]').forEach((o) => o.setAttribute('aria-pressed', String(o === b)));
+    renderBody();
+  }));
+  $('busca').addEventListener('input', (e) => { state.q = e.target.value; renderBody(); });
+  const toggle = (btnId, panelId) => $(btnId).addEventListener('click', () => {
+    const p = $(panelId); p.hidden = !p.hidden; $(btnId).setAttribute('aria-expanded', String(!p.hidden));
+  });
+  toggle('btn-cols', 'p-cols');
+  const FIELDS = ['nome', 'sede', 'poder', 'edificio', 'tecnologia', 'tropas', 'heroi', 'veiculo', 'arena', 't10', 'obs'];
+  let formMsg = { key: 'f_hint', vars: null, err: false };
+  const setMsg = (key, vars, err) => { formMsg = { key, vars, err: !!err }; const m = $('f-msg'); m.textContent = t(key, vars); m.classList.toggle('err', !!err); };
+  const editingRow = () => state.rows.find((m) => m.id === state.editing);
+  const paintForm = () => {
+    const m = editingRow();
+    $('f-title').textContent = m ? t('f_title_edit', { n: m.nome || '' }) : t('f_title_add');
+    $('f-save').textContent = m ? t('f_save_edit') : t('f_save_add');
+    setMsg(formMsg.key, formMsg.vars, formMsg.err);
+  };
+  const setMode = (m) => { state.editing = m ? m.id : null; formMsg = { key: 'f_hint', vars: null, err: false }; paintForm(); };
+  const openPanel = () => { $('p-add').hidden = false; $('btn-add').setAttribute('aria-expanded', 'true'); $('p-add').scrollIntoView({ block: 'nearest' }); $('f-nome').focus(); };
+  const openEdit = (m) => {
+    if (state.readOnly) return;
+    setMode(m);
+    $('f-nome').value = m.nome || '';
+    $('f-cargo').value = m.cargo || '';
+    $('f-alianca').value = m.alianca || 'DEDZ';
+    $('f-status').value = m.status || 'pendente';
+    $('f-ativo').value = m.ativo === false ? '0' : '1';
+    $('f-sede').value = m.sede ?? '';
+    ['poder', 'edificio', 'tecnologia', 'tropas', 'heroi', 'veiculo'].forEach((k) => { $('f-' + k).value = m[k] == null ? '' : nfmt(m[k]); });
+    $('f-arena').value = m.arena == null ? '' : mi(m.arena);
+    $('f-t10').value = m.t10 == null ? '' : String(Math.round(m.t10 * 100));
+    $('f-obs').value = m.obs || '';
+    renderBody(); openPanel();
+  };
+  $('btn-add').addEventListener('click', () => {
+    const p = $('p-add');
+    if (!p.hidden && !state.editing) { p.hidden = true; $('btn-add').setAttribute('aria-expanded', 'false'); return; }
+    clearForm(); setMode(null); renderBody(); openPanel();
+  });
+
+  // "205.554.030", "205,554,030", "205,5M", "205.5M", "1,2 bi" -> number (works in every language)
+  const parseNum = (raw) => {
+    let s = String(raw || '').trim().toLowerCase().replace(/\s+/g, '');
+    if (!s) return null;
+    let mult = 1;
+    if (/(milm|bi|b)$/.test(s)) { mult = 1e9; s = s.replace(/(milm|bi|b)$/, ''); }
+    else if (/m$/.test(s)) { mult = 1e6; s = s.replace(/m$/, ''); }
+    else if (/k$/.test(s)) { mult = 1e3; s = s.replace(/k$/, ''); }
+    s = s.replace(/[.,](?=\d{3}(?:[.,]|$))/g, '').replace(',', '.');
+    const n = Number(s);
+    return Number.isFinite(n) && n >= 0 ? Math.round(n * mult) : NaN;
+  };
+  const clearForm = () => { FIELDS.forEach((k) => { $('f-' + k).value = ''; }); $('f-cargo').value = ''; $('f-alianca').value = 'DEDZ'; $('f-status').value = 'pendente'; $('f-ativo').value = '1'; };
+  $('f-cancel').addEventListener('click', () => { clearForm(); setMode(null); $('p-add').hidden = true; $('btn-add').setAttribute('aria-expanded', 'false'); renderBody(); });
+  $('f-save').addEventListener('click', async () => {
+    const nome = $('f-nome').value.trim();
+    if (!nome) { setMsg('err_name', null, true); $('f-nome').focus(); return; }
+    const editId = state.editing;
+    if (state.rows.some((m) => m.id !== editId && (m.nome || '').toLowerCase() === nome.toLowerCase())) { setMsg('err_dup', { n: nome }, true); return; }
+    const doc = { nome, alianca: $('f-alianca').value, cargo: $('f-cargo').value || null, status: $('f-status').value, ativo: $('f-ativo').value === '1', obs: $('f-obs').value.trim() };
+    if (!editId) doc.origem = 'manual';
+    const sede = $('f-sede').value.trim(); doc.sede = sede ? Number(sede) : null;
+    for (const k of ['poder', 'edificio', 'tecnologia', 'tropas', 'heroi', 'veiculo', 'arena']) {
+      const v = parseNum($('f-' + k).value);
+      if (Number.isNaN(v)) { setMsg('err_num', { f: $('f-' + k).closest('label').querySelector('span').textContent.trim() }, true); $('f-' + k).focus(); return; }
+      doc[k] = v;
+    }
+    const t10 = $('f-t10').value.trim().replace('%', '').replace(',', '.');
+    if (t10) { const n = Number(t10); if (!Number.isFinite(n) || n < 0 || n > 100) { setMsg('err_t10', null, true); return; } doc.t10 = n / 100; } else doc.t10 = null;
+    if (doc.sede != null && !Number.isFinite(doc.sede)) { setMsg('err_sede', null, true); return; }
+    if (!db) { setMsg('err_notloaded', null, true); return; }
+    $('f-save').disabled = true;
+    try {
+      if (editId) {
+        await db.doc('membros/' + editId).update(doc);
+        clearForm(); setMode(null); $('p-add').hidden = true; $('btn-add').setAttribute('aria-expanded', 'false');
+        notice(null); renderBody();
+      } else {
+        await db.collection('membros').add(doc);
+        clearForm(); setMsg('added_ok', { n: nome }, false);
+      }
+    } catch (e) { fail(e); setMsg('err_save', null, true); }
+    $('f-save').disabled = false;
+  });
+
+  $('btn-csv').addEventListener('click', async () => {
+    const rows = filtered(); const cols = visibleCols();
+    const esc = (v) => { const s = String(v ?? ''); return /[";\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+    const label = { vai: t('opt_vai'), nao: t('opt_nao'), pendente: t('sit_pendente') };
+    const lines = [[t('h_player'), t('h_status'), ...cols.map(colLabel)].map(esc).join(';')];
+    rows.forEach((m) => lines.push([m.nome, label[m.status] || '', ...cols.map((c) => c.v(m))].map(esc).join(';')));
+    const data = '﻿' + lines.join('\r\n');
+    if (!dl) { notice('dl_unavail'); return; }
+    try { await dl.save({ filename: 'migracao_dedz.csv', data }); }
+    catch (e) { if (e && e.code !== 'declined') notice('dl_fail'); }
+  });
+
+  // ---- language switch
+  const fmtAt = (iso) => { try { return new Date(iso).toLocaleString(loc(), { dateStyle: 'short', timeStyle: 'short' }); } catch (_) { return iso; } };
+  const applyLang = () => {
+    document.documentElement.lang = LOCALE[lang];
+    document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
+    document.querySelectorAll('[data-i18n-ph]').forEach((el) => { el.placeholder = t(el.dataset.i18nPh); });
+    document.querySelectorAll('[data-i18n-aria]').forEach((el) => { el.setAttribute('aria-label', t(el.dataset.i18nAria)); });
+    document.querySelectorAll('[data-i18n-title]').forEach((el) => { el.title = t(el.dataset.i18nTitle); });
+    document.querySelectorAll('#lang [data-lang]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
+    $('pub-at').textContent = SNAP && SNAP.at ? t('pub_at', { d: fmtAt(SNAP.at) }) : '';
+    if (state.publicView) notice('public_view', { at: SNAP && SNAP.at ? t('public_at', { d: fmtAt(SNAP.at) }) : '' });
+    else if (noticeKey) notice(noticeKey, noticeVars);
+    if (!$('btn-pub').disabled) $('btn-pub').textContent = t('btn_pub');
+    paintForm(); renderCols(); render();
+  };
+  document.querySelectorAll('#lang [data-lang]').forEach((b) => b.addEventListener('click', () => {
+    lang = b.dataset.lang;
+    try { localStorage.setItem('migracao-lang', lang); } catch (_) {}
+    applyLang();
+  }));
+
+  // ---- data
+  const prep = (m) => { m._score = score(m); m._tier = tierOf(m._score); if (!['vai', 'nao', 'pendente'].includes(m.status)) m.status = 'pendente'; m.alianca = ALIANCAS.includes(String(m.alianca || '').toUpperCase()) ? String(m.alianca).toUpperCase() : 'DEDZ'; return m; };
+
+  const publishSnapshot = async (artifact) => {
+    const b = $('btn-pub'); b.disabled = true; b.textContent = t('updating');
+    try {
+      const res = await fetch('fonte.html', { cache: 'no-store' });
+      if (!res.ok) throw new Error('fonte');
+      const tpl = await res.text();
+      const M = '__SNAP' + 'SHOT__';
+      // "<\/" keeps the browser from reading these strings as the end of this script
+      const tag = 'id="snapshot">' + M + '<\/script>';
+      if (!tpl.includes(tag)) throw new Error('fonte');
+      const rows = state.rows.map((m) => { const o = {}; Object.keys(m).forEach((k) => { if (k[0] !== '_') o[k] = m[k]; }); return o; });
+      const json = JSON.stringify({ at: new Date().toISOString(), colunas: state.visible, rows }).replace(/</g, '\\u003c');
+      const page = tpl.replace(tag, 'id="snapshot">' + json + '<\/script>');
+      await artifact.publish(SKEL + page + '<\/body><\/html>');
+    } catch (e) {
+      b.disabled = false; b.textContent = t('btn_pub');
+      if (e && e.code === 'conflict') return;
+      if (e && (e.code === 'not_writer' || e.code === 'not_granted')) { b.hidden = true; return; }
+      notice('pub_fail');
+    }
+  };
+
+  showView(location.hash.slice(1));
+  applyLang();
+  (async () => {
+    db = await claude.use('db');
+    dl = await claude.use('downloads');
+    if (!dl) $('btn-csv').hidden = true;
+    if (!db) {
+      state.rows = SNAP && Array.isArray(SNAP.rows) ? SNAP.rows.map((r) => prep(Object.assign({}, r))) : [];
+      if (SNAP && Array.isArray(SNAP.colunas)) state.visible = COLS.filter((c) => SNAP.colunas.includes(c.k)).map((c) => c.k);
+      state.loaded = true; state.readOnly = true; state.publicView = true;
+      $('btn-add').hidden = true; $('btn-cols').hidden = true;
+      applyLang(); return;
+    }
+    const user = await claude.use('user');
+    if (user) { try { const ok = await user.can('data.write'); if (ok === false) setReadOnly(); } catch (_) {} }
+    try {
+      const canEdit = user ? await user.canEdit() : false;
+      const artifact = canEdit ? await claude.use('artifact') : null;
+      if (artifact) { $('btn-pub').hidden = false; $('btn-pub').addEventListener('click', () => publishSnapshot(artifact)); }
+    } catch (_) {}
+    db.collection('membros').onSnapshot((snap) => {
+      state.rows = snap.docs.map((d) => prep(Object.assign({ id: d.id }, d.data())));
+      state.loaded = true; render();
+    }, () => { notice('stopped'); });
+    db.doc('config/tabela').onSnapshot((snap) => {
+      const d = snap.exists ? snap.data() : null;
+      if (d && Array.isArray(d.colunas)) { state.visible = COLS.filter((c) => d.colunas.includes(c.k)).map((c) => c.k); render(); renderCols(); }
+    }, () => {});
+  })();
+})();
+</script>
