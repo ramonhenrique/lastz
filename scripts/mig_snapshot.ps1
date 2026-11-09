@@ -7,7 +7,9 @@
 # Depois publique o -Out com Artifact publish, url da migração (o fonte.html publicado continua lá).
 param([Parameter(Mandatory)][string]$Fonte, [string]$Out = 'C:\lz\migracao.html',
       [string]$Pasta = 'C:\lz\mig\membros', [string]$Versoes = 'C:\lz\mig_versoes.txt',
-      [string[]]$Colunas = @('ativo', 'alianca', 'cargo', 'sede', 'poder', 'score', 'tier', 'arena', 't10', 'obs'))
+      [ValidateSet('s12', 's3')][string]$Temporada = 's3',
+      [string[]]$Colunas = @('ativo', 'alianca', 'cargo', 'sede', 'poder', 'score', 'tier', 'arena', 't10', 'vtipo', 'obs'))
+# -Temporada: a temporada salva na página (ArtifactData get, collection config, doc_id temporada, campo s); sem o documento, s3.
 . (Join-Path $PSScriptRoot 'comum.ps1')
 
 $tpl = [IO.File]::ReadAllText($Fonte, $script:utf8)
@@ -30,7 +32,7 @@ $rows = foreach ($a in (Get-ChildItem $Pasta -Filter *.json | Sort-Object Name))
 $rows = @($rows)
 if ($rows.Count -ne $ids.Count) { throw "Esperava $($ids.Count) membros, achei $($rows.Count)" }
 
-$snap = [ordered]@{ at = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss.fffZ'); colunas = $Colunas; rows = $rows }
+$snap = [ordered]@{ at = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ss.fffZ'); temporada = $Temporada; colunas = $Colunas; rows = $rows }
 $json = (ConvertTo-Json $snap -Depth 6 -Compress).Replace('<', '\u003c')
 $null = $json | ConvertFrom-Json   # valida
 [IO.File]::WriteAllText($Out, $tpl.Replace($tag, 'id="snapshot">' + $json + '</script>'), $script:utf8)

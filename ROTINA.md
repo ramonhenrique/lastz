@@ -117,8 +117,8 @@ A dash de migração (https://claude.ai/artifact/TdiYGf4RT4jYT7LrAYC6cW) usa os 
 4. Cite no relatório da liderança só o que mudou de estrutura: entrou, saiu ou trocou de nome. Atualização de poder de arena não precisa.
 5. **Lista pública (sempre, mesmo sem escritas):** quem abre a migração sem acesso ao banco vê uma cópia da lista gravada dentro da página. O aviso no topo diz "Você está vendo a lista publicada em…". Essa data é a hora da última sincronização, então republique a cópia em toda execução (regra do Ramon, 09/11/2026):
    1. Se gravou lotes no 3, repita o download do 1.
-   2. `Artifact` `read` no URL da migração com `path` `fonte.html` (o modelo com `__SNAPSHOT__`).
-   3. `scripts\mig_snapshot.ps1 -Fonte <arquivo salvo pelo read> -Out dash\migracao.html`.
+   2. Pegue a temporada escolhida na página: `ArtifactData` `get` no URL da migração, `collection` `config`, `doc_id` `temporada`, campo `s` (`s12` ou `s3`). Sem o documento, use `s3`.
+   3. `scripts\mig_snapshot.ps1 -Fonte dash\migracao_fonte.html -Temporada <s12|s3> -Out dash\migracao.html`. O modelo `dash\migracao_fonte.html` é o mesmo publicado como `fonte.html`. Se alguém mudar a página, publique os dois juntos (`files` `{"fonte.html": "dash/migracao_fonte.html"}`).
    4. `Artifact` publish de `dash\migracao.html` no URL da migração. Leia a página antes (`read`) se for uma sessão nova. Não passe `capabilities`.
    5. Inclua `dash/migracao.html` no commit.
 
