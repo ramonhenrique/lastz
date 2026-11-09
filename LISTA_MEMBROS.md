@@ -40,6 +40,15 @@ Caminho: Chat → Chat privado → Bate-papo em grupo → "REGULAR 609" → engr
 4. Na dash de migração, cada conta de fora é um documento `g_<nome sem símbolos>`, com nome, alianca, zona, sede, poder, cargo (R4 se tiver a insígnia), status "vai", ativo, origem "grupo" e obs "grupo REGULAR 609". Use `set` para criar e `update` para atualizar sede e poder das que já existem. O `sync_migracao.ps1` não toca nessas contas.
 5. Conta de fora que saiu do grupo: cite para o Ramon, não apague sozinho.
 
+## 1b. Leitura card a card (todos os membros, com detalhamento do PC)
+
+Quando o Ramon pedir para "entrar em card por card", leia o cartão e o PC de todos os membros da lista Aliança → Membros:
+1. Na lista, tire um print e anote as posições dos retratos (coluna esquerda x 133, direita x 350; a linha anda de ~80 px).
+2. `scripts\cards_tela.ps1 -Prefixo sNN -Pos "133,610 350,610 ..."` lê os membros daquela tela. Para cada um, `card_pc.ps1` toca no retrato, acha "Detalhes" pela cor verde (o botão de cima à esquerda do menu; nunca "Ajuste de classe"), espera o cartão abrir, toca em PC e salva um recorte (nome, sede e os 5 componentes) em `C:\lz\cards\sNN_XX.png`. O script para no primeiro "sem-menu" ou "sem-cartao": tire um print, resolva à mão e siga.
+3. Faixas: R4 fechada no topo (seta x 508, y 435); R3 já aberta; R2 e R1 abrem pela seta quando aparecem no fim. O R5 abre o menu acima do retrato. A própria conta (C0r1nga²) não abre menu: leia pelo retrato do canto superior esquerdo da cidade, depois PC.
+4. Monte painéis de 8 recortes e transcreva em `C:\lz\cards\transcrito.tsv` (nome, sede, poder, edificio, tecnologia, tropas, heroi, veiculo, matanca). Confira: a soma dos 5 componentes tem que dar o PC exato de cada um.
+5. Grave com `ArtifactData` `batch` usando `file_path` por membro: na migração, sede, poder, os 5 componentes e matança; no acompanhamento, sede, poder e `poderEm`. Depois `sincroniza.ps1`, `foto.ps1`, `mig_snapshot.ps1` e publique as duas.
+
 ## 3b. Detalhamento do PC (o que o Migration Score precisa)
 
 Sem edifício, tecnologia, herói e veículo o membro fica sem score e sem tier na dash de migração. Leia o detalhamento de **todo membro da dash de migração que estiver sem esses campos** (contas de fora e quem entrou depois da última leitura). No cartão do jogador, tocar em **PC** (160,265) abre "Detalhes": Edifício, Tecnologia, Tropas, Herói e Veículo modificado, além do PC e da Matança exatos. Feche os Detalhes no X (486,232) e o cartão no X (487,82).
