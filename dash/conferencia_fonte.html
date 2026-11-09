@@ -1,0 +1,280 @@
+<title>Conferência de Poder DEDZ</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: ficha de conferência — cabeçalho curto, como conferir no jogo, tabela única com linha que abre a conta do score */
+  :root {
+    --bg: #f3f4ef; --panel: #ffffff; --fg: #1d211a; --muted: #5d6656; --line: #d9dcd0; --soft: #e8eadf;
+    --accent: #4f6b2c; --accent-fg: #ffffff;
+    --t-elite: #7a4fa8; --t-adv: #b5541f; --t-int: #23805e; --t-reg: #5d6656;
+    --f-display: "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
+    --f-body: "Barlow", "Segoe UI", Arial, sans-serif;
+    --f-mono: "JetBrains Mono", Consolas, monospace;
+    --r: 6px;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg: #151813; --panel: #1d211a; --fg: #e7eadf; --muted: #9aa392; --line: #343a2f; --soft: #262b22;
+    --accent: #9cbf5f; --accent-fg: #151813;
+    --t-elite: #b58fe0; --t-adv: #ec8a52; --t-int: #5cc79e; --t-reg: #9aa392; color-scheme: dark } }
+  :root[data-theme="dark"] {
+    --bg: #151813; --panel: #1d211a; --fg: #e7eadf; --muted: #9aa392; --line: #343a2f; --soft: #262b22;
+    --accent: #9cbf5f; --accent-fg: #151813;
+    --t-elite: #b58fe0; --t-adv: #ec8a52; --t-int: #5cc79e; --t-reg: #9aa392; color-scheme: dark }
+  body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 15px; line-height: 1.45; }
+  .wrap { max-width: 1280px; margin: 0 auto; padding-block: 24px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 18px; }
+  .toprow { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .eyebrow { font-family: var(--f-mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  h1 { font-family: var(--f-display); font-weight: 700; font-size: clamp(28px, 4vw, 40px); line-height: 1.05; margin: 0; text-wrap: balance; }
+  h2 { font-family: var(--f-display); font-weight: 600; font-size: 18px; margin: 0; }
+  .lede { margin: 0; color: var(--muted); max-width: 75ch; }
+  header { display: grid; gap: 6px; }
+  .langs { display: flex; gap: 4px; }
+  .langs button { border: 0; background: transparent; padding: 3px; border-radius: 4px; cursor: pointer; opacity: .5; line-height: 0; }
+  .langs button:hover { opacity: .85; }
+  .langs button[aria-pressed="true"] { opacity: 1; background: var(--soft); }
+  .langs svg { width: 22px; height: 15px; border-radius: 2px; box-shadow: 0 0 0 1px var(--line); }
+  button:focus-visible, input:focus-visible, select:focus-visible, tr:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .how { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px; display: grid; gap: 10px; }
+  .steps { margin: 0; padding-left: 20px; display: grid; gap: 4px; max-width: 95ch; }
+  .formula { font-family: var(--f-mono); font-size: 13px; background: var(--soft); padding: 8px 10px; border-radius: 4px; overflow-x: auto; white-space: nowrap; }
+  .msg { font-size: 13px; color: var(--muted); margin: 0; max-width: 95ch; }
+
+  .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  input[type="search"], select { font: inherit; font-size: 14px; padding: 7px 10px; border: 1px solid var(--line); border-radius: var(--r); background: var(--panel); color: var(--fg); min-width: 0; }
+  input[type="search"] { flex: 1 1 200px; max-width: 300px; }
+  .count { font-size: 13px; color: var(--muted); }
+
+  .tablebox { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); overflow: auto; max-height: 75vh; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+  th, td { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+  th { position: sticky; top: 0; z-index: 2; background: var(--panel); font-family: var(--f-display); font-weight: 600; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+  th button { all: unset; cursor: pointer; }
+  th[aria-sort="ascending"] button::after { content: " ↑"; } th[aria-sort="descending"] button::after { content: " ↓"; }
+  .l { text-align: left; }
+  td.nome { font-weight: 600; }
+  td.score { font-weight: 600; }
+  .tag { font-family: var(--f-mono); font-size: 11px; color: var(--muted); margin-left: 6px; font-weight: 400; }
+  .tier { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 4px; background: var(--soft); }
+  .tier.Elite { color: var(--t-elite); } .tier.Advanced { color: var(--t-adv); } .tier.Intermediate { color: var(--t-int); } .tier.Regular { color: var(--t-reg); }
+  tr.row { cursor: pointer; } tr.row:hover td { background: var(--soft); }
+  tr.row[aria-expanded="true"] td { background: var(--soft); }
+  tr.det td { text-align: left; white-space: normal; background: var(--bg); }
+  .calc { display: grid; grid-template-columns: max-content max-content max-content; gap: 3px 14px; font-family: var(--f-mono); font-size: 12.5px; }
+  .calc .r { text-align: right; }
+  .calc .tot { font-weight: 600; border-top: 1px solid var(--line); padding-top: 3px; }
+  .empty { padding: 32px 16px; text-align: center; color: var(--muted); }
+  footer { display: grid; gap: 6px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="toprow">
+      <span class="eyebrow">New Deadz [DEDZ] · Zona de guerra #614</span>
+      <div class="langs" role="group" aria-label="Idioma / Language">
+        <button type="button" data-lang="pt" title="Português" aria-pressed="true"><svg viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="20" fill="#009c3b"/><polygon points="15,2.2 27.6,10 15,17.8 2.4,10" fill="#ffdf00"/><circle cx="15" cy="10" r="4.4" fill="#002776"/></svg></button>
+        <button type="button" data-lang="es" title="Español" aria-pressed="false"><svg viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="20" fill="#aa151b"/><rect y="5" width="30" height="10" fill="#f1bf00"/></svg></button>
+        <button type="button" data-lang="en" title="English" aria-pressed="false"><svg viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="20" fill="#b22234"/><g fill="#fff"><rect y="1.54" width="30" height="1.54"/><rect y="4.62" width="30" height="1.54"/><rect y="7.69" width="30" height="1.54"/><rect y="10.77" width="30" height="1.54"/><rect y="13.85" width="30" height="1.54"/><rect y="16.92" width="30" height="1.54"/></g><rect width="13" height="10.77" fill="#3c3b6e"/></svg></button>
+      </div>
+    </div>
+    <h1 data-t="title">Confira seu poder e seu Migration Score</h1>
+    <p class="lede" id="lede"></p>
+  </header>
+
+  <section class="how" aria-labelledby="how-t">
+    <h2 id="how-t" data-t="how_t">Como conferir</h2>
+    <ol class="steps">
+      <li data-t="s1">No jogo, toque no seu retrato (canto de cima à esquerda) e depois em PC.</li>
+      <li data-t="s2">Compare Edifício, Tecnologia, Herói e Veículo modificado com a sua linha aqui.</li>
+      <li data-t="s3">Confira também o tipo de veículo e se você já desbloqueou o T10. Esses dois mudam o score.</li>
+      <li data-t="s4">Se algo estiver diferente, mande um print da tela de PC para a liderança.</li>
+    </ol>
+    <div class="formula" id="formula"></div>
+    <p class="msg" id="formula-note"></p>
+  </section>
+
+  <div class="toolbar">
+    <input type="search" id="busca" data-ph="search" placeholder="Buscar jogador" aria-label="Buscar jogador">
+    <select id="f-ali" aria-label="Aliança"></select>
+    <span class="count" id="count"></span>
+  </div>
+
+  <div class="tablebox">
+    <table>
+      <thead><tr id="head"></tr></thead>
+      <tbody id="body"></tbody>
+    </table>
+  </div>
+  <p class="msg" data-t="click">Toque numa linha para ver a conta do score.</p>
+
+  <footer>
+    <p class="msg" id="foot"></p>
+  </footer>
+</div>
+
+<script type="application/json" id="dados">__DADOS__</script>
+<script>
+(() => {
+  const D = JSON.parse(document.getElementById('dados').textContent);
+  const T = {
+    pt: {
+      title: 'Confira seu poder e seu Migration Score',
+      lede: 'Lista de todos que vão para o levantamento da migração, com os números lidos no jogo em {d}. Procure seu nome e veja se o poder, o tipo de veículo e o T10 estão certos.',
+      how_t: 'Como conferir', s1: 'No jogo, toque no seu retrato (canto de cima à esquerda) e depois em PC.',
+      s2: 'Compare Edifício, Tecnologia, Herói e Veículo modificado com a sua linha aqui.',
+      s3: 'Confira também o tipo de veículo e se você já desbloqueou o T10. Esses dois mudam o score.',
+      s4: 'Se algo estiver diferente, mande um print da tela de PC para a liderança.',
+      fnote: 'Mesma conta da calculadora do lastz.gg. Tropas não entram. EX Destroyer soma 43M. T10 desbloqueado soma 16M e, na S3, mais 0,77 × Herói − 45M. O score nunca fica abaixo de 0. Tiers da {s}: Intermediate a partir de {a}M, Advanced a partir de {b}M, Elite acima de {c}M. É uma estimativa: quem decide é o painel de migração do jogo.',
+      search: 'Buscar jogador', all: 'Todas as alianças', count: '{n} jogadores', click: 'Toque numa linha para ver a conta do score.',
+      c_nome: 'Jogador', c_ali: 'Aliança', c_cargo: 'Cargo', c_sede: 'Sede', c_poder: 'Poder total', c_edif: 'Edifício', c_tec: 'Tecnologia', c_tropas: 'Tropas', c_heroi: 'Herói', c_veic: 'Veículo mod.', c_vtipo: 'Tipo de veículo', c_t10: 'T10', c_score: 'Score', c_tier: 'Tier',
+      yes: 'Sim', no: 'Não', v_hercules: 'Hercules', v_destroyer: 'Destroyer', v_ex: 'EX Destroyer',
+      k_ed: 'Edifício + Tecnologia × 0,06', k_he: 'Herói × 1,2', k_ve: 'Veículo × 1,1', k_base: 'Base', k_ex: 'EX Destroyer', k_t10: 'T10 desbloqueado', k_s3: 'Ajuste S3 com T10 (0,77 × Herói − 45M)', k_tot: 'Migration Score', k_min: '(abaixo de 0 conta como 0)',
+      nodata: 'Sem o detalhamento do PC: ainda não dá para calcular.', empty: 'Ninguém com esse nome.',
+      foot: 'Números lidos no jogo em {d} (perfil > PC). Lista atualizada em {u}. Esta página só mostra os dados; correções são feitas pela liderança.'
+    },
+    es: {
+      title: 'Revisa tu poder y tu Migration Score',
+      lede: 'Lista de todos los que están en el sondeo de migración, con los números leídos en el juego el {d}. Busca tu nombre y revisa si el poder, el tipo de vehículo y el T10 están bien.',
+      how_t: 'Cómo revisar', s1: 'En el juego, toca tu retrato (arriba a la izquierda) y luego PC.',
+      s2: 'Compara Edificio, Tecnología, Héroe y Vehículo modificado con tu fila aquí.',
+      s3: 'Revisa también el tipo de vehículo y si ya desbloqueaste el T10. Los dos cambian el score.',
+      s4: 'Si algo no coincide, manda una captura de la pantalla de PC a los líderes.',
+      fnote: 'Misma cuenta que la calculadora de lastz.gg. Las tropas no cuentan. EX Destroyer suma 43M. T10 desbloqueado suma 16M y, en S3, además 0,77 × Héroe − 45M. El score nunca baja de 0. Tiers de la {s}: Intermediate desde {a}M, Advanced desde {b}M, Elite por encima de {c}M. Es una estimación: el panel de migración del juego es el que decide.',
+      search: 'Buscar jugador', all: 'Todas las alianzas', count: '{n} jugadores', click: 'Toca una fila para ver la cuenta del score.',
+      c_nome: 'Jugador', c_ali: 'Alianza', c_cargo: 'Rango', c_sede: 'Cuartel', c_poder: 'Poder total', c_edif: 'Edificio', c_tec: 'Tecnología', c_tropas: 'Tropas', c_heroi: 'Héroe', c_veic: 'Vehículo mod.', c_vtipo: 'Tipo de vehículo', c_t10: 'T10', c_score: 'Score', c_tier: 'Tier',
+      yes: 'Sí', no: 'No', v_hercules: 'Hercules', v_destroyer: 'Destroyer', v_ex: 'EX Destroyer',
+      k_ed: 'Edificio + Tecnología × 0,06', k_he: 'Héroe × 1,2', k_ve: 'Vehículo × 1,1', k_base: 'Base', k_ex: 'EX Destroyer', k_t10: 'T10 desbloqueado', k_s3: 'Ajuste S3 con T10 (0,77 × Héroe − 45M)', k_tot: 'Migration Score', k_min: '(debajo de 0 cuenta como 0)',
+      nodata: 'Sin el detalle de PC: todavía no se puede calcular.', empty: 'Nadie con ese nombre.',
+      foot: 'Números leídos en el juego el {d} (perfil > PC). Lista actualizada el {u}. Esta página solo muestra los datos; las correcciones las hacen los líderes.'
+    },
+    en: {
+      title: 'Check your power and Migration Score',
+      lede: 'Everyone in the migration survey, with the numbers read in game on {d}. Find your name and check that your power, vehicle type and T10 are right.',
+      how_t: 'How to check', s1: 'In game, tap your portrait (top left), then PC.',
+      s2: 'Compare Building, Tech, Hero and Modified Vehicle with your row here.',
+      s3: 'Also check your vehicle type and whether T10 is unlocked. Both change the score.',
+      s4: 'If anything is different, send a screenshot of the PC screen to the leaders.',
+      fnote: 'Same math as the lastz.gg calculator. Troops do not count. EX Destroyer adds 43M. T10 unlocked adds 16M and, in S3, also 0.77 × Hero − 45M. The score never goes below 0. {s} tiers: Intermediate from {a}M, Advanced from {b}M, Elite above {c}M. This is an estimate: the in-game migration panel has the final say.',
+      search: 'Search player', all: 'All alliances', count: '{n} players', click: 'Tap a row to see how the score adds up.',
+      c_nome: 'Player', c_ali: 'Alliance', c_cargo: 'Rank', c_sede: 'HQ', c_poder: 'Total power', c_edif: 'Building', c_tec: 'Tech', c_tropas: 'Troops', c_heroi: 'Hero', c_veic: 'Mod. vehicle', c_vtipo: 'Vehicle type', c_t10: 'T10', c_score: 'Score', c_tier: 'Tier',
+      yes: 'Yes', no: 'No', v_hercules: 'Hercules', v_destroyer: 'Destroyer', v_ex: 'EX Destroyer',
+      k_ed: 'Building + Tech × 0.06', k_he: 'Hero × 1.2', k_ve: 'Vehicle × 1.1', k_base: 'Base', k_ex: 'EX Destroyer', k_t10: 'T10 unlocked', k_s3: 'S3 adjustment with T10 (0.77 × Hero − 45M)', k_tot: 'Migration Score', k_min: '(below 0 counts as 0)',
+      nodata: 'No PC breakdown yet: the score cannot be calculated.', empty: 'Nobody with that name.',
+      foot: 'Numbers read in game on {d} (profile > PC). List updated {u}. This page only shows the data; corrections are made by the leaders.'
+    }
+  };
+  let lang = 'pt';
+  try { const s = localStorage.getItem('conf_lang'); if (T[s]) lang = s; else if (/^es/i.test(navigator.language)) lang = 'es'; else if (!/^pt/i.test(navigator.language)) lang = 'en'; } catch (e) {}
+  const t = (k, v) => (T[lang][k] || k).replace(/\{(\w+)\}/g, (_, n) => v && v[n] != null ? v[n] : '');
+
+  const LIM = { s12: { a: 20, b: 40, c: 100, nome: 'S1–S2' }, s3: { a: 40, b: 80, c: 160, nome: 'S3' } }[D.temporada] || { a: 40, b: 80, c: 160, nome: 'S3' };
+  const calc = (m) => {
+    if (![m.edificio, m.tecnologia, m.heroi, m.veiculo].every((x) => typeof x === 'number')) return null;
+    const p = { ed: 0.06 * (m.edificio + m.tecnologia), he: 1.2 * m.heroi, ve: 1.1 * m.veiculo, base: -45e6, ex: m.veiculoTipo === 'ex' ? 43e6 : 0, t10: m.t10ok ? 16e6 : 0, s3: m.t10ok && D.temporada === 's3' ? 0.77 * m.heroi - 45e6 : 0 };
+    p.bruto = p.ed + p.he + p.ve + p.base + p.ex + p.t10 + p.s3; p.score = Math.max(0, p.bruto);
+    return p;
+  };
+  const tierOf = (s) => s == null ? '' : s / 1e6 > LIM.c ? 'Elite' : s / 1e6 >= LIM.b ? 'Advanced' : s / 1e6 >= LIM.a ? 'Intermediate' : 'Regular';
+  D.rows.forEach((m) => { m._c = calc(m); m._s = m._c ? m._c.score : null; m._t = tierOf(m._s); });
+
+  const nf = (n) => n == null ? '' : n.toLocaleString(lang === 'en' ? 'en-US' : lang === 'es' ? 'es-ES' : 'pt-BR');
+  const mi = (n) => n == null ? '' : (n / 1e6).toLocaleString(lang === 'en' ? 'en-US' : 'pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + 'M';
+  const fdate = (iso) => { const d = new Date(iso); return isNaN(d) ? iso : d.toLocaleDateString(lang === 'en' ? 'en-US' : lang === 'es' ? 'es-ES' : 'pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }); };
+
+  const COLS = [
+    { k: 'nome', l: true, v: (m) => m.nome, sort: (m) => (m.nome || '').toLowerCase() },
+    { k: 'ali', l: true, v: (m) => m.alianca, sort: (m) => m.alianca },
+    { k: 'cargo', l: true, v: (m) => m.cargo || '', sort: (m) => ['R5', 'R4', 'R3', 'R2', 'R1'].indexOf(m.cargo) },
+    { k: 'sede', v: (m) => m.sede ?? '', sort: (m) => m.sede || 0 },
+    { k: 'poder', v: (m) => nf(m.poder), sort: (m) => m.poder || 0 },
+    { k: 'edif', v: (m) => nf(m.edificio), sort: (m) => m.edificio || 0 },
+    { k: 'tec', v: (m) => nf(m.tecnologia), sort: (m) => m.tecnologia || 0 },
+    { k: 'tropas', v: (m) => nf(m.tropas), sort: (m) => m.tropas || 0 },
+    { k: 'heroi', v: (m) => nf(m.heroi), sort: (m) => m.heroi || 0 },
+    { k: 'veic', v: (m) => nf(m.veiculo), sort: (m) => m.veiculo || 0 },
+    { k: 'vtipo', l: true, v: (m) => m.veiculoTipo ? t('v_' + m.veiculoTipo) : '', sort: (m) => ['hercules', 'destroyer', 'ex'].indexOf(m.veiculoTipo) },
+    { k: 't10', l: true, v: (m) => m.t10ok ? t('yes') : t('no'), sort: (m) => m.t10ok ? 1 : 0 },
+    { k: 'score', v: (m) => m._s == null ? '—' : mi(m._s), sort: (m) => m._s ?? -1, cls: 'score' },
+    { k: 'tier', l: true, v: null, sort: (m) => m._s ?? -1 }
+  ];
+  const st = { q: '', ali: '', sort: 'score', dir: -1, open: null };
+
+  const $ = (id) => document.getElementById(id);
+  const renderHead = () => {
+    const h = $('head'); h.replaceChildren();
+    COLS.forEach((c) => {
+      const th = document.createElement('th'); th.scope = 'col'; if (c.l) th.className = 'l';
+      if (st.sort === c.k) th.setAttribute('aria-sort', st.dir > 0 ? 'ascending' : 'descending');
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = t('c_' + c.k);
+      b.addEventListener('click', () => { if (st.sort === c.k) st.dir = -st.dir; else { st.sort = c.k; st.dir = c.l ? 1 : -1; } render(); });
+      th.appendChild(b); h.appendChild(th);
+    });
+  };
+  const detRow = (m) => {
+    const tr = document.createElement('tr'); tr.className = 'det';
+    const td = document.createElement('td'); td.colSpan = COLS.length;
+    if (!m._c) { td.textContent = t('nodata'); tr.appendChild(td); return tr; }
+    const g = document.createElement('div'); g.className = 'calc';
+    const add = (label, val, extra, cls) => {
+      [label, val, extra || ''].forEach((x, i) => { const s = document.createElement('span'); s.textContent = x; if (i === 1) s.className = 'r'; if (cls) s.className += ' ' + cls; g.appendChild(s); });
+    };
+    const c = m._c;
+    add(t('k_ed'), mi(c.ed), '(' + mi(m.edificio) + ' + ' + mi(m.tecnologia) + ')');
+    add(t('k_he'), mi(c.he), '(' + mi(m.heroi) + ')');
+    add(t('k_ve'), mi(c.ve), '(' + mi(m.veiculo) + ')');
+    add(t('k_base'), '−45,0M', '');
+    if (c.ex) add(t('k_ex'), '+43,0M', '');
+    if (c.t10) add(t('k_t10'), '+16,0M', '');
+    if (c.s3) add(t('k_s3'), (c.s3 >= 0 ? '+' : '') + mi(c.s3), '');
+    add(t('k_tot'), mi(c.score), (c.bruto < 0 ? t('k_min') + ' · ' : '') + m._t, 'tot');
+    td.appendChild(g); tr.appendChild(td); return tr;
+  };
+  const renderBody = () => {
+    const b = $('body'); b.replaceChildren();
+    const q = st.q.trim().toLowerCase();
+    const col = COLS.find((c) => c.k === st.sort);
+    const rows = D.rows.filter((m) => (!st.ali || m.alianca === st.ali) && (!q || (m.nome || '').toLowerCase().includes(q)))
+      .sort((a, z) => { const x = col.sort(a), y = col.sort(z); return (x < y ? -1 : x > y ? 1 : 0) * st.dir || (a.nome || '').localeCompare(z.nome || ''); });
+    $('count').textContent = t('count', { n: rows.length });
+    if (!rows.length) { const tr = document.createElement('tr'); const td = document.createElement('td'); td.colSpan = COLS.length; td.className = 'empty'; td.textContent = t('empty'); tr.appendChild(td); b.appendChild(tr); return; }
+    rows.forEach((m) => {
+      const tr = document.createElement('tr'); tr.className = 'row'; tr.tabIndex = 0; tr.setAttribute('aria-expanded', String(st.open === m.id));
+      COLS.forEach((c) => {
+        const td = document.createElement('td'); td.className = (c.l ? 'l ' : '') + (c.cls || '') + (c.k === 'nome' ? ' nome' : '');
+        if (c.k === 'tier') { if (m._t) { const s = document.createElement('span'); s.className = 'tier ' + m._t; s.textContent = m._t; td.appendChild(s); } }
+        else td.textContent = c.v(m);
+        tr.appendChild(td);
+      });
+      const tog = () => { st.open = st.open === m.id ? null : m.id; renderBody(); };
+      tr.addEventListener('click', tog);
+      tr.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tog(); } });
+      b.appendChild(tr);
+      if (st.open === m.id) b.appendChild(detRow(m));
+    });
+  };
+  const renderStatic = () => {
+    document.documentElement.lang = lang === 'pt' ? 'pt-BR' : lang;
+    document.querySelectorAll('[data-t]').forEach((el) => { el.textContent = t(el.dataset.t); });
+    $('busca').placeholder = t('search'); $('busca').setAttribute('aria-label', t('search'));
+    $('lede').textContent = t('lede', { d: fdate(D.lidoEm) });
+    $('formula').textContent = '0,06 × (Edifício + Tecnologia) + 1,2 × Herói + 1,1 × Veículo − 45M';
+    if (lang === 'en') $('formula').textContent = '0.06 × (Building + Tech) + 1.2 × Hero + 1.1 × Vehicle − 45M';
+    if (lang === 'es') $('formula').textContent = '0,06 × (Edificio + Tecnología) + 1,2 × Héroe + 1,1 × Vehículo − 45M';
+    $('formula-note').textContent = t('fnote', { s: LIM.nome, a: LIM.a, b: LIM.b, c: LIM.c });
+    $('foot').textContent = t('foot', { d: fdate(D.lidoEm), u: fdate(D.at) });
+    const sel = $('f-ali'); const cur = st.ali; sel.replaceChildren();
+    const n = {}; D.rows.forEach((m) => { n[m.alianca] = (n[m.alianca] || 0) + 1; });
+    [['', t('all')], ...Object.keys(n).sort((a, b) => (a === 'DEDZ' ? -1 : b === 'DEDZ' ? 1 : n[b] - n[a] || a.localeCompare(b))).map((a) => [a, a + ' (' + n[a] + ')'])]
+      .forEach(([v, l]) => { const o = document.createElement('option'); o.value = v; o.textContent = l; sel.appendChild(o); });
+    sel.value = cur; sel.setAttribute('aria-label', t('c_ali'));
+    document.querySelectorAll('[data-lang]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
+  };
+  const render = () => { renderStatic(); renderHead(); renderBody(); };
+
+  $('busca').addEventListener('input', (e) => { st.q = e.target.value; renderBody(); });
+  $('f-ali').addEventListener('change', (e) => { st.ali = e.target.value; renderBody(); });
+  document.querySelectorAll('[data-lang]').forEach((b) => b.addEventListener('click', () => { lang = b.dataset.lang; try { localStorage.setItem('conf_lang', lang); } catch (e) {} render(); }));
+  render();
+})();
+</script>

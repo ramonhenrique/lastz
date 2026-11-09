@@ -124,7 +124,8 @@ A dash de migração (https://claude.ai/artifact/TdiYGf4RT4jYT7LrAYC6cW) usa os 
    2. Pegue a temporada escolhida na página: `ArtifactData` `get` no URL da migração, `collection` `config`, `doc_id` `temporada`, campo `s` (`s12` ou `s3`). Sem o documento, use `s3`.
    3. `scripts\mig_snapshot.ps1 -Fonte dash\migracao_fonte.html -Temporada <s12|s3> -Out dash\migracao.html`. O modelo `dash\migracao_fonte.html` é o mesmo publicado como `fonte.html`. Se alguém mudar a página, publique os dois juntos (`files` `{"fonte.html": "dash/migracao_fonte.html"}`).
    4. `Artifact` publish de `dash\migracao.html` no URL da migração. Leia a página antes (`read`) se for uma sessão nova. Não passe `capabilities`.
-   5. Inclua `dash/migracao.html` no commit.
+   5. **Página de conferência dos membros** (https://claude.ai/artifact/AKXssohuCBebsCyeZPHvy9, para os membros conferirem poder e score; sem situação, observação, atividade, arena nem T10 %): `scripts\conferencia.ps1 -Pasta C:\lz\mig\membros -Versoes C:\lz\mig_versoes.txt -Temporada <s12|s3> -LidoEm <data da última leitura do PC, aaaa-mm-dd>` e `Artifact` publish de `dash\conferencia.html` nesse URL (leia antes se for uma sessão nova). Só mude `-LidoEm` quando a rotina de lista de membros ler o PC de novo.
+   6. Inclua `dash/migracao.html` e `dash/conferencia.html` no commit.
 
 ## 6. Atualizar a dash
 
