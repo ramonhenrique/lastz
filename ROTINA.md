@@ -91,7 +91,9 @@ Para cada leitura, **uma de cada vez** (o espelho precisa ser confirmado antes d
 
 **19:01** (`dia` = hoje): só o passo 2 do 11:01 (VS parcial de hoje e doação no slot de hoje). No domingo, só a doação.
 
-**23:01** (o dia que fechou é o `diaAnterior`; a doação lida agora é o acumulado do fim desse dia, então vai no slot dele):
+**Sábado 22:45** (tarefa `dedz-dash-sab-22h45`; substitui a das 23:01 no sábado, porque às 23h o duelo fecha e o Ranking Diário some): leia primeiro o VS de hoje (dia 5), depois o placar e a doação, e grave com `scripts\atualiza.ps1 -Sem <semana> -Dia 5 -VsTsv vs5.tsv -DiaDoa 5`. O relatório sai com `scripts\relatorio.ps1 -Turno fechamento -Agora '<sábado AAAA-MM-DD> 23:05'`, junto com a lista do PV do passo 7c.
+
+**23:01** (domingo a sexta; o dia que fechou é o `diaAnterior`; a doação lida agora é o acumulado do fim desse dia, então vai no slot dele):
 1. `scripts\atualiza.ps1 -Sem <semana> -Dia <diaAnterior> -VsTsv vs<diaAnterior>.tsv -DiaDoa <diaAnterior>`
 2. Domingo 23:01 (`diaAnterior` -1): nada a gravar.
 Depois de cada `atualiza.ps1`:
@@ -122,7 +124,7 @@ Só se a coleta deu certo (dados gravados e dash publicada).
 2. Envie cada um com a ferramenta **Enviar no grupo cuja descrição fala em "relatório da dash DEDZ"** (conector do n8n `/mcp/dedz-relatorio-dash`); não use a da reflexão semanal. Só texto: passe `msg` e `destino` (se a ferramenta ainda listar campos de imagem, mande-os vazios).
 3. Destinos: leia `C:\lz\destinos.txt`. Se ele tiver a linha `real`, mande o geral com `destino: "geral"` (grupo DEDZ) e o da liderança com `destino: "lideranca"` (grupo DEDZ R4, R5 e Agregados). Se o arquivo não existir ou não tiver `real`, mande **os dois com `destino: "teste"`** (grupo de teste).
 4. Primeiro o geral, depois o da liderança. Se um envio falhar, siga e cite no aviso.
-## 7c. Lista do PV (só quarta 19:01 e sábado 23:01)
+## 7c. Lista do PV (só quarta 19:01 e sábado 22:45)
 
 O `relatorio.ps1` gera `C:\lz\pv.txt` só nesses dois horários (nos outros ele apaga o arquivo):
 - **Quarta 19:01:** puxão de orelha do dia (mesmos textos do alerta das 19h) para zerados e abaixo de 50% no VS de hoje, mais quem está com a doação abaixo de 50%.
