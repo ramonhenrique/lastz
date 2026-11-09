@@ -42,7 +42,7 @@ foreach ($mb in (LerLista "$est\membros.json")) {
   $arena = if ($mb.poderArena) { [long]$mb.poderArena } else { $null }
   if (-not $atual) {
     $obs = if ($mb.entrou) { "entrou na DEDZ em $(([datetime]$mb.entrou).ToString('dd/MM'))" } else { '' }
-    $doc = [ordered]@{ nome = [string]$mb.nome; cargo = $cargo; alianca = 'DEDZ'; origem = 'jogo'; status = 'pendente'; ativo = $true; obs = $obs }
+    $doc = [ordered]@{ nome = [string]$mb.nome; cargo = $cargo; alianca = 'DEDZ'; origem = 'jogo'; status = 'pendente'; ativo = $true; obs = $obs; veiculoTipo = 'hercules' }
     if ($mb.poder) { $doc.poder = [long]$mb.poder }
     if ($arena) { $doc.arena = $arena }
     if ($mb.sede) { $doc.sede = [int]$mb.sede }

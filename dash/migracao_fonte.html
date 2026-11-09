@@ -900,7 +900,7 @@
     const n = Number(s);
     return Number.isFinite(n) && n >= 0 ? Math.round(n * mult) : NaN;
   };
-  const clearForm = () => { FIELDS.forEach((k) => { $('f-' + k).value = ''; }); $('f-cargo').value = ''; $('f-alianca').value = 'DEDZ'; $('f-zona').value = ''; $('f-status').value = 'pendente'; $('f-ativo').value = '1'; $('f-vtipo').value = ''; };
+  const clearForm = () => { FIELDS.forEach((k) => { $('f-' + k).value = ''; }); $('f-cargo').value = ''; $('f-alianca').value = 'DEDZ'; $('f-zona').value = ''; $('f-status').value = 'pendente'; $('f-ativo').value = '1'; $('f-vtipo').value = 'hercules'; };
   $('f-cancel').addEventListener('click', () => { clearForm(); setMode(null); $('p-add').hidden = true; $('btn-add').setAttribute('aria-expanded', 'false'); renderBody(); });
   $('f-save').addEventListener('click', async () => {
     const nome = $('f-nome').value.trim();
