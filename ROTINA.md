@@ -112,11 +112,11 @@ A dash de migração (https://claude.ai/artifact/TdiYGf4RT4jYT7LrAYC6cW) usa os 
 - situação, T10, observação, atividade, componentes e membros cadastrados à mão na página nunca são mexidos.
 
 1. `ArtifactData` `list` no URL da migração, `collection` `membros`, `query` `{"limit": 1000}`, `out_dir` `C:\lz\mig`. Salve o texto do resultado (os pares id/versão) em `C:\lz\mig_versoes.txt`.
-2. `scripts\sync_migracao.ps1`. Se ele disser "0 escrita(s)", acabou.
-3. Senão, mande cada `C:\lz\mig_batchN.json` como `writes` de um `ArtifactData` `batch` no URL da migração. Se um lote for recusado por versão (alguém editou pela página), repita do 1.
+2. `scripts\sync_migracao.ps1`. Se ele disser "0 escrita(s)", pule para o 5 (sem repetir o download).
+3. Se houver escritas, mande cada `C:\lz\mig_batchN.json` como `writes` de um `ArtifactData` `batch` no URL da migração. Se um lote for recusado por versão (alguém editou pela página), repita do 1.
 4. Cite no relatório da liderança só o que mudou de estrutura: entrou, saiu ou trocou de nome. Atualização de poder de arena não precisa.
-5. **Lista pública:** quem abre a migração sem acesso ao banco vê uma cópia da lista gravada dentro da página ("Você está vendo a lista publicada em…"). Depois de gravar lotes, atualize essa cópia:
-   1. Repita o download do 1.
+5. **Lista pública (sempre, mesmo sem escritas):** quem abre a migração sem acesso ao banco vê uma cópia da lista gravada dentro da página. O aviso no topo diz "Você está vendo a lista publicada em…". Essa data é a hora da última sincronização, então republique a cópia em toda execução (regra do Ramon, 09/11/2026):
+   1. Se gravou lotes no 3, repita o download do 1.
    2. `Artifact` `read` no URL da migração com `path` `fonte.html` (o modelo com `__SNAPSHOT__`).
    3. `scripts\mig_snapshot.ps1 -Fonte <arquivo salvo pelo read> -Out dash\migracao.html`.
    4. `Artifact` publish de `dash\migracao.html` no URL da migração. Leia a página antes (`read`) se for uma sessão nova. Não passe `capabilities`.
