@@ -98,7 +98,9 @@
   .del { font: inherit; font-size: 12px; border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: 4px; padding: 3px 8px; cursor: pointer; }
   .del.armed { color: var(--no); border-color: var(--no); }
   .acts { display: inline-flex; gap: 6px; }
-  .ally { margin-left: auto; font-family: var(--f-mono); font-size: 11px; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--muted); white-space: nowrap; }
+  .ally { display: flex; flex-wrap: wrap; gap: 4px; font-family: var(--f-mono); font-size: 11px; color: var(--muted); }
+  .ally:empty { display: none; }
+  .ally span { padding: 1px 6px; border: 1px solid var(--line); border-radius: 4px; white-space: nowrap; }
   .ally b { font-weight: 500; color: var(--fg); }
   .view { display: grid; gap: 18px; }
   .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); }
@@ -167,20 +169,23 @@
 
   <section class="strip" data-i18n-aria="summary" aria-label="Resumo">
     <div class="stat go">
-      <h2><span class="dot"></span><span data-i18n="st_vai">Vão migrar</span><span class="ally" id="al-vai"></span></h2>
+      <h2><span class="dot"></span><span data-i18n="st_vai">Vão migrar</span></h2>
       <div class="big" id="n-vai">—</div>
       <div class="sub" id="s-vai">—</div>
+      <div class="ally" id="al-vai"></div>
       <div class="tiers" id="t-vai"></div>
     </div>
     <div class="stat no">
-      <h2><span class="dot"></span><span data-i18n="st_nao">Não vão</span><span class="ally" id="al-nao"></span></h2>
+      <h2><span class="dot"></span><span data-i18n="st_nao">Não vão</span></h2>
       <div class="big" id="n-nao">—</div>
       <div class="sub" id="s-nao">—</div>
+      <div class="ally" id="al-nao"></div>
     </div>
     <div class="stat wait">
-      <h2><span class="dot"></span><span data-i18n="st_pendente">Sem resposta</span><span class="ally" id="al-pendente"></span></h2>
+      <h2><span class="dot"></span><span data-i18n="st_pendente">Sem resposta</span></h2>
       <div class="big" id="n-pendente">—</div>
       <div class="sub" id="s-pendente">—</div>
+      <div class="ally" id="al-pendente"></div>
     </div>
   </section>
 
@@ -546,10 +551,11 @@
       const sc = g.filter((m) => m._score != null);
       const media = sc.length ? sc.reduce((s, m) => s + m._score, 0) / sc.length : null;
       const al = $('al-' + k); al.replaceChildren();
-      if (state.loaded) ALIANCAS.forEach((a, i) => {
-        if (i) al.appendChild(document.createTextNode(' · '));
-        al.appendChild(document.createTextNode(a + ' '));
-        const b = document.createElement('b'); b.textContent = String(g.filter((m) => m.alianca === a).length); al.appendChild(b);
+      if (state.loaded) ALIANCAS.forEach((a) => {
+        const n = g.filter((m) => m.alianca === a).length;
+        if (!n) return;
+        const s = document.createElement('span'); s.textContent = a + ' ';
+        const b = document.createElement('b'); b.textContent = String(n); s.appendChild(b); al.appendChild(s);
       });
       $('s-' + k).textContent = state.loaded ? (g.length ? t('power') + ' ' + bi(poder) + (media != null ? ' · ' + t('avg_score_s') + ' ' + mi(media) : '') : t('nobody')) : '—';
     }
