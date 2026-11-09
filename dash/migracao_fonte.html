@@ -249,6 +249,7 @@
       <label class="field"><span data-i18n="f_veiculo">Veículo modificado</span><input id="f-veiculo" inputmode="numeric"></label>
       <label class="field"><span data-i18n="c_vtipo">Tipo de veículo</span><select id="f-vtipo"><option value="">—</option><option value="hercules" data-i18n="v_hercules">Hercules</option><option value="destroyer" data-i18n="v_destroyer">Destroyer</option><option value="ex" data-i18n="v_ex">EX Destroyer (+43M)</option></select></label>
       <label class="field"><span data-i18n="f_arena">Poder de arena</span><input id="f-arena" inputmode="numeric" data-i18n-ph="ph_arena" placeholder="ex.: 123,3M"></label>
+      <label class="field"><span data-i18n="c_t10ok">T10 desbloqueado</span><select id="f-t10ok"><option value="0" selected data-i18n="no">Não</option><option value="1" data-i18n="yes">Sim</option></select></label>
       <label class="field"><span>T10 (%)</span><input id="f-t10" inputmode="numeric" data-i18n-ph="ph_t10" placeholder="ex.: 45"></label>
       <label class="field wide"><span data-i18n="c_obs">Observação</span><input id="f-obs" autocomplete="off"></label>
     </div>
@@ -310,7 +311,7 @@
   <footer>
     <p id="pub-at"></p>
     <p data-i18n="foot1">Poder e componentes lidos no jogo em 28/10/2026 (Detalhes &gt; PC). Poder de arena da lista no modo "combate da arena" (atualizado em 29/10/2026), arredondado em 0,1M. T10 da lista manual da aliança.</p>
-    <p data-i18n="foot2">Migration Score igual à calculadora do lastz.gg: Edifício e Tecnologia pesam 0,06, Herói 1,2 e Veículo modificado 1,1, menos 45M; Tropas não entram. EX Destroyer soma 43M. Os limites dos tiers seguem a temporada do servidor escolhida acima (S1–S2: 20M, 40M e 100M; S3: 40M, 80M e 160M). O T10 é só para acompanhamento e não entra no cálculo.</p>
+    <p data-i18n="foot2">Migration Score igual à calculadora do lastz.gg: Edifício e Tecnologia pesam 0,06, Herói 1,2 e Veículo modificado 1,1, menos 45M; Tropas não entram. EX Destroyer soma 43M. T10 desbloqueado soma 16M e, na S3, mais 0,77 × Herói − 45M. O score nunca fica abaixo de 0. Os limites dos tiers seguem a temporada do servidor escolhida acima (S1–S2: 20M, 40M e 100M; S3: 40M, 80M e 160M). O T10 (%) é só para acompanhamento e não entra no cálculo.</p>
   </footer>
 </div>
 
@@ -346,7 +347,7 @@
       a_sit_t: 'Situação por tier', a_sit_d: 'Quantos de cada tier já confirmaram a migração. Considera todos os membros.',
       a_pow_t: 'Poder somado por tier', a_pow_d: 'Poder total e poder de arena que cada tier leva.',
       foot1: 'Poder e componentes lidos no jogo em 28/10/2026 (Detalhes > PC). Poder de arena da lista no modo "combate da arena" (atualizado em 29/10/2026), arredondado em 0,1M. T10 da lista manual da aliança.',
-      foot2: 'Migration Score igual à calculadora do lastz.gg: Edifício e Tecnologia pesam 0,06, Herói 1,2 e Veículo modificado 1,1, menos 45M; Tropas não entram. EX Destroyer soma 43M. Os limites dos tiers seguem a temporada do servidor escolhida acima (S1–S2: 20M, 40M e 100M; S3: 40M, 80M e 160M). O T10 é só para acompanhamento e não entra no cálculo.',
+      foot2: 'Migration Score igual à calculadora do lastz.gg: Edifício e Tecnologia pesam 0,06, Herói 1,2 e Veículo modificado 1,1, menos 45M; Tropas não entram. EX Destroyer soma 43M. T10 desbloqueado soma 16M e, na S3, mais 0,77 × Herói − 45M. O score nunca fica abaixo de 0. Os limites dos tiers seguem a temporada do servidor escolhida acima (S1–S2: 20M, 40M e 100M; S3: 40M, 80M e 160M). O T10 (%) é só para acompanhamento e não entra no cálculo.',
       pub_at: 'Versão pública da lista atualizada em {d}.',
       h_player: 'Jogador', h_status: 'Situação', c_alianca: 'Aliança', c_zona: 'Zona', c_cargo: 'Cargo', c_sede: 'Sede', c_poder: 'Poder total',
       c_score: 'Migration Score', c_tier: 'Tier', c_arena: 'Arena', c_t10: 'T10', c_heroi: 'Herói', c_veiculo: 'Veículo', c_tropas: 'Tropas',
@@ -369,7 +370,7 @@
       slots_title: 'Vagas no servidor {s}', slots_note: 'Conta quem está marcado como "Vai", pelo tier estimado.',
       slots_of: '{a} de {b}', slots_left: '{n} vagas livres', slots_left1: '1 vaga livre', slots_full: 'Vagas preenchidas', slots_over: '{n} acima do limite',
       slots_none: 'Sem vagas para este tier',
-      c_vtipo: 'Tipo de veículo', v_hercules: 'Hercules', v_destroyer: 'Destroyer', v_ex: 'EX Destroyer (+43M)',
+      c_vtipo: 'Tipo de veículo', v_hercules: 'Hercules', v_destroyer: 'Destroyer', v_ex: 'EX Destroyer (+43M)', c_t10ok: 'T10 desbloqueado', yes: 'Sim', no: 'Não',
       season_l: 'Temporada do servidor', season_lim: 'Intermediate a partir de {a}M · Advanced a partir de {b}M · Elite acima de {c}M'
     },
     es: {
@@ -393,7 +394,7 @@
       a_sit_t: 'Situación por tier', a_sit_d: 'Cuántos de cada tier ya confirmaron la migración. Considera a todos los miembros.',
       a_pow_t: 'Poder sumado por tier', a_pow_d: 'Poder total y poder de arena que suma cada tier.',
       foot1: 'Poder y componentes leídos en el juego el 28/10/2026 (Detalles > PC). Poder de arena de la lista en modo "combate de arena", redondeado a 0,1M. T10 de la lista manual de la alianza.',
-      foot2: 'Migration Score igual a la calculadora de lastz.gg: Edificio y Tecnología pesan 0,06, Héroe 1,2 y Vehículo modificado 1,1, menos 45M; las Tropas no cuentan. EX Destroyer suma 43M. Los límites de los tiers siguen la temporada del servidor elegida arriba (S1–S2: 20M, 40M y 100M; S3: 40M, 80M y 160M). El T10 es solo para seguimiento y no entra en el cálculo.',
+      foot2: 'Migration Score igual a la calculadora de lastz.gg: Edificio y Tecnología pesan 0,06, Héroe 1,2 y Vehículo modificado 1,1, menos 45M; las Tropas no cuentan. EX Destroyer suma 43M. T10 desbloqueado suma 16M y, en S3, además 0,77 × Héroe − 45M. El score nunca baja de 0. Los límites de los tiers siguen la temporada del servidor elegida arriba (S1–S2: 20M, 40M y 100M; S3: 40M, 80M y 160M). El T10 (%) es solo para seguimiento y no entra en el cálculo.',
       pub_at: 'Versión pública de la lista actualizada el {d}.',
       h_player: 'Jugador', h_status: 'Situación', c_alianca: 'Alianza', c_zona: 'Zona', c_cargo: 'Rango', c_sede: 'Cuartel', c_poder: 'Poder total',
       c_score: 'Migration Score', c_tier: 'Tier', c_arena: 'Arena', c_t10: 'T10', c_heroi: 'Héroe', c_veiculo: 'Vehículo', c_tropas: 'Tropas',
@@ -416,7 +417,7 @@
       slots_title: 'Cupos en el servidor {s}', slots_note: 'Cuenta a quienes están marcados como "Va", según el tier estimado.',
       slots_of: '{a} de {b}', slots_left: '{n} cupos libres', slots_left1: '1 cupo libre', slots_full: 'Cupos completos', slots_over: '{n} por encima del límite',
       slots_none: 'Sin cupos para este tier',
-      c_vtipo: 'Tipo de vehículo', v_hercules: 'Hercules', v_destroyer: 'Destroyer', v_ex: 'EX Destroyer (+43M)',
+      c_vtipo: 'Tipo de vehículo', v_hercules: 'Hercules', v_destroyer: 'Destroyer', v_ex: 'EX Destroyer (+43M)', c_t10ok: 'T10 desbloqueado', yes: 'Sí', no: 'No',
       season_l: 'Temporada del servidor', season_lim: 'Intermediate desde {a}M · Advanced desde {b}M · Elite por encima de {c}M'
     },
     en: {
@@ -440,7 +441,7 @@
       a_sit_t: 'Status by tier', a_sit_d: 'How many in each tier have confirmed. Counts every member.',
       a_pow_t: 'Power by tier', a_pow_d: 'Total power and arena power each tier brings.',
       foot1: 'Power and components read in game on 10/28/2026 (Details > PC). Arena power from the member list in "arena combat" mode, rounded to 0.1M. T10 from the alliance\'s manual list.',
-      foot2: 'Migration Score matches the lastz.gg calculator: Building and Tech weigh 0.06, Hero 1.2 and Modified Vehicle 1.1, minus 45M; Troops do not count. EX Destroyer adds 43M. Tier limits follow the server season chosen above (S1–S2: 20M, 40M and 100M; S3: 40M, 80M and 160M). T10 is for tracking only and is not part of the score.',
+      foot2: 'Migration Score matches the lastz.gg calculator: Building and Tech weigh 0.06, Hero 1.2 and Modified Vehicle 1.1, minus 45M; Troops do not count. EX Destroyer adds 43M. T10 unlocked adds 16M and, in S3, also 0.77 × Hero − 45M. The score never goes below 0. Tier limits follow the server season chosen above (S1–S2: 20M, 40M and 100M; S3: 40M, 80M and 160M). T10 (%) is for tracking only and is not part of the score.',
       pub_at: 'Public version of the list updated on {d}.',
       h_player: 'Player', h_status: 'Status', c_alianca: 'Alliance', c_zona: 'Zone', c_cargo: 'Rank', c_sede: 'HQ', c_poder: 'Total power',
       c_score: 'Migration Score', c_tier: 'Tier', c_arena: 'Arena', c_t10: 'T10', c_heroi: 'Hero', c_veiculo: 'Vehicle', c_tropas: 'Troops',
@@ -463,7 +464,7 @@
       slots_title: 'Slots on server {s}', slots_note: 'Counts players marked "Going", by estimated tier.',
       slots_of: '{a} of {b}', slots_left: '{n} slots left', slots_left1: '1 slot left', slots_full: 'All slots taken', slots_over: '{n} over the limit',
       slots_none: 'No slots for this tier',
-      c_vtipo: 'Vehicle type', v_hercules: 'Hercules', v_destroyer: 'Destroyer', v_ex: 'EX Destroyer (+43M)',
+      c_vtipo: 'Vehicle type', v_hercules: 'Hercules', v_destroyer: 'Destroyer', v_ex: 'EX Destroyer (+43M)', c_t10ok: 'T10 unlocked', yes: 'Yes', no: 'No',
       season_l: 'Server season', season_lim: 'Intermediate from {a}M · Advanced from {b}M · Elite above {c}M'
     }
   };
@@ -476,9 +477,10 @@
   const mi = (v) => (v / 1e6).toLocaleString(loc(), { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + 'M';
   const bi = (v) => (v / 1e9).toLocaleString(loc(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + t('bi');
 
-  // Migration Score como a calculadora do lastz.gg (conferido no site em 09/11/2026 com o exemplo dela:
-  // 0,06×(76,5M+20,0M) + 1,2×60,3M + 1,1×9,8M − 45M = 43,9M): menos 45M; EX Destroyer soma 43M; T10 não entra (só gestão)
-  const W = { edificio: 0.06, tecnologia: 0.06, heroi: 1.2, veiculo: 1.1, base: -45e6 };
+  // Migration Score como a calculadora do lastz.gg (código do site lido em 09/11/2026):
+  // 0,06×(edifício+tecnologia) + 1,2×herói + 1,1×veículo − 45M; EX Destroyer +43M;
+  // T10 desbloqueado +16M e, na S3, mais 0,77×herói − 45M; nunca abaixo de 0. O T10 (%) é só gestão.
+  const W = { edificio: 0.06, tecnologia: 0.06, heroi: 1.2, veiculo: 1.1, base: -45e6, t10: 16e6, s3t10heroi: 0.77, s3t10base: -45e6 };
   const VTIPOS = ['hercules', 'destroyer', 'ex'];
   const VBONUS = { ex: 43e6 };
   // limites dos tiers por temporada do servidor (lastz.gg): S1–S2 20/40/100M, S3 40/80/160M
@@ -488,7 +490,8 @@
   const STATUS = [['vai', 'b_vai', 't_vai'], ['nao', 'b_nao', 't_nao'], ['pendente', 'b_pend', 't_pend']];
 
   const score = (m) => ['edificio', 'tecnologia', 'heroi', 'veiculo'].every((k) => typeof m[k] === 'number')
-    ? W.edificio * m.edificio + W.tecnologia * m.tecnologia + W.heroi * m.heroi + W.veiculo * m.veiculo + W.base + (VBONUS[m.veiculoTipo] || 0) : null;
+    ? Math.max(0, W.edificio * m.edificio + W.tecnologia * m.tecnologia + W.heroi * m.heroi + W.veiculo * m.veiculo + W.base + (VBONUS[m.veiculoTipo] || 0)
+      + (m.t10ok === true ? W.t10 + (season === 's3' ? W.s3t10heroi * m.heroi + W.s3t10base : 0) : 0)) : null;
   const tierOf = (s) => s == null ? null : s <= 0 ? 'Regular' : s > LIMIT.elite ? 'Elite' : s >= LIMIT.advanced ? 'Advanced' : s >= LIMIT.intermediate ? 'Intermediate' : 'Regular';
 
   // every column the table can show; nome and status are always on
@@ -506,6 +509,7 @@
     { k: 'cargo', l: true, on: true, v: (m) => m.cargo || '', sort: (m) => ['R5', 'R4', 'R3', 'R2', 'R1'].indexOf(m.cargo) },
     { k: 'sede', on: true, v: (m) => m.sede ?? '' },
     { k: 'vtipo', l: true, on: true, v: (m) => VTIPOS.includes(m.veiculoTipo) ? t('v_' + m.veiculoTipo) : '', sort: (m) => VTIPOS.indexOf(m.veiculoTipo) },
+    { k: 't10ok', l: true, on: true, v: (m) => m.t10ok === true ? t('yes') : t('no'), sort: (m) => (m.t10ok === true ? 1 : 0) },
     { k: 'poder', on: true, v: (m) => m.poder == null ? '' : nfmt(m.poder) },
     { k: 'score', on: true, v: (m) => m._score == null ? '' : mi(m._score), sort: (m) => m._score },
     { k: 'tier', l: true, on: true, v: (m) => m._tier || '', sort: (m) => m._score, cls: (m) => m._tier ? 'tier-' + m._tier : '' },
@@ -646,6 +650,12 @@
     try { await db.doc('membros/' + m.id).update({ veiculoTipo: v || null }); }
     catch (e) { m.veiculoTipo = prev; prep(m); render(); fail(e); }
   };
+  const saveT10ok = async (m, v) => {
+    if (state.readOnly || !db || (m.t10ok === true) === v) return;
+    const prev = m.t10ok; m.t10ok = v; prep(m); render();
+    try { await db.doc('membros/' + m.id).update({ t10ok: v }); }
+    catch (e) { m.t10ok = prev; prep(m); render(); fail(e); }
+  };
   const saveObs = async (m, text) => {
     if (state.readOnly || !db || (m.obs || '') === text) return;
     m.obs = text;
@@ -688,6 +698,15 @@
             seg2.appendChild(b);
           });
           td.appendChild(seg2);
+        } else if (c.k === 't10ok' && !state.readOnly) {
+          const seg3 = document.createElement('div'); seg3.className = 'st'; seg3.setAttribute('role', 'group'); seg3.setAttribute('aria-label', t('c_t10ok') + ' · ' + (m.nome || ''));
+          [[true, 'on', 'yes'], [false, 'off', 'no']].forEach(([val, key, label]) => {
+            const b = document.createElement('button'); b.type = 'button'; b.dataset.v = key; b.textContent = t(label);
+            b.setAttribute('aria-pressed', String((m.t10ok === true) === val));
+            b.addEventListener('click', () => saveT10ok(m, val));
+            seg3.appendChild(b);
+          });
+          td.appendChild(seg3);
         } else if (c.k === 'vtipo' && !state.readOnly) {
           const sel = document.createElement('select'); sel.className = 'vsel';
           sel.setAttribute('aria-label', t('c_vtipo') + ' · ' + (m.nome || ''));
@@ -885,6 +904,7 @@
     $('f-arena').value = m.arena == null ? '' : mi(m.arena);
     $('f-t10').value = m.t10 == null ? '' : String(Math.round(m.t10 * 100));
     $('f-vtipo').value = VTIPOS.includes(m.veiculoTipo) ? m.veiculoTipo : '';
+    $('f-t10ok').value = m.t10ok === true ? '1' : '0';
     $('f-obs').value = m.obs || '';
     renderBody(); openPanel();
   };
@@ -906,7 +926,7 @@
     const n = Number(s);
     return Number.isFinite(n) && n >= 0 ? Math.round(n * mult) : NaN;
   };
-  const clearForm = () => { FIELDS.forEach((k) => { $('f-' + k).value = ''; }); $('f-cargo').value = ''; $('f-alianca').value = 'DEDZ'; $('f-zona').value = ''; $('f-status').value = 'pendente'; $('f-ativo').value = '1'; $('f-vtipo').value = 'hercules'; };
+  const clearForm = () => { FIELDS.forEach((k) => { $('f-' + k).value = ''; }); $('f-cargo').value = ''; $('f-alianca').value = 'DEDZ'; $('f-zona').value = ''; $('f-status').value = 'pendente'; $('f-ativo').value = '1'; $('f-vtipo').value = 'hercules'; $('f-t10ok').value = '0'; };
   $('f-cancel').addEventListener('click', () => { clearForm(); setMode(null); $('p-add').hidden = true; $('btn-add').setAttribute('aria-expanded', 'false'); renderBody(); });
   $('f-save').addEventListener('click', async () => {
     const nome = $('f-nome').value.trim();
@@ -916,6 +936,7 @@
     const doc = { nome, alianca: ($('f-alianca').value.trim().toUpperCase() || 'DEDZ'), cargo: $('f-cargo').value || null, status: $('f-status').value, ativo: $('f-ativo').value === '1', obs: $('f-obs').value.trim() };
     if (!editId) doc.origem = 'manual';
     doc.veiculoTipo = $('f-vtipo').value || null;
+    doc.t10ok = $('f-t10ok').value === '1';
     const zona = $('f-zona').value.trim().replace('#', ''); doc.zona = zona ? Number(zona) : null;
     if (doc.zona != null && !Number.isInteger(doc.zona)) { setMsg('err_zona', null, true); return; }
     const sede = $('f-sede').value.trim(); doc.sede = sede ? Number(sede) : null;

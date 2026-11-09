@@ -8,7 +8,7 @@
 param([Parameter(Mandatory)][string]$Fonte, [string]$Out = 'C:\lz\migracao.html',
       [string]$Pasta = 'C:\lz\mig\membros', [string]$Versoes = 'C:\lz\mig_versoes.txt',
       [ValidateSet('s12', 's3')][string]$Temporada = 's3',
-      [string[]]$Colunas = @('ativo', 'alianca', 'zona', 'cargo', 'sede', 'poder', 'score', 'tier', 'arena', 't10', 'vtipo', 'obs'))
+      [string[]]$Colunas = @('ativo', 'alianca', 'zona', 'cargo', 'sede', 'poder', 'score', 'tier', 'arena', 't10', 'vtipo', 't10ok', 'obs'))
 # -Temporada: a temporada salva na página (ArtifactData get, collection config, doc_id temporada, campo s); sem o documento, s3.
 . (Join-Path $PSScriptRoot 'comum.ps1')
 
