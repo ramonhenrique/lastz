@@ -220,6 +220,7 @@
     <h3 data-i18n="cols_title">Colunas da tabela</h3>
     <div class="cols" id="cols"></div>
     <p class="msg" data-i18n="cols_note">Jogador e Situação aparecem sempre. A escolha vale para todos que abrirem a página.</p>
+    <div class="row-actions"><button type="button" class="btn" id="cols-close" data-i18n="close">Fechar</button></div>
   </section>
 
   <section class="panel" id="p-add" hidden>
@@ -324,7 +325,7 @@
       btn_pub_title: 'Grava a lista atual na página para quem abre sem login', btn_csv: 'Baixar CSV', btn_add: 'Adicionar membro',
       cols_title: 'Colunas da tabela', cols_note: 'Jogador e Situação aparecem sempre. A escolha vale para todos que abrirem a página.',
       f_nome: 'Nome no jogo', f_sede: 'Nível da sede', f_veiculo: 'Veículo modificado', f_arena: 'Poder de arena',
-      opt_vai: 'Vai', opt_nao: 'Não vai', ph_arena: 'ex.: 123,3M', ph_t10: 'ex.: 45', cancel: 'Cancelar',
+      opt_vai: 'Vai', opt_nao: 'Não vai', ph_arena: 'ex.: 123,3M', ph_t10: 'ex.: 45', cancel: 'Cancelar', close: 'Fechar',
       f_title_add: 'Adicionar membro', f_title_edit: 'Editar {n}', f_save_add: 'Salvar membro', f_save_edit: 'Salvar alterações',
       f_hint: 'Números podem ser digitados completos (205.554.030) ou em milhões (205,5M). O Migration Score é calculado quando Edifício, Tecnologia, Herói e Veículo estão preenchidos.',
       loading: 'Carregando membros…', empty_filter: 'Nenhum jogador com esse filtro.', empty_none: 'Nenhum membro na lista ainda. Use "Adicionar membro" para começar.',
@@ -371,7 +372,7 @@
       btn_pub_title: 'Guarda la lista actual en la página para quien la abre sin iniciar sesión', btn_csv: 'Descargar CSV', btn_add: 'Agregar miembro',
       cols_title: 'Columnas de la tabla', cols_note: 'Jugador y Situación aparecen siempre. La elección vale para todos los que abran la página.',
       f_nome: 'Nombre en el juego', f_sede: 'Nivel del cuartel', f_veiculo: 'Vehículo modificado', f_arena: 'Poder de arena',
-      opt_vai: 'Va', opt_nao: 'No va', ph_arena: 'ej.: 123,3M', ph_t10: 'ej.: 45', cancel: 'Cancelar',
+      opt_vai: 'Va', opt_nao: 'No va', ph_arena: 'ej.: 123,3M', ph_t10: 'ej.: 45', cancel: 'Cancelar', close: 'Cerrar',
       f_title_add: 'Agregar miembro', f_title_edit: 'Editar {n}', f_save_add: 'Guardar miembro', f_save_edit: 'Guardar cambios',
       f_hint: 'Los números se pueden escribir completos (205.554.030) o en millones (205,5M). El Migration Score se calcula cuando Edificio, Tecnología, Héroe y Vehículo están completos.',
       loading: 'Cargando miembros…', empty_filter: 'Ningún jugador con ese filtro.', empty_none: 'Todavía no hay miembros en la lista. Usa "Agregar miembro" para empezar.',
@@ -418,7 +419,7 @@
       btn_pub_title: 'Saves the current list into the page for people who open it without signing in', btn_csv: 'Download CSV', btn_add: 'Add member',
       cols_title: 'Table columns', cols_note: 'Player and Status are always shown. Your choice applies to everyone who opens the page.',
       f_nome: 'In-game name', f_sede: 'HQ level', f_veiculo: 'Modified vehicle', f_arena: 'Arena power',
-      opt_vai: 'Going', opt_nao: 'Not going', ph_arena: 'e.g. 123.3M', ph_t10: 'e.g. 45', cancel: 'Cancel',
+      opt_vai: 'Going', opt_nao: 'Not going', ph_arena: 'e.g. 123.3M', ph_t10: 'e.g. 45', cancel: 'Cancel', close: 'Close',
       f_title_add: 'Add member', f_title_edit: 'Edit {n}', f_save_add: 'Save member', f_save_edit: 'Save changes',
       f_hint: 'Type numbers in full (205,554,030) or in millions (205.5M). The Migration Score is calculated when Building, Tech, Hero and Vehicle are filled in.',
       loading: 'Loading members…', empty_filter: 'No players match this filter.', empty_none: 'No members on the list yet. Use "Add member" to start.',
@@ -818,10 +819,15 @@
     renderBody();
   }));
   $('busca').addEventListener('input', (e) => { state.q = e.target.value; renderBody(); });
-  const toggle = (btnId, panelId) => $(btnId).addEventListener('click', () => {
-    const p = $(panelId); p.hidden = !p.hidden; $(btnId).setAttribute('aria-expanded', String(!p.hidden));
+  // only one panel open at a time: opening "Colunas" closes the form and vice versa
+  const closeCols = () => { $('p-cols').hidden = true; $('btn-cols').setAttribute('aria-expanded', 'false'); };
+  const closeForm = () => { if ($('p-add').hidden) return; $('f-cancel').click(); };
+  $('btn-cols').addEventListener('click', () => {
+    const p = $('p-cols'); const open = p.hidden;
+    if (open) closeForm();
+    p.hidden = !open; $('btn-cols').setAttribute('aria-expanded', String(open));
   });
-  toggle('btn-cols', 'p-cols');
+  $('cols-close').addEventListener('click', closeCols);
   const FIELDS = ['nome', 'sede', 'poder', 'edificio', 'tecnologia', 'tropas', 'heroi', 'veiculo', 'arena', 't10', 'obs'];
   let formMsg = { key: 'f_hint', vars: null, err: false };
   const setMsg = (key, vars, err) => { formMsg = { key, vars, err: !!err }; const m = $('f-msg'); m.textContent = t(key, vars); m.classList.toggle('err', !!err); };
@@ -833,7 +839,7 @@
     setMsg(formMsg.key, formMsg.vars, formMsg.err);
   };
   const setMode = (m) => { state.editing = m ? m.id : null; formMsg = { key: 'f_hint', vars: null, err: false }; paintForm(); };
-  const openPanel = () => { $('p-add').hidden = false; $('btn-add').setAttribute('aria-expanded', 'true'); $('p-add').scrollIntoView({ block: 'nearest' }); $('f-nome').focus(); };
+  const openPanel = () => { closeCols(); $('p-add').hidden = false; $('btn-add').setAttribute('aria-expanded', 'true'); $('p-add').scrollIntoView({ block: 'nearest' }); $('f-nome').focus(); };
   const openEdit = (m) => {
     if (state.readOnly) return;
     setMode(m);
