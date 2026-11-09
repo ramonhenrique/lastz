@@ -46,6 +46,7 @@ foreach ($mb in (LerLista "$est\membros.json")) {
     if ($mb.poder) { $doc.poder = [long]$mb.poder }
     if ($arena) { $doc.arena = $arena }
     if ($mb.sede) { $doc.sede = [int]$mb.sede }
+    $doc.zona = 614
     $writes.Add([ordered]@{ op = 'set'; collection = 'membros'; doc_id = $id; data = $doc }); $log.Add("cria $($mb.nome)")
     continue
   }
@@ -56,9 +57,10 @@ foreach ($mb in (LerLista "$est\membros.json")) {
   # poder total e sede vêm da lista de membros (membros_lista.ps1); os componentes (edifício, herói…) ficam
   if ($mb.poder -and [long]$atual.poder -ne [long]$mb.poder) { $mud.poder = [long]$mb.poder }
   if ($mb.sede -and [int]$atual.sede -ne [int]$mb.sede) { $mud.sede = [int]$mb.sede }
+  if (-not $atual.zona) { $mud.zona = 614 }   # membros da DEDZ são da zona #614
   if ($mud.Count) {
     $writes.Add([ordered]@{ op = 'update'; collection = 'membros'; doc_id = $id; data = $mud; if_version = $vers[$id] })
-    $log.Add("atualiza $($atual.nome): $(($mud.Keys | ForEach-Object { if ($_ -eq 'nome') { "nome -> $($mud.nome)" } elseif ($_ -eq 'cargo') { "cargo $($atual.cargo) -> $($mud.cargo)" } elseif ($_ -eq 'arena') { 'poder de arena' } elseif ($_ -eq 'sede') { "sede $($atual.sede) -> $($mud.sede)" } else { 'poder total' } }) -join ', ')")
+    $log.Add("atualiza $($atual.nome): $(($mud.Keys | ForEach-Object { if ($_ -eq 'nome') { "nome -> $($mud.nome)" } elseif ($_ -eq 'cargo') { "cargo $($atual.cargo) -> $($mud.cargo)" } elseif ($_ -eq 'arena') { 'poder de arena' } elseif ($_ -eq 'sede') { "sede $($atual.sede) -> $($mud.sede)" } elseif ($_ -eq 'zona') { 'zona 614' } else { 'poder total' } }) -join ', ')")
   }
 }
 

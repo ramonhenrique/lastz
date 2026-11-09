@@ -228,7 +228,8 @@
     <div class="form-grid">
       <label class="field wide"><span data-i18n="f_nome">Nome no jogo</span><input id="f-nome" autocomplete="off" required></label>
       <label class="field"><span data-i18n="c_cargo">Cargo</span><select id="f-cargo"><option value="">—</option><option>R5</option><option>R4</option><option>R3</option><option>R2</option><option>R1</option></select></label>
-      <label class="field"><span data-i18n="c_alianca">Aliança</span><select id="f-alianca"><option value="DEDZ" selected>DEDZ</option><option value="KURT">KURT</option><option value="BXG">BXG</option></select></label>
+      <label class="field"><span data-i18n="c_alianca">Aliança</span><input id="f-alianca" list="dl-alianca" autocomplete="off" placeholder="DEDZ"><datalist id="dl-alianca"></datalist></label>
+      <label class="field"><span data-i18n="c_zona">Zona</span><input id="f-zona" inputmode="numeric" placeholder="614"></label>
       <label class="field"><span data-i18n="h_status">Situação</span><select id="f-status"><option value="vai" data-i18n="opt_vai">Vai</option><option value="pendente" selected data-i18n="sit_pendente">Sem resposta</option><option value="nao" data-i18n="opt_nao">Não vai</option></select></label>
       <label class="field"><span data-i18n="c_ativo">Atividade</span><select id="f-ativo"><option value="1" selected data-i18n="act_on">Ativo</option><option value="0" data-i18n="act_off">Inativo</option></select></label>
       <label class="field"><span data-i18n="f_sede">Nível da sede</span><input id="f-sede" inputmode="numeric"></label>
@@ -325,7 +326,7 @@
       btn_pub_title: 'Grava a lista atual na página para quem abre sem login', btn_csv: 'Baixar CSV', btn_add: 'Adicionar membro',
       cols_title: 'Colunas da tabela', cols_note: 'Jogador e Situação aparecem sempre. A escolha vale para todos que abrirem a página.',
       f_nome: 'Nome no jogo', f_sede: 'Nível da sede', f_veiculo: 'Veículo modificado', f_arena: 'Poder de arena',
-      opt_vai: 'Vai', opt_nao: 'Não vai', ph_arena: 'ex.: 123,3M', ph_t10: 'ex.: 45', cancel: 'Cancelar', close: 'Fechar',
+      opt_vai: 'Vai', opt_nao: 'Não vai', ph_arena: 'ex.: 123,3M', ph_t10: 'ex.: 45', cancel: 'Cancelar', close: 'Fechar', err_zona: 'Zona deve ser um número (ex.: 614).',
       f_title_add: 'Adicionar membro', f_title_edit: 'Editar {n}', f_save_add: 'Salvar membro', f_save_edit: 'Salvar alterações',
       f_hint: 'Números podem ser digitados completos (205.554.030) ou em milhões (205,5M). O Migration Score é calculado quando Edifício, Tecnologia, Herói e Veículo estão preenchidos.',
       loading: 'Carregando membros…', empty_filter: 'Nenhum jogador com esse filtro.', empty_none: 'Nenhum membro na lista ainda. Use "Adicionar membro" para começar.',
@@ -339,7 +340,7 @@
       foot1: 'Poder e componentes lidos no jogo em 28/10/2026 (Detalhes > PC). Poder de arena da lista no modo "combate da arena" (atualizado em 29/10/2026), arredondado em 0,1M. T10 da lista manual da aliança.',
       foot2: 'Migration Score igual à calculadora do lastz.gg: Edifício e Tecnologia pesam 0,06, Herói 1,2 e Veículo modificado 1,1; Tropas não entram. EX Destroyer soma 43M. Os limites dos tiers seguem a temporada do servidor escolhida acima (S1–S2: 20M, 40M e 100M; S3: 40M, 80M e 160M). O T10 é só para acompanhamento e não entra no cálculo.',
       pub_at: 'Versão pública da lista atualizada em {d}.',
-      h_player: 'Jogador', h_status: 'Situação', c_alianca: 'Aliança', c_cargo: 'Cargo', c_sede: 'Sede', c_poder: 'Poder total',
+      h_player: 'Jogador', h_status: 'Situação', c_alianca: 'Aliança', c_zona: 'Zona', c_cargo: 'Cargo', c_sede: 'Sede', c_poder: 'Poder total',
       c_score: 'Migration Score', c_tier: 'Tier', c_arena: 'Arena', c_t10: 'T10', c_heroi: 'Herói', c_veiculo: 'Veículo', c_tropas: 'Tropas',
       c_edificio: 'Edifício', c_tecnologia: 'Tecnologia', c_matanca: 'Matança', c_obs: 'Observação', c_ativo: 'Atividade', act_on: 'Ativo', act_off: 'Inativo', act_of: 'Atividade de {n}',
       members: 'Membros', avg_score: 'Score médio', total: 'Total', no_score: 'Sem score', missing_power: '{n} (faltam dados de poder)',
@@ -372,7 +373,7 @@
       btn_pub_title: 'Guarda la lista actual en la página para quien la abre sin iniciar sesión', btn_csv: 'Descargar CSV', btn_add: 'Agregar miembro',
       cols_title: 'Columnas de la tabla', cols_note: 'Jugador y Situación aparecen siempre. La elección vale para todos los que abran la página.',
       f_nome: 'Nombre en el juego', f_sede: 'Nivel del cuartel', f_veiculo: 'Vehículo modificado', f_arena: 'Poder de arena',
-      opt_vai: 'Va', opt_nao: 'No va', ph_arena: 'ej.: 123,3M', ph_t10: 'ej.: 45', cancel: 'Cancelar', close: 'Cerrar',
+      opt_vai: 'Va', opt_nao: 'No va', ph_arena: 'ej.: 123,3M', ph_t10: 'ej.: 45', cancel: 'Cancelar', close: 'Cerrar', err_zona: 'La zona debe ser un número (ej.: 614).',
       f_title_add: 'Agregar miembro', f_title_edit: 'Editar {n}', f_save_add: 'Guardar miembro', f_save_edit: 'Guardar cambios',
       f_hint: 'Los números se pueden escribir completos (205.554.030) o en millones (205,5M). El Migration Score se calcula cuando Edificio, Tecnología, Héroe y Vehículo están completos.',
       loading: 'Cargando miembros…', empty_filter: 'Ningún jugador con ese filtro.', empty_none: 'Todavía no hay miembros en la lista. Usa "Agregar miembro" para empezar.',
@@ -386,7 +387,7 @@
       foot1: 'Poder y componentes leídos en el juego el 28/10/2026 (Detalles > PC). Poder de arena de la lista en modo "combate de arena", redondeado a 0,1M. T10 de la lista manual de la alianza.',
       foot2: 'Migration Score igual a la calculadora de lastz.gg: Edificio y Tecnología pesan 0,06, Héroe 1,2 y Vehículo modificado 1,1; las Tropas no cuentan. EX Destroyer suma 43M. Los límites de los tiers siguen la temporada del servidor elegida arriba (S1–S2: 20M, 40M y 100M; S3: 40M, 80M y 160M). El T10 es solo para seguimiento y no entra en el cálculo.',
       pub_at: 'Versión pública de la lista actualizada el {d}.',
-      h_player: 'Jugador', h_status: 'Situación', c_alianca: 'Alianza', c_cargo: 'Rango', c_sede: 'Cuartel', c_poder: 'Poder total',
+      h_player: 'Jugador', h_status: 'Situación', c_alianca: 'Alianza', c_zona: 'Zona', c_cargo: 'Rango', c_sede: 'Cuartel', c_poder: 'Poder total',
       c_score: 'Migration Score', c_tier: 'Tier', c_arena: 'Arena', c_t10: 'T10', c_heroi: 'Héroe', c_veiculo: 'Vehículo', c_tropas: 'Tropas',
       c_edificio: 'Edificio', c_tecnologia: 'Tecnología', c_matanca: 'Bajas', c_obs: 'Observación', c_ativo: 'Actividad', act_on: 'Activo', act_off: 'Inactivo', act_of: 'Actividad de {n}',
       members: 'Miembros', avg_score: 'Score promedio', total: 'Total', no_score: 'Sin score', missing_power: '{n} (faltan datos de poder)',
@@ -419,7 +420,7 @@
       btn_pub_title: 'Saves the current list into the page for people who open it without signing in', btn_csv: 'Download CSV', btn_add: 'Add member',
       cols_title: 'Table columns', cols_note: 'Player and Status are always shown. Your choice applies to everyone who opens the page.',
       f_nome: 'In-game name', f_sede: 'HQ level', f_veiculo: 'Modified vehicle', f_arena: 'Arena power',
-      opt_vai: 'Going', opt_nao: 'Not going', ph_arena: 'e.g. 123.3M', ph_t10: 'e.g. 45', cancel: 'Cancel', close: 'Close',
+      opt_vai: 'Going', opt_nao: 'Not going', ph_arena: 'e.g. 123.3M', ph_t10: 'e.g. 45', cancel: 'Cancel', close: 'Close', err_zona: 'Zone must be a number (e.g. 614).',
       f_title_add: 'Add member', f_title_edit: 'Edit {n}', f_save_add: 'Save member', f_save_edit: 'Save changes',
       f_hint: 'Type numbers in full (205,554,030) or in millions (205.5M). The Migration Score is calculated when Building, Tech, Hero and Vehicle are filled in.',
       loading: 'Loading members…', empty_filter: 'No players match this filter.', empty_none: 'No members on the list yet. Use "Add member" to start.',
@@ -433,7 +434,7 @@
       foot1: 'Power and components read in game on 10/28/2026 (Details > PC). Arena power from the member list in "arena combat" mode, rounded to 0.1M. T10 from the alliance\'s manual list.',
       foot2: 'Migration Score matches the lastz.gg calculator: Building and Tech weigh 0.06, Hero 1.2 and Modified Vehicle 1.1; Troops do not count. EX Destroyer adds 43M. Tier limits follow the server season chosen above (S1–S2: 20M, 40M and 100M; S3: 40M, 80M and 160M). T10 is for tracking only and is not part of the score.',
       pub_at: 'Public version of the list updated on {d}.',
-      h_player: 'Player', h_status: 'Status', c_alianca: 'Alliance', c_cargo: 'Rank', c_sede: 'HQ', c_poder: 'Total power',
+      h_player: 'Player', h_status: 'Status', c_alianca: 'Alliance', c_zona: 'Zone', c_cargo: 'Rank', c_sede: 'HQ', c_poder: 'Total power',
       c_score: 'Migration Score', c_tier: 'Tier', c_arena: 'Arena', c_t10: 'T10', c_heroi: 'Hero', c_veiculo: 'Vehicle', c_tropas: 'Troops',
       c_edificio: 'Building', c_tecnologia: 'Tech', c_matanca: 'Kills', c_obs: 'Notes', c_ativo: 'Activity', act_on: 'Active', act_off: 'Inactive', act_of: 'Activity of {n}',
       members: 'Members', avg_score: 'Avg. score', total: 'Total', no_score: 'No score', missing_power: '{n} (missing power data)',
@@ -482,10 +483,17 @@
   const tierOf = (s) => s == null ? null : s <= 0 ? 'Regular' : s > LIMIT.elite ? 'Elite' : s >= LIMIT.advanced ? 'Advanced' : s >= LIMIT.intermediate ? 'Intermediate' : 'Regular';
 
   // every column the table can show; nome and status are always on
-  const ALIANCAS = ['DEDZ', 'KURT', 'BXG'];
+  // alianças presentes nos dados: DEDZ primeiro, depois as outras pela quantidade de membros
+  let ALIANCAS = ['DEDZ'];
+  const refreshAliancas = () => {
+    const n = {}; state.rows.forEach((m) => { n[m.alianca] = (n[m.alianca] || 0) + 1; });
+    ALIANCAS = ['DEDZ', ...Object.keys(n).filter((a) => a !== 'DEDZ').sort((a, b) => n[b] - n[a] || a.localeCompare(b))];
+    const dl = document.getElementById('dl-alianca'); if (dl) { dl.replaceChildren(); ALIANCAS.forEach((a) => { const o = document.createElement('option'); o.value = a; dl.appendChild(o); }); }
+  };
   const COLS = [
     { k: 'ativo', l: true, on: true, v: (m) => m.ativo === false ? t('act_off') : t('act_on'), sort: (m) => (m.ativo === false ? 1 : 0) },
     { k: 'alianca', l: true, on: true, v: (m) => m.alianca, sort: (m) => m.alianca },
+    { k: 'zona', on: true, v: (m) => m.zona ? '#' + m.zona : '', sort: (m) => m.zona || 0 },
     { k: 'cargo', l: true, on: true, v: (m) => m.cargo || '', sort: (m) => ['R5', 'R4', 'R3', 'R2', 'R1'].indexOf(m.cargo) },
     { k: 'sede', on: true, v: (m) => m.sede ?? '' },
     { k: 'poder', on: true, v: (m) => m.poder == null ? '' : nfmt(m.poder) },
@@ -845,7 +853,7 @@
     setMode(m);
     $('f-nome').value = m.nome || '';
     $('f-cargo').value = m.cargo || '';
-    $('f-alianca').value = m.alianca || 'DEDZ';
+    $('f-alianca').value = m.alianca || 'DEDZ'; $('f-zona').value = m.zona ?? '';
     $('f-status').value = m.status || 'pendente';
     $('f-ativo').value = m.ativo === false ? '0' : '1';
     $('f-sede').value = m.sede ?? '';
@@ -874,16 +882,18 @@
     const n = Number(s);
     return Number.isFinite(n) && n >= 0 ? Math.round(n * mult) : NaN;
   };
-  const clearForm = () => { FIELDS.forEach((k) => { $('f-' + k).value = ''; }); $('f-cargo').value = ''; $('f-alianca').value = 'DEDZ'; $('f-status').value = 'pendente'; $('f-ativo').value = '1'; $('f-vtipo').value = ''; };
+  const clearForm = () => { FIELDS.forEach((k) => { $('f-' + k).value = ''; }); $('f-cargo').value = ''; $('f-alianca').value = 'DEDZ'; $('f-zona').value = ''; $('f-status').value = 'pendente'; $('f-ativo').value = '1'; $('f-vtipo').value = ''; };
   $('f-cancel').addEventListener('click', () => { clearForm(); setMode(null); $('p-add').hidden = true; $('btn-add').setAttribute('aria-expanded', 'false'); renderBody(); });
   $('f-save').addEventListener('click', async () => {
     const nome = $('f-nome').value.trim();
     if (!nome) { setMsg('err_name', null, true); $('f-nome').focus(); return; }
     const editId = state.editing;
     if (state.rows.some((m) => m.id !== editId && (m.nome || '').toLowerCase() === nome.toLowerCase())) { setMsg('err_dup', { n: nome }, true); return; }
-    const doc = { nome, alianca: $('f-alianca').value, cargo: $('f-cargo').value || null, status: $('f-status').value, ativo: $('f-ativo').value === '1', obs: $('f-obs').value.trim() };
+    const doc = { nome, alianca: ($('f-alianca').value.trim().toUpperCase() || 'DEDZ'), cargo: $('f-cargo').value || null, status: $('f-status').value, ativo: $('f-ativo').value === '1', obs: $('f-obs').value.trim() };
     if (!editId) doc.origem = 'manual';
     doc.veiculoTipo = $('f-vtipo').value || null;
+    const zona = $('f-zona').value.trim().replace('#', ''); doc.zona = zona ? Number(zona) : null;
+    if (doc.zona != null && !Number.isInteger(doc.zona)) { setMsg('err_zona', null, true); return; }
     const sede = $('f-sede').value.trim(); doc.sede = sede ? Number(sede) : null;
     for (const k of ['poder', 'edificio', 'tecnologia', 'tropas', 'heroi', 'veiculo', 'arena']) {
       const v = parseNum($('f-' + k).value);
@@ -942,7 +952,7 @@
   }));
 
   // ---- data
-  const prep = (m) => { m._score = score(m); m._tier = tierOf(m._score); if (!['vai', 'nao', 'pendente'].includes(m.status)) m.status = 'pendente'; m.alianca = ALIANCAS.includes(String(m.alianca || '').toUpperCase()) ? String(m.alianca).toUpperCase() : 'DEDZ'; return m; };
+  const prep = (m) => { m._score = score(m); m._tier = tierOf(m._score); if (!['vai', 'nao', 'pendente'].includes(m.status)) m.status = 'pendente'; m.alianca = String(m.alianca || '').trim().toUpperCase() || 'DEDZ'; return m; };
 
   const publishSnapshot = async (artifact) => {
     const b = $('btn-pub'); b.disabled = true; b.textContent = t('updating');
@@ -974,7 +984,7 @@
     if (!dl) $('btn-csv').hidden = true;
     if (!db) {
       if (SNAP && LIMITS[SNAP.temporada]) season = SNAP.temporada;
-      state.rows = SNAP && Array.isArray(SNAP.rows) ? SNAP.rows.map((r) => prep(Object.assign({}, r))) : [];
+      state.rows = SNAP && Array.isArray(SNAP.rows) ? SNAP.rows.map((r) => prep(Object.assign({}, r))) : []; refreshAliancas();
       if (SNAP && Array.isArray(SNAP.colunas)) state.visible = COLS.filter((c) => SNAP.colunas.includes(c.k)).map((c) => c.k);
       state.loaded = true; state.readOnly = true; state.publicView = true;
       $('btn-add').hidden = true; $('btn-cols').hidden = true;
@@ -988,7 +998,7 @@
       if (artifact) { $('btn-pub').hidden = false; $('btn-pub').addEventListener('click', () => publishSnapshot(artifact)); }
     } catch (_) {}
     db.collection('membros').onSnapshot((snap) => {
-      state.rows = snap.docs.map((d) => prep(Object.assign({ id: d.id }, d.data())));
+      state.rows = snap.docs.map((d) => prep(Object.assign({ id: d.id }, d.data()))); refreshAliancas();
       state.loaded = true; render();
     }, () => { notice('stopped'); });
     db.doc('config/temporada').onSnapshot((snap) => {

@@ -31,6 +31,15 @@ Regras de sempre: no jogo só leia. Nunca clique em "Ajuste de classe", "Expulsa
 
 Siga o passo 5a do `ROTINA.md`: download, `sync_migracao.ps1`, lotes e lista pública. O sync agora também leva poder total e sede.
 
+## 3a. Grupo REGULAR 609 (contas de fora da DEDZ que também vão migrar)
+
+Caminho: Chat → Chat privado → Bate-papo em grupo → "REGULAR 609" → engrenagem → "Ver mais membros". A lista mostra `[TAG]Nome`.
+1. Comece com um print para saber em que tela o jogo está. Role até o topo e desça tirando prints até o fim, anotando todos os nomes.
+2. Quem não tem a tag [DEDZ] é conta de fora (outra aliança e/ou outro servidor; UFO8 é a aliança de farms da #614).
+3. Para cada conta de fora, digite o nome na busca (290,80; lupa 498,80) e toque na foto (133,152). O cartão mostra a sede (Lv), o poder (PC), a aliança, a zona e a insígnia R4. Feche no X (487,82). A busca não aceita hífen: use um pedaço do nome (ex.: "Bando"). O nome no cartão pode ser mais novo que o da lista do grupo.
+4. Na dash de migração, cada conta de fora é um documento `g_<nome sem símbolos>`, com nome, alianca, zona, sede, poder, cargo (R4 se tiver a insígnia), status "vai", ativo, origem "grupo" e obs "grupo REGULAR 609". Use `set` para criar e `update` para atualizar sede e poder das que já existem. O `sync_migracao.ps1` não toca nessas contas.
+5. Conta de fora que saiu do grupo: cite para o Ramon, não apague sozinho.
+
 ## 4. Publicar e avisar
 
 1. `scripts\foto.ps1`, depois `Artifact` `read` e publish da dash de acompanhamento (passo 6 do `ROTINA.md`). A migração já foi publicada no passo 3.
