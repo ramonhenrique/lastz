@@ -78,6 +78,7 @@ function Mudar($id, $status, $nota) {
 
 foreach ($k in @($info.Keys | Sort-Object)) {
   $x = $info[$k]; $a = @($antes[$k] | Where-Object { $_ }); $n = @($agora[$k] | Where-Object { $_ }); $id = Achar $x
+  if ($id -and $ORGANIZA -contains $id) { continue }   # organizadores ficam fora da auditoria
   $rot = if ($x.ali) { "$($x.nome) [$($x.ali)]" } else { $x.nome }
   if ($n.Count -and -not $a.Count) {
     # entrou
