@@ -66,6 +66,11 @@
   .calc .tot { font-weight: 600; border-top: 1px solid var(--line); padding-top: 3px; }
   .empty { padding: 32px 16px; text-align: center; color: var(--muted); }
   footer { display: grid; gap: 6px; }
+  .pgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 10px; }
+  .pcard { background: var(--soft); border-radius: var(--r); padding: 10px 12px; display: grid; gap: 2px; }
+  .pcard .tier { justify-self: start; background: var(--panel); }
+  .pcard .pn { font-family: var(--f-display); font-weight: 600; font-size: 30px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .pcard .ps { font-size: 13px; color: var(--muted); }
 </style>
 
 <div class="wrap">
@@ -92,6 +97,12 @@
     </ol>
     <div class="formula" id="formula"></div>
     <p class="msg" id="formula-note"></p>
+  </section>
+
+  <section class="how" aria-labelledby="pass-t">
+    <h2 id="pass-t" data-t="pass_t">Passes de migração por tier</h2>
+    <div class="pgrid" id="passes"></div>
+    <p class="msg" data-t="pass_note">Valores da calculadora de migração do lastz.gg (estimativa da comunidade). Intermediate, Advanced e Elite foram confirmados em prints da S3; o Regular é a referência das temporadas anteriores. Confira no painel de migração do jogo antes de gastar os passes.</p>
   </section>
 
   <div class="toolbar">
@@ -131,7 +142,9 @@
       yes: 'Sim', no: 'Não', v_hercules: 'Hercules', v_destroyer: 'Destroyer', v_ex: 'EX Destroyer',
       k_ed: 'Edifício + Tecnologia × 0,06', k_he: 'Herói × 1,2', k_ve: 'Veículo × 1,1', k_base: 'Base', k_ex: 'EX Destroyer', k_t10: 'T10 desbloqueado', k_s3: 'Ajuste S3 com T10 (0,77 × Herói − 45M)', k_tot: 'Migration Score', k_min: '(abaixo de 0 conta como 0)',
       nodata: 'Sem o detalhamento do PC: ainda não dá para calcular.', empty: 'Ninguém com esse nome.',
-      foot: 'Números lidos no jogo em {d} (perfil > PC). Lista atualizada em {u}. Esta página só mostra os dados; correções são feitas pela liderança.'
+      foot: 'Números lidos no jogo em {d} (perfil > PC). Lista atualizada em {u}. Esta página só mostra os dados; correções são feitas pela liderança.',
+      pass_t: 'Passes de migração por tier', pass_n: 'passes', c_pass: 'Passes', r_lt: 'abaixo de {a}M', r_ab: '{a}M a {b}M', r_gt: 'acima de {a}M',
+      pass_note: 'Valores da calculadora de migração do lastz.gg (estimativa da comunidade). Intermediate, Advanced e Elite foram confirmados em prints da S3; o Regular é a referência das temporadas anteriores. Confira no painel de migração do jogo antes de gastar os passes.'
     },
     es: {
       title: 'Revisa tu poder y tu Migration Score',
@@ -146,7 +159,9 @@
       yes: 'Sí', no: 'No', v_hercules: 'Hercules', v_destroyer: 'Destroyer', v_ex: 'EX Destroyer',
       k_ed: 'Edificio + Tecnología × 0,06', k_he: 'Héroe × 1,2', k_ve: 'Vehículo × 1,1', k_base: 'Base', k_ex: 'EX Destroyer', k_t10: 'T10 desbloqueado', k_s3: 'Ajuste S3 con T10 (0,77 × Héroe − 45M)', k_tot: 'Migration Score', k_min: '(debajo de 0 cuenta como 0)',
       nodata: 'Sin el detalle de PC: todavía no se puede calcular.', empty: 'Nadie con ese nombre.',
-      foot: 'Números leídos en el juego el {d} (perfil > PC). Lista actualizada el {u}. Esta página solo muestra los datos; las correcciones las hacen los líderes.'
+      foot: 'Números leídos en el juego el {d} (perfil > PC). Lista actualizada el {u}. Esta página solo muestra los datos; las correcciones las hacen los líderes.',
+      pass_t: 'Pases de migración por tier', pass_n: 'pases', c_pass: 'Pases', r_lt: 'debajo de {a}M', r_ab: '{a}M a {b}M', r_gt: 'más de {a}M',
+      pass_note: 'Valores de la calculadora de migración de lastz.gg (estimación de la comunidad). Intermediate, Advanced y Elite se confirmaron en capturas de la S3; el Regular es la referencia de temporadas anteriores. Revisa el panel de migración del juego antes de gastar los pases.'
     },
     en: {
       title: 'Check your power and Migration Score',
@@ -161,7 +176,9 @@
       yes: 'Yes', no: 'No', v_hercules: 'Hercules', v_destroyer: 'Destroyer', v_ex: 'EX Destroyer',
       k_ed: 'Building + Tech × 0.06', k_he: 'Hero × 1.2', k_ve: 'Vehicle × 1.1', k_base: 'Base', k_ex: 'EX Destroyer', k_t10: 'T10 unlocked', k_s3: 'S3 adjustment with T10 (0.77 × Hero − 45M)', k_tot: 'Migration Score', k_min: '(below 0 counts as 0)',
       nodata: 'No PC breakdown yet: the score cannot be calculated.', empty: 'Nobody with that name.',
-      foot: 'Numbers read in game on {d} (profile > PC). List updated {u}. This page only shows the data; corrections are made by the leaders.'
+      foot: 'Numbers read in game on {d} (profile > PC). List updated {u}. This page only shows the data; corrections are made by the leaders.',
+      pass_t: 'Migration passes by tier', pass_n: 'passes', c_pass: 'Passes', r_lt: 'below {a}M', r_ab: '{a}M to {b}M', r_gt: 'above {a}M',
+      pass_note: 'Values from the lastz.gg migration calculator (a community estimate). Intermediate, Advanced and Elite were confirmed in S3 screenshots; Regular is the reference from earlier seasons. Check the in-game migration panel before spending passes.'
     }
   };
   let lang = 'pt';
@@ -177,6 +194,19 @@
   };
   const tierOf = (s) => s == null ? '' : s / 1e6 > LIM.c ? 'Elite' : s / 1e6 >= LIM.b ? 'Advanced' : s / 1e6 >= LIM.a ? 'Intermediate' : 'Regular';
   D.rows.forEach((m) => { m._c = calc(m); m._s = m._c ? m._c.score : null; m._t = tierOf(m._s); });
+  // passes de migração por tier (calculadora do lastz.gg)
+  const PASSES = { Regular: 10, Intermediate: 15, Advanced: 20, Elite: 50 };
+  const renderPasses = () => {
+    const box = document.getElementById('passes'); box.replaceChildren();
+    const faixa = { Regular: t('r_lt', { a: LIM.a }), Intermediate: t('r_ab', { a: LIM.a, b: LIM.b }), Advanced: t('r_ab', { a: LIM.b, b: LIM.c }), Elite: t('r_gt', { a: LIM.c }) };
+    ['Regular', 'Intermediate', 'Advanced', 'Elite'].forEach((k) => {
+      const c = document.createElement('div'); c.className = 'pcard';
+      const tg = document.createElement('span'); tg.className = 'tier ' + k; tg.textContent = k;
+      const n = document.createElement('span'); n.className = 'pn'; n.textContent = PASSES[k] + ' ' + t('pass_n');
+      const s = document.createElement('span'); s.className = 'ps'; s.textContent = 'Score ' + faixa[k];
+      c.append(tg, n, s); box.appendChild(c);
+    });
+  };
 
   const nf = (n) => n == null ? '' : n.toLocaleString(lang === 'en' ? 'en-US' : lang === 'es' ? 'es-ES' : 'pt-BR');
   const mi = (n) => n == null ? '' : (n / 1e6).toLocaleString(lang === 'en' ? 'en-US' : 'pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + 'M';
@@ -196,7 +226,8 @@
     { k: 'vtipo', l: true, v: (m) => m.veiculoTipo ? t('v_' + m.veiculoTipo) : '', sort: (m) => ['hercules', 'destroyer', 'ex'].indexOf(m.veiculoTipo) },
     { k: 't10', l: true, v: (m) => m.t10ok ? t('yes') : t('no'), sort: (m) => m.t10ok ? 1 : 0 },
     { k: 'score', v: (m) => m._s == null ? '—' : mi(m._s), sort: (m) => m._s ?? -1, cls: 'score' },
-    { k: 'tier', l: true, v: null, sort: (m) => m._s ?? -1 }
+    { k: 'tier', l: true, v: null, sort: (m) => m._s ?? -1 },
+    { k: 'pass', v: (m) => m._t ? String(PASSES[m._t]) : '—', sort: (m) => m._t ? PASSES[m._t] : -1 }
   ];
   const st = { q: '', ali: '', sort: 'score', dir: -1, open: null };
 
@@ -227,7 +258,7 @@
     if (c.ex) add(t('k_ex'), '+43,0M', '');
     if (c.t10) add(t('k_t10'), '+16,0M', '');
     if (c.s3) add(t('k_s3'), (c.s3 >= 0 ? '+' : '') + mi(c.s3), '');
-    add(t('k_tot'), mi(c.score), (c.bruto < 0 ? t('k_min') + ' · ' : '') + m._t, 'tot');
+    add(t('k_tot'), mi(c.score), (c.bruto < 0 ? t('k_min') + ' · ' : '') + m._t + ' · ' + PASSES[m._t] + ' ' + t('pass_n'), 'tot');
     td.appendChild(g); tr.appendChild(td); return tr;
   };
   const renderBody = () => {
@@ -270,7 +301,7 @@
     sel.value = cur; sel.setAttribute('aria-label', t('c_ali'));
     document.querySelectorAll('[data-lang]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
   };
-  const render = () => { renderStatic(); renderHead(); renderBody(); };
+  const render = () => { renderStatic(); renderPasses(); renderHead(); renderBody(); };
 
   $('busca').addEventListener('input', (e) => { st.q = e.target.value; renderBody(); });
   $('f-ali').addEventListener('change', (e) => { st.ali = e.target.value; renderBody(); });
