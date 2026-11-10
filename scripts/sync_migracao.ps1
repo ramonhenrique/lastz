@@ -22,7 +22,7 @@ $est = PastaEstado $Dir
 $txt = [IO.File]::ReadAllText($Versoes, $script:utf8)
 $vers = @{}
 foreach ($m in [regex]::Matches($txt, '"([^"]+)"\s+\d+ bytes\s+version (\d+)')) { $vers[$m.Groups[1].Value] = [int]$m.Groups[2].Value }
-foreach ($m in [regex]::Matches($txt, '"([^"]+)" (\d+)(?=[,\]])')) { $vers[$m.Groups[1].Value] = [int]$m.Groups[2].Value }
+foreach ($m in [regex]::Matches($txt, '"([^"]+)" (\d+)(?=\s*[,\]]|\s*$)')) { $vers[$m.Groups[1].Value] = [int]$m.Groups[2].Value }
 
 # arquivo sem versão no resultado = sobra de um download anterior (documento já apagado): ignora
 $mig = @{}
