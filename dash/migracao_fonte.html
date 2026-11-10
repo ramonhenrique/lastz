@@ -124,6 +124,27 @@
   .pchip.p-bom { background: var(--go-bg); color: var(--go); } .pchip.p-atencao { background: var(--wait-bg); color: var(--wait); } .pchip.p-baixo { background: var(--no-bg); color: var(--no); }
   .pchip.s-sai { background: var(--no); color: var(--bg); } .pchip.s-cede { background: var(--wait-bg); color: var(--wait); border: 1px solid var(--wait); }
   .atable td.grp { background: var(--soft); font-weight: 600; font-size: 13px; }
+  .panel[hidden] { display: none; }
+  .pgrid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr)); align-items: start; }
+  .pfig { margin: 0; display: grid; gap: 8px; min-width: 0; }
+  .pfig figcaption { font-size: 13px; font-weight: 600; color: var(--muted); }
+  .pchart { display: block; width: 100%; min-width: 440px; height: auto; font-family: var(--f-body); }
+  .pchart text { fill: var(--fg); font-size: 12px; }
+  .pchart .ax { fill: var(--muted); font-size: 11px; }
+  .pchart .grid { stroke: var(--line); }
+  .pchart .lim { stroke: var(--muted); stroke-dasharray: 4 4; }
+  .pchart .zone { fill: var(--no-bg); opacity: .7; }
+  .pchart .seg-txt { fill: var(--panel); font-size: 11px; font-weight: 600; }
+  .pchart .vag { stroke: var(--fg); stroke-width: 2; }
+  .pchart .lbl { font-size: 11px; font-weight: 600; paint-order: stroke; stroke: var(--panel); stroke-width: 3px; }
+  .pchart circle { stroke: var(--panel); stroke-width: 1.5; }
+  .pchart circle.sai { stroke: var(--fg); stroke-width: 2; }
+  .plegend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; color: var(--muted); }
+  .plegend span { display: inline-flex; align-items: center; gap: 6px; }
+  .plegend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+  .plegend i.round { border-radius: 50%; }
+  .sub3 { font-size: 16px !important; }
+  .atable td.p-baixo, .atable td.s-sai { color: var(--no); font-weight: 600; } .atable td.p-atencao, .atable td.s-cede { color: var(--wait); font-weight: 600; } .atable td.p-bom { color: var(--go); }
   .atable th { position: static; }
   .atable td:first-child, .atable th:first-child { text-align: left; }
   .atable tfoot td { font-weight: 600; border-bottom: 0; }
@@ -299,6 +320,24 @@
         <p class="msg" data-i18n="a_vag_d">Vagas de cada tier contra quem já confirmou. A projeção soma quem está sem resposta, como se todos fossem. Considera todos os membros; quem não vai fica de fora.</p>
         <div class="tscroll"><table class="atable" id="a-vagas"></table></div>
       </section>
+      <section class="panel full" id="a-desemp" hidden>
+        <h3 data-i18n="a_perf_t">Desempenho de quem vai</h3>
+        <p class="msg" id="a-perf-d"></p>
+        <div class="pgrid">
+          <figure class="pfig">
+            <figcaption data-i18n="a_perf_bar">Confirmados por desempenho em cada tier</figcaption>
+            <div class="tscroll"><svg class="pchart" id="a-perf-bar" role="img"></svg></div>
+            <div class="plegend" id="a-perf-leg"></div>
+          </figure>
+          <figure class="pfig">
+            <figcaption data-i18n="a_perf_sc">VS na meta × doação (cada ponto é um jogador da DEDZ que vai)</figcaption>
+            <div class="tscroll"><svg class="pchart" id="a-perf-sc" role="img"></svg></div>
+            <div class="plegend" id="a-perf-leg2"></div>
+          </figure>
+        </div>
+        <h3 class="sub3" data-i18n="a_perf_list">Quem vai e tem observação</h3>
+        <div class="tscroll tall"><table class="atable" id="a-perf-tab"></table></div>
+      </section>
       <section class="panel">
         <h3 data-i18n="a_lim_t">Perto do limite de tier</h3>
         <p class="msg" id="a-lim-d"></p>
@@ -385,6 +424,9 @@
       a_lim_t: 'Perto do limite de tier', a_lim_d: 'Jogadores a até {m} de um limite do Migration Score: os de baixo sobem de tier com pouco crescimento; os de cima caem se o score baixar.',
       h_dist: 'Distância', dist_up: 'faltam {n} para {t}', dist_down: '{n} acima do piso de {t}', lim_none: 'Ninguém está perto de um limite.',
       a_pend_t: 'Sem resposta: quem cobrar', a_pend_d: 'Quem ainda não respondeu, agrupado por aliança e com o maior score primeiro. Considera todos os membros.', pend_none: 'Todos já responderam.',
+      a_perf_t: 'Desempenho de quem vai', a_perf_d: 'Só quem está marcado "vai". VS e doação vêm da dash de acompanhamento ({d} dias fechados, até {a}). A faixa vermelha é baixo empenho (menos de 50% dos dias de VS na meta ou da doação esperada); as linhas tracejadas marcam 75% de VS e 80% de doação, abaixo disso fica em atenção.',
+      a_perf_bar: 'Confirmados por desempenho em cada tier', a_perf_sc: 'VS na meta × doação (cada ponto é um jogador da DEDZ que vai)', a_perf_list: 'Quem vai e tem observação',
+      ax_vs: 'dias de VS na meta', ax_doa: 'doação da meta', vagas_n: '{n} vagas', h_vs: 'VS na meta', h_doa: 'Doação', perf_none: 'Ninguém que vai tem observação de desempenho.', sc_cap: 'acima de 120% fica no topo',
       foot1: 'Poder e componentes lidos no jogo em 28/10/2026 (Detalhes > PC). Poder de arena da lista no modo "combate da arena" (atualizado em 29/10/2026), arredondado em 0,1M. T10 da lista manual da aliança.',
       foot2: 'Migration Score igual à calculadora do lastz.gg: Edifício e Tecnologia pesam 0,06, Herói 1,2 e Veículo modificado 1,1, menos 45M; Tropas não entram. EX Destroyer soma 43M. T10 desbloqueado soma 16M e, na S3, mais 0,77 × Herói − 45M. O score nunca fica abaixo de 0. Os limites dos tiers seguem a temporada do servidor escolhida acima (S1–S2: 20M, 40M e 100M; S3: 40M, 80M e 160M). O T10 (%) é só para acompanhamento e não entra no cálculo.',
       pub_at: 'Versão pública da lista atualizada em {d}.',
@@ -442,6 +484,9 @@
       a_lim_t: 'Cerca del límite de tier', a_lim_d: 'Jugadores a hasta {m} de un límite del Migration Score: los de abajo suben de tier con poco crecimiento; los de arriba bajan si el score cae.',
       h_dist: 'Distancia', dist_up: 'faltan {n} para {t}', dist_down: '{n} sobre el piso de {t}', lim_none: 'Nadie está cerca de un límite.',
       a_pend_t: 'Sin respuesta: a quién cobrar', a_pend_d: 'Quienes todavía no respondieron, agrupados por alianza y con el mayor score primero. Considera a todos los miembros.', pend_none: 'Todos ya respondieron.',
+      a_perf_t: 'Desempeño de quienes van', a_perf_d: 'Solo quienes están marcados "va". VS y donación vienen del panel de seguimiento ({d} días cerrados, hasta {a}). La franja roja es bajo empeño (menos del 50% de los días de VS en la meta o de la donación esperada); las líneas discontinuas marcan 75% de VS y 80% de donación, por debajo queda en atención.',
+      a_perf_bar: 'Confirmados por desempeño en cada tier', a_perf_sc: 'VS en la meta × donación (cada punto es un jugador de DEDZ que va)', a_perf_list: 'Quienes van y tienen observación',
+      ax_vs: 'días de VS en la meta', ax_doa: 'donación de la meta', vagas_n: '{n} plazas', h_vs: 'VS en la meta', h_doa: 'Donación', perf_none: 'Nadie que va tiene observación de desempeño.', sc_cap: 'por encima de 120% queda arriba',
       foot1: 'Poder y componentes leídos en el juego el 28/10/2026 (Detalles > PC). Poder de arena de la lista en modo "combate de arena", redondeado a 0,1M. T10 de la lista manual de la alianza.',
       foot2: 'Migration Score igual a la calculadora de lastz.gg: Edificio y Tecnología pesan 0,06, Héroe 1,2 y Vehículo modificado 1,1, menos 45M; las Tropas no cuentan. EX Destroyer suma 43M. T10 desbloqueado suma 16M y, en S3, además 0,77 × Héroe − 45M. El score nunca baja de 0. Los límites de los tiers siguen la temporada del servidor elegida arriba (S1–S2: 20M, 40M y 100M; S3: 40M, 80M y 160M). El T10 (%) es solo para seguimiento y no entra en el cálculo.',
       pub_at: 'Versión pública de la lista actualizada el {d}.',
@@ -499,6 +544,9 @@
       a_lim_t: 'Close to a tier limit', a_lim_d: 'Players within {m} of a Migration Score limit: those below move up a tier with little growth; those above drop if their score falls.',
       h_dist: 'Distance', dist_up: '{n} short of {t}', dist_down: '{n} above the {t} floor', lim_none: 'Nobody is close to a limit.',
       a_pend_t: 'No answer: who to follow up', a_pend_d: 'Who has not answered yet, grouped by alliance with the highest score first. Counts all members.', pend_none: 'Everyone has answered.',
+      a_perf_t: 'Performance of who is going', a_perf_d: 'Only players marked "going". VS and donation come from the tracking dashboard ({d} closed days, up to {a}). The red band is low effort (under 50% of VS days at goal or of expected donation); the dashed lines mark 75% VS and 80% donation, below that is watch.',
+      a_perf_bar: 'Confirmed players by performance in each tier', a_perf_sc: 'VS at goal × donation (each dot is a DEDZ player going)', a_perf_list: 'Going with a note',
+      ax_vs: 'VS days at goal', ax_doa: 'donation of goal', vagas_n: '{n} slots', h_vs: 'VS at goal', h_doa: 'Donation', perf_none: 'Nobody going has a performance note.', sc_cap: 'above 120% sits at the top',
       foot1: 'Power and components read in game on 10/28/2026 (Details > PC). Arena power from the member list in "arena combat" mode, rounded to 0.1M. T10 from the alliance\'s manual list.',
       foot2: 'Migration Score matches the lastz.gg calculator: Building and Tech weigh 0.06, Hero 1.2 and Modified Vehicle 1.1, minus 45M; Troops do not count. EX Destroyer adds 43M. T10 unlocked adds 16M and, in S3, also 0.77 × Hero − 45M. The score never goes below 0. Tier limits follow the server season chosen above (S1–S2: 20M, 40M and 100M; S3: 40M, 80M and 160M). T10 (%) is for tracking only and is not part of the score.',
       pub_at: 'Public version of the list updated on {d}.',
@@ -679,7 +727,7 @@
     const idx = (Math.min(vs, 1) + Math.min(doa, 1)) / 2;
     if (p.ent && p.d < PERF.novatoDias) return { k: 'novato', cls: '', label: t('p_novato'), tip: t('pt_novato', { e: dmy(p.ent), d: p.d }) + ' · ' + det, rank: 4, idx: null };
     const k = vs < PERF.baixoVS || doa < PERF.baixoDoa ? 'baixo' : vs < PERF.atVS || doa < PERF.atDoa ? 'atencao' : 'bom';
-    return { k, cls: 'p-' + k, label: t('p_' + k), tip: det, rank: { baixo: 1, atencao: 2, bom: 3 }[k], idx };
+    return { k, cls: 'p-' + k, label: t('p_' + k), tip: det, rank: { baixo: 1, atencao: 2, bom: 3 }[k], idx, vs, doa, p };
   };
   const computePerf = () => {
     state.rows.forEach((m) => { m._perf = state.perf ? perfOf(m) : null; m._sinal = null; });
@@ -909,8 +957,107 @@
   };
   const avgScore = (g) => { const s = g.filter((m) => m._score != null); return s.length ? mi(s.reduce((a, m) => a + m._score, 0) / s.length) : '—'; };
   const pct = (n, d) => d ? Math.round(n / d * 100) + '%' : '—';
+  // ---- gráfico de desempenho de quem vai (só com os dados da dash de acompanhamento)
+  const PCOR = { bom: 'var(--go)', atencao: 'var(--wait)', baixo: 'var(--no)', novato: 'var(--t-adv)', fora: 'var(--muted)', semdados: 'var(--line)' };
+  const PORD = ['baixo', 'atencao', 'bom', 'novato', 'fora', 'semdados'];
+  const svgEl = (tag, attrs, parent, text) => {
+    const e = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    Object.entries(attrs || {}).forEach(([k, v]) => e.setAttribute(k, v));
+    if (text != null) e.textContent = text;
+    if (parent) parent.appendChild(e);
+    return e;
+  };
+  const legend = (id, items) => {
+    const box = $(id); box.replaceChildren();
+    items.forEach(([cor, label, round]) => { const s = document.createElement('span'); const i = document.createElement('i'); i.style.background = cor; if (round) i.className = 'round'; s.append(i, document.createTextNode(label)); box.appendChild(s); });
+  };
+  const renderPerf = (all) => {
+    const P = state.perf;
+    $('a-desemp').hidden = !P;
+    if (!P) return;
+    const going = all.filter((m) => m.status === 'vai' && m._perf);
+    const dias = Math.max(0, ...going.map((m) => (m._perf.p && m._perf.p.d) || 0));
+    $('a-perf-d').textContent = t('a_perf_d', { d: dias, a: dmy(P.ate) });
+    // barras empilhadas por tier, com a marca das vagas
+    const tiers = TIERS.filter((tier) => going.some((m) => m._tier === tier) || VAGAS[tier] != null);
+    const W = 720, L = 104, R = 110, RH = 34, H = tiers.length * RH + 26;
+    const max = Math.max(1, ...tiers.map((tier) => Math.max(going.filter((m) => m._tier === tier).length, VAGAS[tier] || 0)));
+    const sx = (n) => n / max * (W - L - R);
+    const bar = $('a-perf-bar'); bar.replaceChildren(); bar.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    bar.setAttribute('aria-label', t('a_perf_bar'));
+    tiers.forEach((tier, i) => {
+      const y = 8 + i * RH, g = going.filter((m) => m._tier === tier);
+      svgEl('text', { x: 0, y: y + 17, class: 'tier-' + tier }, bar, tier);
+      let x = L;
+      PORD.forEach((k) => {
+        const n = g.filter((m) => m._perf.k === k).length;
+        if (!n) return;
+        const w = sx(n);
+        const r = svgEl('rect', { x, y, width: Math.max(1, w - 1), height: 24, rx: 3, fill: PCOR[k] }, bar);
+        svgEl('title', {}, r, `${tier} · ${t('p_' + k)}: ${n}`);
+        if (w >= 20) svgEl('text', { x: x + w / 2, y: y + 16, 'text-anchor': 'middle', class: 'seg-txt', style: k === 'semdados' ? 'fill: var(--fg)' : '' }, bar, String(n));
+        x += w;
+      });
+      svgEl('text', { x: Math.max(x, VAGAS[tier] != null ? L + sx(VAGAS[tier]) : 0) + 6, y: y + 17, class: 'ax' }, bar, VAGAS[tier] != null ? `${g.length} / ${t('vagas_n', { n: VAGAS[tier] })}` : String(g.length));
+      if (VAGAS[tier] != null) {
+        const vx = L + sx(VAGAS[tier]);
+        svgEl('line', { x1: vx, x2: vx, y1: y - 3, y2: y + 27, class: 'vag' }, bar);
+        svgEl('title', {}, svgEl('rect', { x: vx - 4, y: y - 3, width: 8, height: 30, fill: 'transparent' }, bar), t('vagas_n', { n: VAGAS[tier] }));      }
+    });
+    svgEl('text', { x: L, y: H - 4, class: 'ax' }, bar, '▏ = ' + t('h_vagas').toLowerCase());
+    legend('a-perf-leg', PORD.filter((k) => going.some((m) => m._perf.k === k)).map((k) => [PCOR[k], `${t('p_' + k)} (${going.filter((m) => m._perf.k === k).length})`]));
+    // dispersão: VS na meta (x) por doação (y), com as faixas dos limites
+    const pts = going.filter((m) => m._perf.vs != null);
+    const SW = 720, SH = 400, ML = 48, MR = 16, MT = 34, MB = 42, YMAX = 1.2;
+    const px = (v) => ML + v * (SW - ML - MR), py = (v) => MT + (1 - Math.min(v, YMAX) / YMAX) * (SH - MT - MB);
+    const sc = $('a-perf-sc'); sc.replaceChildren(); sc.setAttribute('viewBox', `0 0 ${SW} ${SH}`);
+    sc.setAttribute('aria-label', t('a_perf_sc'));
+    svgEl('rect', { x: px(0), y: py(YMAX), width: px(PERF.baixoVS) - px(0), height: py(0) - py(YMAX), class: 'zone' }, sc);
+    svgEl('rect', { x: px(PERF.baixoVS), y: py(PERF.baixoDoa), width: px(1) - px(PERF.baixoVS), height: py(0) - py(PERF.baixoDoa), class: 'zone' }, sc);
+    [0, 0.25, 0.5, 0.75, 1].forEach((v) => {
+      svgEl('line', { x1: px(v), x2: px(v), y1: py(0), y2: py(YMAX), class: 'grid' }, sc);
+      svgEl('text', { x: px(v), y: py(0) + 16, 'text-anchor': 'middle', class: 'ax' }, sc, pctTxt(v));
+    });
+    [0, 0.4, 0.8, 1.2].forEach((v) => {
+      svgEl('line', { x1: px(0), x2: px(1), y1: py(v), y2: py(v), class: 'grid' }, sc);
+      svgEl('text', { x: ML - 6, y: py(v) + 4, 'text-anchor': 'end', class: 'ax' }, sc, pctTxt(v));
+    });
+    svgEl('line', { x1: px(PERF.atVS), x2: px(PERF.atVS), y1: py(0), y2: py(YMAX), class: 'lim' }, sc);
+    svgEl('line', { x1: px(0), x2: px(1), y1: py(PERF.atDoa), y2: py(PERF.atDoa), class: 'lim' }, sc);
+    svgEl('text', { x: px(0.5), y: SH - 6, 'text-anchor': 'middle', class: 'ax' }, sc, t('ax_vs') + ' →');
+    svgEl('text', { x: 12, y: py(0.6), 'text-anchor': 'middle', class: 'ax', transform: `rotate(-90 12 ${py(0.6)})` }, sc, t('ax_doa') + ' →');
+    svgEl('text', { x: ML, y: 12, class: 'ax' }, sc, '↑ ' + t('sc_cap'));
+    // pontos no mesmo lugar (dias são frações de poucos dias) se espalham um pouco
+    const seen = new Map();
+    const placed = pts.map((m) => {
+      const key = Math.round(m._perf.vs * 50) + ':' + Math.round(Math.min(m._perf.doa, YMAX) * 25);
+      const n = seen.get(key) || 0; seen.set(key, n + 1);
+      const ang = n * 2.4, rad = n ? 4 + 2.2 * Math.sqrt(n) : 0;
+      return { m, x: px(m._perf.vs) + Math.cos(ang) * rad, y: py(m._perf.doa) + Math.sin(ang) * rad };
+    });
+    // os sinalizados por cima
+    const ord = (o) => o.m._sinal && o.m._sinal.k === 'sai' ? 2 : o.m._sinal && o.m._sinal.k === 'cede' ? 1 : 0;
+    placed.sort((a, b) => ord(a) - ord(b)).forEach((o) => {
+      const s = o.m._sinal && (o.m._sinal.k === 'sai' || o.m._sinal.k === 'cede') ? o.m._sinal : null;
+      const c = svgEl('circle', { cx: o.x, cy: o.y, r: s ? 6.5 : 5, fill: PCOR[o.m._perf.k], class: s && s.k === 'sai' ? 'sai' : '' }, sc);
+      svgEl('title', {}, c, `${o.m.nome} (${o.m._tier || '—'}) · ${o.m._perf.label}${s ? ' · ' + s.label : ''} · ${o.m._perf.tip}`);
+      if (s) svgEl('text', { x: o.x + 9, y: o.y + 4, class: 'lbl', style: `fill: ${s.k === 'sai' ? 'var(--no)' : 'var(--wait)'}` }, sc, o.m.nome);
+    });
+    legend('a-perf-leg2', [[PCOR.bom, t('p_bom'), 1], [PCOR.atencao, t('p_atencao'), 1], [PCOR.baixo, t('p_baixo'), 1], ['var(--no-bg)', t('p_baixo') + ' (faixa)'], ['var(--fg)', t('s_sai') + ' / ' + t('s_cede') + ' = nome', 1]]);
+    // lista de quem vai com observação
+    const obs = going.filter((m) => (m._sinal && (m._sinal.k === 'sai' || m._sinal.k === 'cede')) || m._perf.k === 'baixo' || m._perf.k === 'atencao' || m._perf.k === 'novato')
+      .sort((a, b) => ((a._sinal && a._sinal.rank) || 9) - ((b._sinal && b._sinal.rank) || 9) || a._perf.rank - b._perf.rank || (a._perf.idx ?? 9) - (b._perf.idx ?? 9));
+    fillTable('a-perf-tab', [t('h_player'), t('c_tier'), t('c_desemp'), t('c_sinal'), t('h_vs'), t('h_doa')],
+      obs.length ? obs.map((m) => {
+        const p = m._perf.p;
+        return [m.nome + (p && p.sec ? ' (' + p.sec + ')' : ''), m._tier ? { v: m._tier, cls: 'tier-' + m._tier } : '—', { v: m._perf.label, cls: m._perf.cls },
+          m._sinal && m._sinal.k !== 'lid' ? { v: m._sinal.label, cls: m._sinal.cls } : (m._sinal ? m._sinal.label : '—'),
+          p && p.d ? `${p.m}/${p.d} (${pctTxt(p.m / p.d)})` : '—', p && p.dm ? pctTxt(p.doa / p.dm) : '—'];
+      }) : [[{ v: t('perf_none'), span: 6 }]]);
+  };
   const renderAnalise = () => {
     if ($('v-analise').hidden) return;
+    renderPerf(state.rows);
     const all = state.rows;
     const rows = state.scope ? all.filter((m) => m.status === state.scope) : all;
     $('a-count').textContent = state.loaded ? (rows.length === 1 ? t('player') : t('players', { n: rows.length })) : '';
