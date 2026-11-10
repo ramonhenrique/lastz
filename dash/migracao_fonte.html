@@ -120,6 +120,9 @@
   .agrid .full { grid-column: 1 / -1; }
   .atable td.neg { color: var(--no); font-weight: 600; } .atable td.pos { color: var(--go); }
   #a-limite td:last-child { white-space: normal; min-width: 120px; }
+  .pchip { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--soft); color: var(--muted); cursor: help; }
+  .pchip.p-bom { background: var(--go-bg); color: var(--go); } .pchip.p-atencao { background: var(--wait-bg); color: var(--wait); } .pchip.p-baixo { background: var(--no-bg); color: var(--no); }
+  .pchip.s-sai { background: var(--no); color: var(--bg); } .pchip.s-cede { background: var(--wait-bg); color: var(--wait); border: 1px solid var(--wait); }
   .atable td.grp { background: var(--soft); font-weight: 600; font-size: 13px; }
   .atable th { position: static; }
   .atable td:first-child, .atable th:first-child { text-align: left; }
@@ -357,6 +360,10 @@
       lede: 'Marque quem vai migrar de servidor, adicione jogadores que não estão na lista, corrija os dados de qualquer membro em "Editar" e escolha as colunas que aparecem na tabela. As marcações ficam salvas para todos que abrirem esta página.',
       summary: 'Resumo', sections: 'Seções', st_vai: 'Vão migrar', st_nao: 'Não vão', st_pendente: 'Sem resposta',
       tab_lista: 'Lista', tab_analise: 'Análise', all: 'Todos', sit_vai: 'Vão', sit_nao: 'Não vão', sit_pendente: 'Sem resposta',
+      c_desemp: 'Desempenho', c_sinal: 'Sinal', p_bom: 'Bom', p_atencao: 'Atenção', p_baixo: 'Baixo empenho', p_novato: 'Novato', p_fora: 'Outra aliança', p_semdados: 'Sem dados',
+      pt_vs: 'VS na meta em {m} de {d} dias ({p}), {z} zerado(s)', pt_doa: 'doação {a} de {b} ({p})', pt_ate: 'dados da dash de acompanhamento até {d}',
+      pt_novato: 'Entrou em {e}: só {d} dia(s) de dados, ainda cedo para avaliar', pt_fora: 'Fora da DEDZ: não temos dados de VS e doação', pt_semdados: 'Sem leituras na dash de acompanhamento', pt_sec: 'conta secundária de {n}',
+      s_sai: 'Não deveria ir', s_cede: 'Pode ceder a vaga', s_lid: 'Liderança', st_sai: 'O {t} já tem {x} acima das vagas, e este jogador está entre os {x} de menor desempenho que vão', st_cede: 'Baixo empenho em VS ou doação: é candidato a dar a vaga para quem se empenha', st_lid: 'Liderança e organização da migração não são sinalizadas',
       clear_f: 'Limpar filtros', f_all: 'Todos', f_empty: '(vazio)', f_of: 'Filtrar {n}', f_count: '{n} de {t} jogadores',
       filter_aria: 'Filtrar por situação', search: 'Buscar jogador', btn_cols: 'Colunas', btn_pub: 'Atualizar versão pública',
       btn_pub_title: 'Grava a lista atual na página para quem abre sem login', btn_csv: 'Baixar CSV', btn_add: 'Adicionar membro',
@@ -410,6 +417,10 @@
       lede: 'Marca quién va a migrar de servidor, agrega jugadores que no están en la lista, corrige los datos de cualquier miembro en "Editar" y elige las columnas que aparecen en la tabla. Las marcas quedan guardadas para todos los que abran esta página.',
       summary: 'Resumen', sections: 'Secciones', st_vai: 'Van a migrar', st_nao: 'No van', st_pendente: 'Sin respuesta',
       tab_lista: 'Lista', tab_analise: 'Análisis', all: 'Todos', sit_vai: 'Van', sit_nao: 'No van', sit_pendente: 'Sin respuesta',
+      c_desemp: 'Desempeño', c_sinal: 'Señal', p_bom: 'Bueno', p_atencao: 'Atención', p_baixo: 'Bajo empeño', p_novato: 'Novato', p_fora: 'Otra alianza', p_semdados: 'Sin datos',
+      pt_vs: 'VS en la meta {m} de {d} días ({p}), {z} en cero', pt_doa: 'donación {a} de {b} ({p})', pt_ate: 'datos del panel de seguimiento hasta {d}',
+      pt_novato: 'Entró el {e}: solo {d} día(s) de datos, todavía es pronto para evaluar', pt_fora: 'Fuera de DEDZ: no tenemos datos de VS ni de donación', pt_semdados: 'Sin lecturas en el panel de seguimiento', pt_sec: 'cuenta secundaria de {n}',
+      s_sai: 'No debería ir', s_cede: 'Puede ceder la plaza', s_lid: 'Liderazgo', st_sai: '{t} ya tiene {x} por encima de las plazas, y este jugador está entre los {x} de menor desempeño que van', st_cede: 'Bajo empeño en VS o donación: candidato a dejar la plaza a quien se esfuerza', st_lid: 'El liderazgo y la organización de la migración no se señalan',
       clear_f: 'Limpiar filtros', f_all: 'Todos', f_empty: '(vacío)', f_of: 'Filtrar {n}', f_count: '{n} de {t} jugadores',
       filter_aria: 'Filtrar por situación', search: 'Buscar jugador', btn_cols: 'Columnas', btn_pub: 'Actualizar versión pública',
       btn_pub_title: 'Guarda la lista actual en la página para quien la abre sin iniciar sesión', btn_csv: 'Descargar CSV', btn_add: 'Agregar miembro',
@@ -463,6 +474,10 @@
       lede: 'Mark who is migrating to the new server, add players who are not on the list, fix any member\'s data with "Edit" and choose which columns the table shows. Your marks are saved for everyone who opens this page.',
       summary: 'Summary', sections: 'Sections', st_vai: 'Migrating', st_nao: 'Not going', st_pendente: 'No answer',
       tab_lista: 'List', tab_analise: 'Analysis', all: 'All', sit_vai: 'Going', sit_nao: 'Not going', sit_pendente: 'No answer',
+      c_desemp: 'Performance', c_sinal: 'Flag', p_bom: 'Good', p_atencao: 'Watch', p_baixo: 'Low effort', p_novato: 'Newcomer', p_fora: 'Other alliance', p_semdados: 'No data',
+      pt_vs: 'VS goal hit on {m} of {d} days ({p}), {z} at zero', pt_doa: 'donation {a} of {b} ({p})', pt_ate: 'tracking dashboard data up to {d}',
+      pt_novato: 'Joined on {e}: only {d} day(s) of data, too early to judge', pt_fora: 'Outside DEDZ: no VS or donation data', pt_semdados: 'No readings in the tracking dashboard', pt_sec: 'secondary account of {n}',
+      s_sai: 'Should not go', s_cede: 'Could give up slot', s_lid: 'Leadership', st_sai: '{t} is already {x} over its slots, and this player is among the {x} lowest performers going', st_cede: 'Low effort in VS or donation: candidate to give the slot to someone who puts in the work', st_lid: 'Leadership and migration organizers are not flagged',
       clear_f: 'Clear filters', f_all: 'All', f_empty: '(empty)', f_of: 'Filter {n}', f_count: '{n} of {t} players',
       filter_aria: 'Filter by status', search: 'Search player', btn_cols: 'Columns', btn_pub: 'Update public version',
       btn_pub_title: 'Saves the current list into the page for people who open it without signing in', btn_csv: 'Download CSV', btn_add: 'Add member',
@@ -547,6 +562,8 @@
     const dl = document.getElementById('dl-alianca'); if (dl) { dl.replaceChildren(); ALIANCAS.forEach((a) => { const o = document.createElement('option'); o.value = a; dl.appendChild(o); }); }
   };
   const COLS = [
+    { k: 'desemp', l: true, on: true, perf: true, v: (m) => m._perf ? m._perf.label : '', sort: (m) => m._perf ? m._perf.rank : null },
+    { k: 'sinal', l: true, on: true, perf: true, v: (m) => m._sinal ? m._sinal.label : '', sort: (m) => m._sinal ? m._sinal.rank : 9 },
     { k: 'ativo', l: true, on: true, v: (m) => m.ativo === false ? t('act_off') : t('act_on'), sort: (m) => (m.ativo === false ? 1 : 0) },
     { k: 'alianca', l: true, on: true, v: (m) => m.alianca, sort: (m) => m.alianca },
     { k: 'zona', on: true, v: (m) => m.zona ? '#' + m.zona : '', sort: (m) => m.zona || 0 },
@@ -569,12 +586,12 @@
   ];
   const colLabel = (c) => t('c_' + c.k);
   // colunas com filtro no cabeçalho: valor bruto (não muda com o idioma) e rótulo mostrado
-  const FCOLS = { ativo: (m) => m.ativo === false ? '0' : '1', alianca: (m) => m.alianca || '', zona: (m) => m.zona ? String(m.zona) : '',
+  const FCOLS = { desemp: (m) => m._perf ? m._perf.k : '', sinal: (m) => m._sinal ? m._sinal.k : '', ativo: (m) => m.ativo === false ? '0' : '1', alianca: (m) => m.alianca || '', zona: (m) => m.zona ? String(m.zona) : '',
     cargo: (m) => m.cargo || '', sede: (m) => m.sede != null ? String(m.sede) : '', vtipo: (m) => m.veiculoTipo || '',
     t10ok: (m) => m.t10ok === true ? '1' : '0', tier: (m) => m._tier || '' };
   const activeFilters = () => Object.entries(state.cf).filter(([k, v]) => v != null && state.visible.includes(k));
 
-  const state = { rows: [], visible: COLS.filter((c) => c.on).map((c) => c.k), filter: '', q: '', cf: {}, sort: 'score', dir: -1, readOnly: false, loaded: false, editing: null, scope: '', publicView: false };
+  const state = { rows: [], visible: COLS.filter((c) => c.on).map((c) => c.k), filter: '', q: '', cf: {}, perf: null, sort: 'score', dir: -1, readOnly: false, loaded: false, editing: null, scope: '', publicView: false };
   let db = null, dl = null;
   const $ = (id) => document.getElementById(id);
 
@@ -632,7 +649,7 @@
         const next = COLS.filter((x) => x.k === c.k ? cb.checked : state.visible.includes(x.k)).map((x) => x.k);
         state.visible = next; render();
         if (!db) return;
-        try { await db.doc('config/tabela').set({ colunas: next }); } catch (e) { fail(e); }
+        try { await db.doc('config/tabela').set({ colunas: next, colunasV: 2 }); } catch (e) { fail(e); }
       });
       lab.append(cb, document.createTextNode(colLabel(c)));
       box.appendChild(lab);
@@ -640,7 +657,49 @@
   };
 
   // ---- table
-  const visibleCols = () => COLS.filter((c) => state.visible.includes(c.k));
+  // desempenho e sinal só existem com os dados da dash de acompanhamento (não vão para a versão pública)
+  const visibleCols = () => COLS.filter((c) => state.visible.includes(c.k) && (!c.perf || state.perf));
+
+  // ---- desempenho (VS e doação) e sinal de quem não deveria ir
+  // limites: baixo empenho abaixo de 50% dos dias de VS na meta ou de 50% da doação esperada; atenção abaixo de 75% / 80%
+  const PERF = { baixoVS: 0.5, baixoDoa: 0.5, atVS: 0.75, atDoa: 0.8, novatoDias: 5 };
+  // organização da migração (além de R4 e R5): Marcelo QAF, Mané 07, Vini²², C0r1nga²
+  const ORGANIZA = ['m001', 'm002', 'm003', 'm071'];
+  const pctTxt = (x) => Math.round(x * 100) + '%';
+  const milTxt = (v) => v >= 1e6 ? mi(v) : Math.round(v / 1000) + ' mil';
+  const dmy = (s) => s ? s.slice(8, 10) + '/' + s.slice(5, 7) : '';
+  const perfOf = (m) => {
+    const P = state.perf;
+    if (m.alianca !== 'DEDZ') return { k: 'fora', cls: '', label: t('p_fora'), tip: t('pt_fora'), rank: 5, idx: null };
+    const p = P.membros && P.membros[m.id];
+    if (!p || !p.d) return { k: 'semdados', cls: '', label: t('p_semdados'), tip: t('pt_semdados'), rank: 6, idx: null };
+    const vs = p.m / p.d, doa = p.dm ? p.doa / p.dm : 1;
+    const det = t('pt_vs', { m: p.m, d: p.d, p: pctTxt(vs), z: p.z }) + ' · ' + t('pt_doa', { a: milTxt(p.doa), b: milTxt(p.dm), p: pctTxt(doa) })
+      + (p.sec ? ' · ' + t('pt_sec', { n: p.sec }) : '') + ' · ' + t('pt_ate', { d: dmy(P.ate) });
+    const idx = (Math.min(vs, 1) + Math.min(doa, 1)) / 2;
+    if (p.ent && p.d < PERF.novatoDias) return { k: 'novato', cls: '', label: t('p_novato'), tip: t('pt_novato', { e: dmy(p.ent), d: p.d }) + ' · ' + det, rank: 4, idx: null };
+    const k = vs < PERF.baixoVS || doa < PERF.baixoDoa ? 'baixo' : vs < PERF.atVS || doa < PERF.atDoa ? 'atencao' : 'bom';
+    return { k, cls: 'p-' + k, label: t('p_' + k), tip: det, rank: { baixo: 1, atencao: 2, bom: 3 }[k], idx };
+  };
+  const computePerf = () => {
+    state.rows.forEach((m) => { m._perf = state.perf ? perfOf(m) : null; m._sinal = null; });
+    if (!state.perf) return;
+    const lid = (m) => ORGANIZA.includes(m.id) || m.cargo === 'R4' || m.cargo === 'R5';
+    TIERS.forEach((tier) => {
+      const going = state.rows.filter((m) => m.status === 'vai' && m._tier === tier);
+      const excess = VAGAS[tier] != null ? going.length - VAGAS[tier] : 0;
+      // quem pode ser avaliado: tem dados, não é novato e não é da liderança/organização
+      const cand = going.filter((m) => m._perf && m._perf.idx != null && !lid(m))
+        .sort((a, b) => a._perf.idx - b._perf.idx || (a._score ?? 0) - (b._score ?? 0));
+      const sai = excess > 0 ? cand.slice(0, excess) : [];
+      sai.forEach((m) => { m._sinal = { k: 'sai', cls: 's-sai', label: t('s_sai'), tip: t('st_sai', { t: tier, x: excess }) + ' · ' + m._perf.tip, rank: 1 }; });
+      going.forEach((m) => {
+        if (m._sinal) return;
+        if (lid(m)) { m._sinal = { k: 'lid', cls: '', label: t('s_lid'), tip: t('st_lid'), rank: 8 }; return; }
+        if (m._perf && m._perf.k === 'baixo') m._sinal = { k: 'cede', cls: 's-cede', label: t('s_cede'), tip: t('st_cede') + ' · ' + m._perf.tip, rank: 2 };
+      });
+    });
+  };
   // filtro de uma coluna: as opções são os valores que existem na lista, ordenados como a coluna
   const filterSelect = (key, label) => {
     const c = COLS.find((x) => x.k === key), fv = FCOLS[key];
@@ -768,7 +827,10 @@
       tds.appendChild(seg); tr.appendChild(tds);
       visibleCols().forEach((c) => {
         const td = document.createElement('td'); if (c.l) td.className = 'l';
-        if (c.k === 'ativo') {
+        if (c.k === 'desemp' || c.k === 'sinal') {
+          const info = c.k === 'desemp' ? m._perf : m._sinal;
+          if (info && info.label) { const s = document.createElement('span'); s.className = 'pchip ' + info.cls; s.textContent = info.label; s.title = info.tip; s.tabIndex = 0; s.setAttribute('aria-label', info.label + ': ' + info.tip); td.appendChild(s); }
+        } else if (c.k === 'ativo') {
           const seg2 = document.createElement('div'); seg2.className = 'st'; seg2.setAttribute('role', 'group'); seg2.setAttribute('aria-label', t('act_of', { n: m.nome || '' }));
           [[true, 'on', 'act_on'], [false, 'off', 'act_off']].forEach(([val, key, label]) => {
             const b = document.createElement('button'); b.type = 'button'; b.dataset.v = key; b.textContent = t(label);
@@ -968,7 +1030,7 @@
   };
   document.querySelectorAll('[data-season]').forEach((b) => b.addEventListener('click', () => { if (b.dataset.season !== season) setSeason(b.dataset.season, true); }));
 
-  const render = () => { renderStrip(); renderSlots(); renderSeason(); renderHead(); renderBody(); renderAnalise(); };
+  const render = () => { computePerf(); renderStrip(); renderSlots(); renderSeason(); renderHead(); renderBody(); renderAnalise(); };
 
   const showView = (v) => {
     const views = { lista: 'v-lista', analise: 'v-analise' };
@@ -1131,6 +1193,7 @@
       // "<\/" keeps the browser from reading these strings as the end of this script
       const tag = 'id="snapshot">' + M + '<\/script>';
       if (!tpl.includes(tag)) throw new Error('fonte');
+      // campos com _ (score, tier, desempenho, sinal) são calculados na página e não vão para a versão pública
       const rows = state.rows.map((m) => { const o = {}; Object.keys(m).forEach((k) => { if (k[0] !== '_') o[k] = m[k]; }); return o; });
       const json = JSON.stringify({ at: new Date().toISOString(), temporada: season, colunas: state.visible, rows }).replace(/</g, '\\u003c');
       const page = tpl.replace(tag, 'id="snapshot">' + json + '<\/script>');
@@ -1174,7 +1237,12 @@
     }, () => {});
     db.doc('config/tabela').onSnapshot((snap) => {
       const d = snap.exists ? snap.data() : null;
-      if (d && Array.isArray(d.colunas)) { state.visible = COLS.filter((c) => d.colunas.includes(c.k)).map((c) => c.k); render(); renderCols(); }
+      // colunasV 2: a escolha salva já conhece Desempenho e Sinal; antes disso, as duas entram ligadas
+      if (d && Array.isArray(d.colunas)) { const cols = d.colunasV >= 2 ? d.colunas : d.colunas.concat(['desemp', 'sinal']); state.visible = COLS.filter((c) => cols.includes(c.k)).map((c) => c.k); render(); renderCols(); }
+    }, () => {});
+    // desempenho calculado pelo scripts\desempenho.ps1 a partir da dash de acompanhamento
+    db.doc('config/desempenho').onSnapshot((snap) => {
+      state.perf = snap.exists ? snap.data() : null; render();
     }, () => {});
   })();
 })();

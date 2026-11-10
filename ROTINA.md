@@ -125,7 +125,8 @@ A dash de migração (https://claude.ai/artifact/TdiYGf4RT4jYT7LrAYC6cW) usa os 
    3. `scripts\mig_snapshot.ps1 -Fonte dash\migracao_fonte.html -Temporada <s12|s3> -Out dash\migracao.html`. O modelo `dash\migracao_fonte.html` é o mesmo publicado como `fonte.html`. Se alguém mudar a página, publique os dois juntos (`files` `{"fonte.html": "dash/migracao_fonte.html"}`).
    4. `Artifact` publish de `dash\migracao.html` no URL da migração. Leia a página antes (`read`) se for uma sessão nova. Não passe `capabilities`.
    5. **Página de conferência dos membros** (https://claude.ai/artifact/AKXssohuCBebsCyeZPHvy9, para os membros conferirem poder e score; sem situação, observação, atividade, arena nem T10 %): `scripts\conferencia.ps1 -Pasta C:\lz\mig\membros -Versoes C:\lz\mig_versoes.txt -Temporada <s12|s3> -LidoEm <data da última leitura do PC, aaaa-mm-dd>` e `Artifact` publish de `dash\conferencia.html` nesse URL (leia antes se for uma sessão nova). Só mude `-LidoEm` quando a rotina de lista de membros ler o PC de novo.
-   6. Inclua `dash/migracao.html` e `dash/conferencia.html` no commit.
+   6. **Desempenho para a migração** (colunas Desempenho e Sinal, que só aparecem para quem abre logado): `scripts\desempenho.ps1` (resume VS e doação de cada membro a partir do espelho `C:\lz\estado`, só dias já fechados) e grave `C:\lz\desempenho.json` no banco da migração: `ArtifactData` `set`, `collection` `config`, `doc_id` `desempenho`, `file_path` `C:\lz\desempenho.json`, com o `if_version` do documento (pegue com `get`; a versão 1 foi criada em 10/11/2026). Os limites (baixo empenho abaixo de 50% dos dias de VS na meta ou de 50% da doação; atenção abaixo de 75% / 80%; novato com menos de 5 dias de dados) e a lista de organizadores ficam no `dash\migracao_fonte.html` (`PERF` e `ORGANIZA`).
+   7. Inclua `dash/migracao.html` e `dash/conferencia.html` no commit.
 
 ## 6. Atualizar a dash
 
