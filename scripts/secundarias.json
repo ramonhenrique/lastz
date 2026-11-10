@@ -1,7 +1,7 @@
 {
   "_sobre": "Contas secundárias de membros da liderança. Ficam fora só das mensagens e listas de cobrança no privado; em todo o resto (VS, doação, metas, alertas, totais) contam normalmente. Chave = id da conta secundária, valor = id da conta principal.",
-  "m071": { "nome": "C0r1nga²", "principal": "m011", "principalNome": "C0r1nga" },
-  "m054": { "nome": "C0r1nga³", "principal": "m011", "principalNome": "C0r1nga" },
+  "m071": { "nome": "C0r1nga-farm", "principal": "m011", "principalNome": "C0r1nga" },
+  "m054": { "nome": "Codexy", "principal": "m011", "principalNome": "C0r1nga" },
   "m087": { "nome": "Vini¹²³", "principal": "m003", "principalNome": "Vini²²" },
   "m060": { "nome": "Penelope Ø", "principal": "m013", "principalNome": "Medonho 亖" },
   "m043": { "nome": "X Warrior", "principal": "m040", "principalNome": "Xambre" },
