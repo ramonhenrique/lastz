@@ -77,6 +77,10 @@
   th { position: sticky; top: 0; z-index: 2; background: var(--panel); font-family: var(--f-display); font-weight: 600; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
   th button { all: unset; cursor: pointer; }
   th button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  th .cf { display: block; margin-top: 4px; font: inherit; font-family: var(--f-body, inherit); font-size: 12px; letter-spacing: 0; text-transform: none; font-weight: 400; padding: 2px 4px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); max-width: 130px; }
+  th .cf.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  th.l .cf { margin-right: auto; } th:not(.l) .cf { margin-left: auto; }
+  .fcount { font-size: 13px; color: var(--muted); }
   th[aria-sort="ascending"] button::after { content: " ↑"; } th[aria-sort="descending"] button::after { content: " ↓"; }
   .l { text-align: left; }
   td.nome { font-weight: 600; }
@@ -217,6 +221,8 @@
       <button type="button" data-f="pendente" aria-pressed="false" data-i18n="sit_pendente">Sem resposta</button>
     </div>
     <input type="search" id="busca" placeholder="Buscar jogador" aria-label="Buscar jogador" data-i18n-ph="search" data-i18n-aria="search">
+    <button type="button" class="btn" id="btn-clearf" hidden data-i18n="clear_f">Limpar filtros</button>
+    <span class="fcount" id="fcount" aria-live="polite"></span>
     <span class="spacer"></span>
     <button type="button" class="btn" id="btn-cols" aria-expanded="false" aria-controls="p-cols" data-i18n="btn_cols">Colunas</button>
     <button type="button" class="btn" id="btn-pub" hidden data-i18n="btn_pub" data-i18n-title="btn_pub_title">Atualizar versão pública</button>
@@ -331,6 +337,7 @@
       lede: 'Marque quem vai migrar de servidor, adicione jogadores que não estão na lista, corrija os dados de qualquer membro em "Editar" e escolha as colunas que aparecem na tabela. As marcações ficam salvas para todos que abrirem esta página.',
       summary: 'Resumo', sections: 'Seções', st_vai: 'Vão migrar', st_nao: 'Não vão', st_pendente: 'Sem resposta',
       tab_lista: 'Lista', tab_analise: 'Análise', all: 'Todos', sit_vai: 'Vão', sit_nao: 'Não vão', sit_pendente: 'Sem resposta',
+      clear_f: 'Limpar filtros', f_all: 'Todos', f_empty: '(vazio)', f_of: 'Filtrar {n}', f_count: '{n} de {t} jogadores',
       filter_aria: 'Filtrar por situação', search: 'Buscar jogador', btn_cols: 'Colunas', btn_pub: 'Atualizar versão pública',
       btn_pub_title: 'Grava a lista atual na página para quem abre sem login', btn_csv: 'Baixar CSV', btn_add: 'Adicionar membro',
       cols_title: 'Colunas da tabela', cols_note: 'Jogador e Situação aparecem sempre. A escolha vale para todos que abrirem a página.',
@@ -378,6 +385,7 @@
       lede: 'Marca quién va a migrar de servidor, agrega jugadores que no están en la lista, corrige los datos de cualquier miembro en "Editar" y elige las columnas que aparecen en la tabla. Las marcas quedan guardadas para todos los que abran esta página.',
       summary: 'Resumen', sections: 'Secciones', st_vai: 'Van a migrar', st_nao: 'No van', st_pendente: 'Sin respuesta',
       tab_lista: 'Lista', tab_analise: 'Análisis', all: 'Todos', sit_vai: 'Van', sit_nao: 'No van', sit_pendente: 'Sin respuesta',
+      clear_f: 'Limpiar filtros', f_all: 'Todos', f_empty: '(vacío)', f_of: 'Filtrar {n}', f_count: '{n} de {t} jugadores',
       filter_aria: 'Filtrar por situación', search: 'Buscar jugador', btn_cols: 'Columnas', btn_pub: 'Actualizar versión pública',
       btn_pub_title: 'Guarda la lista actual en la página para quien la abre sin iniciar sesión', btn_csv: 'Descargar CSV', btn_add: 'Agregar miembro',
       cols_title: 'Columnas de la tabla', cols_note: 'Jugador y Situación aparecen siempre. La elección vale para todos los que abran la página.',
@@ -425,6 +433,7 @@
       lede: 'Mark who is migrating to the new server, add players who are not on the list, fix any member\'s data with "Edit" and choose which columns the table shows. Your marks are saved for everyone who opens this page.',
       summary: 'Summary', sections: 'Sections', st_vai: 'Migrating', st_nao: 'Not going', st_pendente: 'No answer',
       tab_lista: 'List', tab_analise: 'Analysis', all: 'All', sit_vai: 'Going', sit_nao: 'Not going', sit_pendente: 'No answer',
+      clear_f: 'Clear filters', f_all: 'All', f_empty: '(empty)', f_of: 'Filter {n}', f_count: '{n} of {t} players',
       filter_aria: 'Filter by status', search: 'Search player', btn_cols: 'Columns', btn_pub: 'Update public version',
       btn_pub_title: 'Saves the current list into the page for people who open it without signing in', btn_csv: 'Download CSV', btn_add: 'Add member',
       cols_title: 'Table columns', cols_note: 'Player and Status are always shown. Your choice applies to everyone who opens the page.',
@@ -524,8 +533,13 @@
     { k: 'obs', l: true, on: true, v: (m) => m.obs || '', sort: (m) => m.obs || '' },
   ];
   const colLabel = (c) => t('c_' + c.k);
+  // colunas com filtro no cabeçalho: valor bruto (não muda com o idioma) e rótulo mostrado
+  const FCOLS = { ativo: (m) => m.ativo === false ? '0' : '1', alianca: (m) => m.alianca || '', zona: (m) => m.zona ? String(m.zona) : '',
+    cargo: (m) => m.cargo || '', sede: (m) => m.sede != null ? String(m.sede) : '', vtipo: (m) => m.veiculoTipo || '',
+    t10ok: (m) => m.t10ok === true ? '1' : '0', tier: (m) => m._tier || '' };
+  const activeFilters = () => Object.entries(state.cf).filter(([k, v]) => v != null && state.visible.includes(k));
 
-  const state = { rows: [], visible: COLS.filter((c) => c.on).map((c) => c.k), filter: '', q: '', sort: 'score', dir: -1, readOnly: false, loaded: false, editing: null, scope: '', publicView: false };
+  const state = { rows: [], visible: COLS.filter((c) => c.on).map((c) => c.k), filter: '', q: '', cf: {}, sort: 'score', dir: -1, readOnly: false, loaded: false, editing: null, scope: '', publicView: false };
   let db = null, dl = null;
   const $ = (id) => document.getElementById(id);
 
@@ -592,6 +606,30 @@
 
   // ---- table
   const visibleCols = () => COLS.filter((c) => state.visible.includes(c.k));
+  // filtro de uma coluna: as opções são os valores que existem na lista, ordenados como a coluna
+  const filterSelect = (key, label) => {
+    const c = COLS.find((x) => x.k === key), fv = FCOLS[key];
+    const opts = new Map();
+    state.rows.forEach((m) => { const v = fv(m); if (!opts.has(v)) opts.set(v, { label: v === '' ? t('f_empty') : String(c.v(m)), sk: sortVal(m, key) }); });
+    const list = [...opts.entries()].sort((a, b) => {
+      if (a[0] === '') return 1; if (b[0] === '') return -1;
+      const x = a[1].sk, y = b[1].sk;
+      return typeof x === 'number' && typeof y === 'number' ? x - y : String(a[1].label).localeCompare(String(b[1].label), loc(), { numeric: true });
+    });
+    const sel = document.createElement('select'); sel.className = 'cf'; sel.setAttribute('aria-label', t('f_of', { n: label }));
+    const all = document.createElement('option'); all.value = '\u0000'; all.textContent = t('f_all'); sel.appendChild(all);
+    list.forEach(([v, o]) => { const op = document.createElement('option'); op.value = v; op.textContent = o.label; sel.appendChild(op); });
+    const cur = state.cf[key];
+    sel.value = cur != null && opts.has(cur) ? cur : '\u0000';
+    sel.classList.toggle('on', sel.value !== '\u0000');
+    sel.addEventListener('click', (e) => e.stopPropagation());
+    sel.addEventListener('change', () => {
+      if (sel.value === '\u0000') delete state.cf[key]; else state.cf[key] = sel.value;
+      sel.classList.toggle('on', sel.value !== '\u0000');
+      renderBody();
+    });
+    return sel;
+  };
   const renderHead = () => {
     const tr = $('head'); tr.replaceChildren();
     const mk = (key, label, left) => {
@@ -602,6 +640,7 @@
         th.appendChild(b);
         if (state.sort === key) th.setAttribute('aria-sort', state.dir > 0 ? 'ascending' : 'descending');
       } else th.textContent = label;
+      if (key && FCOLS[key]) th.appendChild(filterSelect(key, label));
       tr.appendChild(th);
     };
     mk('nome', t('h_player'), true); mk('status', t('h_status'), true);
@@ -619,7 +658,9 @@
 
   const filtered = () => {
     const q = state.q.trim().toLowerCase();
-    const rows = state.rows.filter((m) => (!state.filter || m.status === state.filter) && (!q || (m.nome || '').toLowerCase().includes(q)));
+    const cf = activeFilters();
+    const rows = state.rows.filter((m) => (!state.filter || m.status === state.filter) && (!q || (m.nome || '').toLowerCase().includes(q))
+      && cf.every(([k, v]) => FCOLS[k](m) === v));
     rows.sort((a, b) => {
       const va = sortVal(a, state.sort), vb = sortVal(b, state.sort);
       if (va == null && vb == null) return 0; if (va == null || va === '') return 1; if (vb == null || vb === '') return -1;
@@ -666,6 +707,9 @@
     const body = $('body'); body.replaceChildren();
     const span = 2 + visibleCols().length + (state.readOnly ? 0 : 1);
     const rows = filtered();
+    const anyF = !!(state.filter || state.q.trim() || activeFilters().length);
+    $('btn-clearf').hidden = !(state.q.trim() || activeFilters().length);
+    $('fcount').textContent = state.loaded && anyF ? t('f_count', { n: rows.length, t: state.rows.length }) : '';
     if (!rows.length) {
       const tr = document.createElement('tr'); const td = document.createElement('td');
       td.className = 'empty'; td.colSpan = span;
@@ -870,6 +914,7 @@
     renderBody();
   }));
   $('busca').addEventListener('input', (e) => { state.q = e.target.value; renderBody(); });
+  $('btn-clearf').addEventListener('click', () => { state.cf = {}; state.q = ''; $('busca').value = ''; renderHead(); renderBody(); });
   // only one panel open at a time: opening "Colunas" closes the form and vice versa
   const closeCols = () => { $('p-cols').hidden = true; $('btn-cols').setAttribute('aria-expanded', 'false'); };
   const closeForm = () => { if ($('p-add').hidden) return; $('f-cancel').click(); };
