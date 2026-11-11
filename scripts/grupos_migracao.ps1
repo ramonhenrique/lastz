@@ -9,6 +9,7 @@
 # Regras:
 #   - entrou num grupo (ou está num grupo) e não está "vai"  -> "vai"
 #   - saiu dos dois grupos e estava "vai"                    -> "nao"
+#   - está "vai" e não aparece em nenhum grupo                -> "pendente" (sem resposta)
 #   - trocou de um grupo para o outro                         -> só aparece no relatório
 #   - organizadores (Vini²², C0r1nga², Marcelo QAF, Mané 07)  -> nunca mudam
 #   - nome do grupo sem cadastro na dash                      -> relatório (conta de fora: cadastrar pelo 3a/3b do LISTA_MEMBROS.md)
@@ -19,7 +20,7 @@ param([string]$Dir = 'C:\lz', [string]$Pasta = 'C:\lz\mig\membros', [string]$Ver
 . (Join-Path $PSScriptRoot 'comum.ps1')
 
 $grp = Join-Path $Dir 'grp'; $novo = Join-Path $grp 'novo'
-$GRUPOS = [ordered]@{ regular = 'REGULAR 609'; inter = 'intermediary609' }
+$GRUPOS = [ordered]@{ regular = 'REGULAR 609'; inter = 'Intermediary30' }
 
 if ($Confirmar) {
   $hist = Join-Path $grp ('historico\' + (Get-Date -Format 'yyyy-MM-dd_HHmm')); New-Item -ItemType Directory -Force $hist | Out-Null
@@ -103,14 +104,25 @@ foreach ($k in @($info.Keys | Sort-Object)) {
   }
 }
 
+# "vai" só para quem está num grupo (regra do Ramon, 11/11/2026): quem está "vai" e não aparece em nenhum grupo
+# na leitura nova volta para "sem resposta" (pendente). Quem saiu de um grupo já foi para "não vai" acima.
+$nosGrupos = @{}; foreach ($g in $GRUPOS.Keys) { foreach ($x in $nova[$g]) { $i = Achar $x; if ($i) { $nosGrupos[$i] = 1 } } }
+$jaMudou = @{}; foreach ($w in $writes) { $jaMudou[$w.doc_id] = 1 }
+$foraGrupo = New-Object System.Collections.ArrayList
+foreach ($id in @($docs.Keys | Sort-Object)) {
+  if ($ORGANIZA -contains $id -or $nosGrupos.ContainsKey($id) -or $jaMudou.ContainsKey($id)) { continue }
+  if ($docs[$id].status -ne 'vai') { continue }
+  Mudar $id 'pendente' "não está nos grupos de migração ($Hoje)"; [void]$foraGrupo.Add("$($docs[$id].nome): vai -> sem resposta")
+}
+
 Get-ChildItem $Dir -Filter 'grp_batch*.json' | Remove-Item -Force
 for ($i = 0; $i -lt $writes.Count; $i += 50) {
   $lote = @($writes[$i..([math]::Min($i + 49, $writes.Count - 1))])
   [IO.File]::WriteAllText((Join-Path $Dir ("grp_batch{0}.json" -f ($i / 50))), (ConvertTo-Json -InputObject $lote -Depth 6 -Compress), $script:utf8)
 }
 
-$cont = "REGULAR 609: $($nova.regular.Count) · intermediary609: $($nova.inter.Count)"
-$tem = $entrou.Count + $saiu.Count + $trocou.Count + $semCad.Count + $ajuste.Count
+$cont = "$($GRUPOS.regular): $($nova.regular.Count) · $($GRUPOS.inter): $($nova.inter.Count)"
+$tem = $entrou.Count + $saiu.Count + $trocou.Count + $semCad.Count + $ajuste.Count + $foraGrupo.Count
 $msg = New-Object System.Collections.ArrayList
 if (-not $tem) {
   [void]$msg.Add("Rotina dos grupos de migração finalizada em $Hoje $(Get-Date -Format 'HH:mm'). Não foi constatada alteração nos membros.")
@@ -124,6 +136,7 @@ if (-not $tem) {
   & $bloco 'Trocaram de grupo' $trocou
   & $bloco 'Estavam no grupo sem estar como vai' $ajuste
   & $bloco 'No grupo sem cadastro na dash' $semCad
+  & $bloco 'Estavam como vai fora dos grupos (agora sem resposta)' $foraGrupo
 }
 [IO.File]::WriteAllText((Join-Path $grp 'mensagem.txt'), ($msg -join "`n"), $script:utf8)
 $msg -join "`n"
