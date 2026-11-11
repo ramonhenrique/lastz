@@ -151,6 +151,8 @@ Só se a coleta deu certo (dados gravados e dash publicada).
 4. Primeiro o geral, depois o da liderança. Se um envio falhar, siga e cite no aviso.
 ## 7c. Lista do PV (só quarta 19:01 e sábado 22:45)
 
+> **Migração de servidor (desde 11/11/2026): o PV cobra só a doação.** Com `"vsNoPrivado": false` em `scripts\cobranca.json`, a lista do PV, as "MENSAGENS PARA O PRIVADO" e o "COBRAR NO PRIVADO" da liderança trazem só quem está com a doação abaixo de 50%, e o relatório geral não promete mais chamar no privado quem zerou o VS. O VS continua sendo coletado nos três horários, gravado na dash e analisado nos relatórios. Na próxima temporada, volte a chave para `true`. Os critérios abaixo valem quando ela está em `true`.
+
 O `relatorio.ps1` gera `C:\lz\pv.txt` só nesses dois horários (nos outros ele apaga o arquivo):
 - **Quarta 19:01:** puxão de orelha do dia (mesmos textos do alerta das 19h) para zerados e abaixo de 50% no VS de hoje, mais quem está com a doação abaixo de 50%.
 - **Sábado 23:01:** balanço da semana para quem bateu a meta em 3 de 6 dias ou menos, ou está com a doação abaixo de 50%: dias na meta, dias abaixo e zerados, pior dia, doação e quanto falta para os 140 mil, pontos de melhoria.

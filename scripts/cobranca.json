@@ -1,0 +1,4 @@
+{
+  "_": "Cobrança no chat privado. vsNoPrivado=false: durante a migração de servidor (desde 11/11/2026) o PV e as mensagens prontas para o privado cobram só a doação; o VS continua sendo coletado e analisado na dash e nos relatórios. Volte para true na próxima temporada.",
+  "vsNoPrivado": false
+}

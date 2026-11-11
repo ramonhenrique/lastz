@@ -54,6 +54,11 @@ $secundarias = @{}
 $arqSec = Join-Path $PSScriptRoot 'secundarias.json'
 if (Test-Path $arqSec) { foreach ($pr in (LerJson $arqSec).PSObject.Properties) { if ($pr.Name -notlike '_*') { $secundarias[$pr.Name] = $pr.Value } } }
 
+# cobrança de VS no privado (scripts\cobranca.json): desligada na migração de servidor; o PV cobra só a doação
+$cobrarVS = $true
+$arqCob = Join-Path $PSScriptRoot 'cobranca.json'
+if (Test-Path $arqCob) { $cfgCob = LerJson $arqCob; if ($null -ne $cfgCob.vsNoPrivado) { $cobrarVS = [bool]$cfgCob.vsNoPrivado } }
+
 # ---------- por membro ----------
 $pessoas = foreach ($reg in $regsSemana) {
   $dd = @($reg.doacaoDias); while ($dd.Count -lt 7) { $dd += $null }
@@ -155,7 +160,8 @@ function CobrancaGeral {
     $l.Add("$(Qtd $cobZerados.Count 'membro fechou' 'membros fecharam') $(ArtigoDia $diaCob) ZERADO$(if ($cobZerados.Count -ne 1) { 'S' }) no VS e $(Qtd $cobMetade.Count 'ficou' 'ficaram') abaixo da metade da meta de $(MetaMi $diaCob) ($(EmMi ($metas[$diaCob] / 2)))$baixa.")
   }
   $l.Add('Zerar o VS não é falta de recurso, é falta de participação. Cada zero tira pontos do duelo e coloca a aliança inteira em desvantagem.')
-  if ($vsHoje -ge 0) { $l.Add('A meta é para todos. Quem estiver zerado ou abaixo da metade até o fechamento vai ser chamado no privado pela liderança.') }
+  if (-not $cobrarVS) { }
+  elseif ($vsHoje -ge 0) { $l.Add('A meta é para todos. Quem estiver zerado ou abaixo da metade até o fechamento vai ser chamado no privado pela liderança.') }
   else { $l.Add('A meta é para todos. Quem ficou zerado ou abaixo da metade vai ser chamado no privado pela liderança.') }
   $repet = @($pessoas | Where-Object { $_.falhas.Count -ge 2 }).Count
   if ($repet) { $l.Add("Quem fica abaixo da meta vários dias seguidos está sendo acompanhado ($repet nesta semana). Aliança forte é aliança em que todo mundo joga junto.") }
@@ -164,6 +170,10 @@ function CobrancaGeral {
 
 function MensagensPrivado {
   $l = New-Object System.Collections.Generic.List[string]
+  if (-not $cobrarVS) {   # migração: só a doação abaixo de 50% vai para o privado
+    foreach ($p in @($pessoas | Where-Object { $_.pctDoa -lt 0.5 -and -not $secundarias.ContainsKey($_.id) -and $_.ini -eq 0 } | Sort-Object pctDoa)) { $l.Add("> $(TextoDoacaoPV $p)") }
+    return $l
+  }
   if ($diaCob -lt 0) { return $l }
   $alvo = @(@($cobZerados) + @($cobMetade) | Where-Object { -not $secundarias.ContainsKey($_.id) -and $_.ini -eq 0 })   # contas secundárias da liderança não recebem cobrança no privado
   foreach ($p in $alvo) { $l.Add("> $(TextoPrivado $p)") }
@@ -202,6 +212,16 @@ function JuntarDias($ds) { $n = @($ds | ForEach-Object { $curtos[$_] }); if ($n.
 
 function TextoDoacaoPV($p) {
   "$($p.nome), sua doação da semana está em $(EmMil $p.doa) de $(EmMil $p.metaDoa) até hoje. Sem doação a loja da aliança não é reabastecida. Dá para doar com diamantes: 30 por dia já fazem diferença. Contamos com você para colocar em dia até domingo."
+}
+
+# Balanço de sábado só com a doação (migração: VS fora do privado).
+function TextoDoacaoSemanaPV($p) {
+  $faltaSem = [math]::Max($p.metaSem - $p.doa, 0)
+  $desde = if ($p.ini -gt 0) { "desde a sua entrada na $($curtos[$p.ini])" } else { "até $($nomesDia[$refDia])" }
+  $txt = "$($p.nome), a semana está fechando e sua doação está em $(EmMil $p.doa) de $(EmMil $p.metaDoa) $desde ($(Pct $p.doa $p.metaDoa))."
+  if ($faltaSem -gt 0) { $txt += " Para fechar os $(EmMil $p.metaSem) da semana, faltam $(EmMil $faltaSem) até domingo às 23h." }
+  $txt += ' Sem doação a loja da aliança não é reabastecida. Dá para doar com diamantes: 30 por dia já fazem diferença. Contamos com você!'
+  [regex]::Replace($txt, '\bsex\b', 'sexta')
 }
 
 function TextoSemanaPV($p, $diasVS) {
@@ -243,6 +263,7 @@ function TextoSemanaPV($p, $diasVS) {
 function MotivoPV($p) {
   $partes = @()
   $dias = @(0..[math]::Min($refDia, 5) | Where-Object { $_ -ge $p.ini -and $null -ne $p.reg.vs[$_] })
+  if (-not $cobrarVS) { $dias = @() }
   $abx = @($dias | Where-Object { (Num $p.reg.vs[$_]) -lt $metas[$_] })
   $zer = @($dias | Where-Object { -not (Num $p.reg.vs[$_]) })
   if ($abx.Count) {
@@ -268,7 +289,7 @@ function ReincPV($p) {
   }
   $vsAbx = @(0..[math]::Min($refDia, 5) | Where-Object { $_ -ge $p.ini -and $null -ne $p.reg.vs[$_] -and (Num $p.reg.vs[$_]) -lt $metas[$_] })
   $partes = @()
-  if ($vsAbx.Count -ge 2) { $partes += "VS abaixo da meta em $($vsAbx.Count) dias ($(JuntarDias $vsAbx))" }
+  if ($cobrarVS -and $vsAbx.Count -ge 2) { $partes += "VS abaixo da meta em $($vsAbx.Count) dias ($(JuntarDias $vsAbx))" }
   if ($doaBaixa.Count -ge 2) { $partes += "doou menos de 20 mil em $($doaBaixa.Count) dias ($(JuntarDias $doaBaixa))" }
   $partes -join ' · '
 }
@@ -278,7 +299,7 @@ function CompactoPV($p) {
   $partes = @()
   $dias = @(0..[math]::Min($refDia, 5) | Where-Object { $_ -ge $p.ini -and $null -ne $p.reg.vs[$_] })
   $falhos = @($dias | Where-Object { (Num $p.reg.vs[$_]) -lt $metas[$_] })
-  if ($falhos.Count) {
+  if ($cobrarVS -and $falhos.Count) {
     $icones = ($dias | ForEach-Object { if ((Num $p.reg.vs[$_]) -ge $metas[$_]) { '✅' } else { '❌' } }) -join ''
     $pcts = ($falhos | ForEach-Object { "$($curtos[$_]) $([math]::Round(100 * (Num $p.reg.vs[$_]) / $metas[$_]))%" }) -join ' · '
     $partes += "VS $icones ($pcts)"
@@ -291,6 +312,16 @@ function CompactoPV($p) {
 
 function ListaPV {
   $itens = @()
+  if ($diaPV -and -not $cobrarVS) {
+    # migração: só quem está com a doação abaixo de 50%
+    foreach ($p in $pessoas) {
+      if ($secundarias.ContainsKey($p.id) -or $p.ini -gt 0 -or $p.pctDoa -ge 0.5) { continue }
+      $s = if ($p.pctDoa -lt 0.25) { 2 } else { 1 }
+      $txt = if ($diaPV -eq 'quarta') { TextoDoacaoPV $p } else { TextoDoacaoSemanaPV $p }
+      $itens += [pscustomobject]@{ nome = $p.nome; s = $s; pct = $p.pctDoa; txt = $txt; mot = (MotivoPV $p); rein = (ReincPV $p); curto = (CompactoPV $p) }
+    }
+    return @($itens | Sort-Object @{e = 's'; Descending = $true }, pct, nome | Select-Object -First 10)
+  }
   if ($diaPV -eq 'quarta') {
     foreach ($p in $pessoas) {
       if ($secundarias.ContainsKey($p.id) -or $p.ini -gt 0) { continue }   # quem entrou nesta semana só é cobrado a partir da semana seguinte
@@ -400,7 +431,7 @@ if ($Turno -eq 'alerta') {
   $geral.Add('- Sem doação a loja da aliança não é reabastecida, e todo mundo perde.')
   $geral.Add('- Não dependa só da recarga: 30 diamantes por dia já fazem muita diferença.')
   $geral.Add('')
-  $geral.Add('A liderança está acompanhando quem está zerado, abaixo da metade ou atrasado na doação, e vai chamar no privado.')
+  $geral.Add($(if ($cobrarVS) { 'A liderança está acompanhando quem está zerado, abaixo da metade ou atrasado na doação, e vai chamar no privado.' } else { 'A liderança está acompanhando quem está atrasado na doação e vai chamar no privado.' }))
   $geral.Add($(if ($vsHoje -ge 0) { 'Combo ativo até as 23h. É agora!' } else { 'Fechem a doação até as 23h!' }))
 
   $lid.Add("⚠️ DEDZ - Liderança - ALERTA DAS 19H - $titulo"); $lid.Add('')
@@ -486,7 +517,10 @@ elseif ($Turno -eq 'meio') {
       [pscustomobject]@{ nome = $p.nome; s = $s; txt = "$($p.nome): VS hoje $(EmMi $p.vsHoje) · doação $(EmMil $p.doa) ($(Pct $p.doa $p.metaDoa)) → $dica" }
     }
     $fila = @($fila | Sort-Object @{e = 's'; Descending = $true }, nome | Select-Object -First 10)
-    $lid.Add(''); $lid.Add("COBRAR NO PRIVADO AGORA (prioridade, até 10)")
+    if (-not $cobrarVS) {   # migração: a cobrança no privado é só da doação
+      $fila = @($pessoas | Where-Object { $_.pctDoa -lt 0.5 -and -not $secundarias.ContainsKey($_.id) } | Sort-Object pctDoa | Select-Object -First 10 | ForEach-Object { [pscustomobject]@{ nome = $_.nome; txt = "$($_.nome): doação $(EmMil $_.doa) de $(EmMil $_.metaDoa) ($(Pct $_.doa $_.metaDoa))" } })
+    }
+    $lid.Add(''); $lid.Add($(if ($cobrarVS) { "COBRAR NO PRIVADO AGORA (prioridade, até 10)" } else { "COBRAR DOAÇÃO NO PRIVADO AGORA (abaixo de 50%, até 10; VS fora do privado na migração)" }))
     if ($fila.Count) { $n = 1; foreach ($f in $fila) { $lid.Add("$n. $($f.txt)"); $n++ } } else { $lid.Add('- ninguém em situação crítica') }
     if ($abaixoMetade.Count) { $lid.Add(''); $lid.Add("ABAIXO DE 50% DA META DE HOJE, menos de $(EmMi $metade) ($($abaixoMetade.Count))"); foreach ($p in $abaixoMetade) { $lid.Add("- $($p.nome): $(EmMi $p.vsHoje)") } }
     if ($zerados.Count) { $lid.Add("ZERADOS HOJE ($($zerados.Count)): $(Juntar $zerados.nome)") }
@@ -599,6 +633,7 @@ if ($diaPV) {
   $pv = @(ListaPV)
   $cab = if ($diaPV -eq 'quarta') { "LISTA DO PV - puxão de orelha de quarta ($($refData.ToString('dd/MM'))), combo ativo" } else { "LISTA DO PV - balanço da semana ($($refData.AddDays(-$refDia).ToString('dd/MM')) a $($refData.ToString('dd/MM')))" }
   $linhasPV = New-Object System.Collections.Generic.List[string]
+  if (-not $cobrarVS) { $cab = "LISTA DO PV - só doação (VS fora do privado na migração) - $(if ($diaPV -eq 'quarta') { "quarta $($refData.ToString('dd/MM'))" } else { "semana $($refData.AddDays(-$refDia).ToString('dd/MM')) a $($refData.ToString('dd/MM'))" })" }
   $linhasPV.Add("$cab · $($pv.Count) pessoa(s), as piores primeiro · fora quem está entre 50% e 99% e as contas secundárias"); $linhasPV.Add('')
   $n = 1; foreach ($i in $pv) { $linhasPV.Add("$n. $($i.nome)"); $linhasPV.Add($i.txt); $linhasPV.Add(''); $n++ }
   if (-not $pv.Count) { $linhasPV.Add('Ninguém na lista.') }

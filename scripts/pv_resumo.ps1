@@ -55,7 +55,10 @@ $r = New-Object System.Collections.Generic.List[string]
 $r.Add("📩 DEDZ - Notificações no PV - $tipo ($($Data.ToString('dd/MM')))")
 $r.Add("Enviadas: $($okL.Count) de $($itens.Count) · Não deu certo: $($falhou.Count) · Reincidentes: $($rein.Count)")
 if ($periodo) { $r.Add("Período: $periodo (semana até hoje)") }
-if ($tipo -eq 'quarta') { $r.Add('Critério: piores da semana no VS (zerado ou abaixo de 50% hoje) ou na doação (abaixo de 50%). Entre 50% e 99% fica com vocês. Secundárias fora.') }
+$cobrarVS = $true; $arqCob = Join-Path $PSScriptRoot 'cobranca.json'
+if (Test-Path $arqCob) { $cfgCob = LerJson $arqCob; if ($null -ne $cfgCob.vsNoPrivado) { $cobrarVS = [bool]$cfgCob.vsNoPrivado } }
+if (-not $cobrarVS) { $r.Add('Critério: só doação abaixo de 50% da meta (VS fora do privado durante a migração). Secundárias fora.') }
+elseif ($tipo -eq 'quarta') { $r.Add('Critério: piores da semana no VS (zerado ou abaixo de 50% hoje) ou na doação (abaixo de 50%). Entre 50% e 99% fica com vocês. Secundárias fora.') }
 else { $r.Add('Critério: bateram o VS em 3 de 6 dias ou menos, ou doação abaixo de 50%. Receberam o balanço da semana. Secundárias fora.') }
 $r.Add('')
 # formato curto: uma linha por pessoa; VS dia a dia (✅/❌ e o % dos dias que falhou), doação da semana
