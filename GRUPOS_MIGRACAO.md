@@ -7,6 +7,8 @@ Regras de sempre: no jogo só leia. Nunca envie mensagem no jogo (nunca na aba M
 O que muda na dash (o `scripts\grupos_migracao.ps1` decide):
 - entrou num grupo, ou está num grupo sem estar "vai": passa para **vai**;
 - saiu dos dois grupos e estava "vai": passa para **não vai**;
+- está "vai" e não aparece em nenhum grupo (nunca entrou): volta para **sem resposta** — "vai" é só para quem está nos grupos (regra do Ramon, 11/11/2026);
+- o grupo intermediário agora se chama **Intermediary30** (antes intermediary609); a lista do grupo pode mostrar nome antigo de quem trocou de nome (ex.: HeraBlood = Maikynhooo2): anote com o nome atual;
 - trocou de um grupo para o outro: só entra no relatório;
 - organizadores (Vini²², C0r1nga², Marcelo QAF, Mané 07) nunca mudam;
 - a obs ganha uma nota ("entrou no REGULAR 609 em 10/11", "saiu do intermediary609 em 10/11").
