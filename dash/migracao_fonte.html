@@ -158,6 +158,10 @@
   .kpi:not(:has(small)) span { grid-row: span 2; align-self: center; }
   .kpi.warn b { color: var(--no); } .kpi.ok b { color: var(--go); }
   .kpi.sel { outline: 2px solid var(--accent); outline-offset: -2px; } .kpi.dim { opacity: .45; }
+  .kpi.click { cursor: pointer; } .kpi.click:hover { border-color: var(--accent); } .kpi.click:focus-visible { outline: 2px solid var(--accent); }
+  .kfiltro { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; justify-content: space-between; background: var(--soft); border-radius: 6px; padding: 6px 10px; font-size: 13px; font-weight: 600; }
+  .kfiltro[hidden] { display: none; }
+  .kfiltro button { font: inherit; font-size: 13px; font-weight: 600; padding: 3px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--fg); cursor: pointer; }
   .kpi.k-farm { border-left: 4px solid #e0b830; } .kpi.k-sec { border-left: 4px solid #4a86d4; }
   .blegend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--muted); }
   .blegend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
@@ -458,6 +462,7 @@
       </section>
       <section class="bcol" id="d-col-def" data-side="def" aria-labelledby="d-def-t">
         <div class="bhead"><h3 id="d-def-t" data-i18n="d_def_t">Lista definitiva</h3><span class="bcount" id="d-def-n"></span></div>
+        <div class="kfiltro" id="d-kpi-filtro" hidden><span id="d-kpi-nome"></span><button type="button" id="d-kpi-limpar" data-i18n="d_kpi_off">✕ Mostrar todos</button></div>
         <div class="btools">
           <select id="d-tier2" aria-label="Tier"><option value="" selected data-i18n="d_all_tiers">Todos os tiers</option><option value="Advanced">Advanced</option><option value="Intermediate">Intermediate</option><option value="Regular">Regular</option></select>
           <select id="d-ord2" aria-label="Ordem"><option value="desemp" data-i18n="d_o_desemp">Melhor desempenho</option><option value="score" selected data-i18n="d_o_score">Maior score</option><option value="nome" data-i18n="d_o_nome">Nome</option></select>
@@ -497,6 +502,7 @@
       d_o_desemp: 'Melhor desempenho', d_o_score: 'Maior score', d_o_nome: 'Nome',
       d_intro: 'Arraste os cartões de uma coluna para a outra (ou use o botão do cartão). A lista definitiva fica salva para todos que abrirem a página. Vagas no {s}: Regular {r}, Intermediate {i}.', d_intro_perf: 'VS e doação vêm da dash de acompanhamento ({d} dias fechados, até {a}).', d_intro_noperf: 'VS e doação só aparecem para quem entra com login.',
       d_intro_ro: 'Só quem pode editar a página move os cartões.', mk_sobe: 'Perspectiva de subir de classe', mk_avaliar: 'Avaliar ainda', lg_farm: 'Conta farm', lg_sec: 'Conta secundária',
+      d_kpi_on: 'Filtro: {k} ({n})', d_kpi_off: '✕ Mostrar todos',
       k_total: 'Contas na lista', k_total_t: '{t} na lista', k_vagas: '{n} vagas no total', k_prin: 'Membros ativos', k_prin_s: 'sem farm e secundária', k_de: 'de {n} vagas',
       k_sec: 'Contas secundárias', k_farm: 'Contas farm', k_farmfora: 'Farms sem liderança', k_farmfora_s: 'dono não é R4/R5',
       k_baixo: 'Baixo desempenho', k_login: 'só com login', k_s20: 'Score abaixo de 20M', k_outras: 'De outras alianças', k_pend: 'Sem confirmar', k_pend_s: 'na lista e fora do "vai"', d_sec: 'Secundária de {d}', d_sec0: 'Secundária',
@@ -1254,7 +1260,7 @@
   const VAGAS = { Advanced: 3, Intermediate: 30, Regular: 30 };
 
   // ---- aba "Lista definitiva": duas colunas; o campo definitiva (true) fica em cada membro do banco
-  const D = { q: '', tier: 'Regular', sit: 'vai', ord: 'desemp', ord2: 'score', tier2: '', drag: null };
+  const D = { q: '', tier: 'Regular', sit: 'vai', ord: 'desemp', ord2: 'score', tier2: '', kpi: null, kpiIds: null, kpiLabel: '', drag: null };
   const dSort = (k) => (a, b) => k === 'nome' ? String(a.nome).localeCompare(String(b.nome))
     : k === 'score' ? (b._score ?? -1) - (a._score ?? -1)
     : ((b._perf && b._perf.idx != null ? b._perf.idx : -1) - (a._perf && a._perf.idx != null ? a._perf.idx : -1)) || (b._score ?? -1) - (a._score ?? -1);
@@ -1318,28 +1324,44 @@
     const tierN = (tier) => all.filter((m) => m._tier === tier).length;
     const baixo = def.filter((m) => m._perf && m._perf.k === 'baixo');
     const s20 = def.filter((m) => m._score != null && m._score < 20e6);
-    const outras = def.filter((m) => m.alianca !== 'DEDZ').length;
-    const pend = def.filter((m) => m.status !== 'vai').length;
-    const kpi = (n, label, sub, cls, tip) => {
+    const outrasL = def.filter((m) => m.alianca !== 'DEDZ');
+    const pendL = def.filter((m) => m.status !== 'vai');
+    // clicar num indicador filtra a coluna da lista definitiva; clicar de novo (ou em "Mostrar todos") tira o filtro
+    D.kpiIds = null; D.kpiLabel = '';
+    const kpi = (n, label, sub, cls, tip, key, list) => {
       const d = document.createElement('div'); d.className = 'kpi' + (cls ? ' ' + cls : '');
       const b = document.createElement('b'); b.textContent = state.loaded ? String(n) : '—';
       const s = document.createElement('span'); s.textContent = label; d.append(b, s);
       if (sub) { const sm = document.createElement('small'); sm.textContent = sub; d.appendChild(sm); }
       if (tip) d.title = tip;
+      if (key) {
+        d.classList.add('click'); d.tabIndex = 0; d.setAttribute('role', 'button');
+        if (key === D.kpi && list) { d.classList.add('sel'); D.kpiIds = new Set(list.map((m) => m.id)); D.kpiLabel = label; }
+        d.setAttribute('aria-pressed', String(key === D.kpi));
+        const go = () => {
+          if (key.startsWith('tier:')) { const tr = key.slice(5); D.tier2 = D.tier2 === tr ? '' : tr; $('d-tier2').value = D.tier2; }
+          else if (key === 'total') D.kpi = null;
+          else D.kpi = D.kpi === key ? null : key;
+          renderDefin();
+        };
+        d.addEventListener('click', go);
+        d.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+      }
       box.appendChild(d);
     };
     const nomes = (g) => g.map((m) => m.nome).join(', ');
     const cap = D.tier2 ? VAGAS[D.tier2] : VAGAS.Advanced + VAGAS.Intermediate + VAGAS.Regular;
-    kpi(def.length, D.tier2 ? t('k_total_t', { t: D.tier2 }) : t('k_total'), D.tier2 ? t('k_de', { n: cap }) : t('k_vagas', { n: cap }), D.tier2 && def.length > cap ? 'warn' : '');
-    kpi(prin.length, t('k_prin'), t('k_prin_s'));
-    ['Advanced', 'Intermediate', 'Regular'].forEach((tier) => { const n = tierN(tier); kpi(n, tier, t('k_de', { n: VAGAS[tier] }), (n > VAGAS[tier] ? 'warn' : (n === VAGAS[tier] ? 'ok' : '')) + (D.tier2 ? (D.tier2 === tier ? ' sel' : ' dim') : ''), nomes(all.filter((m) => m._tier === tier))); });
-    kpi(secs.length, t('k_sec'), '', 'k-sec', nomes(secs));
-    kpi(farms.length, t('k_farm'), '', 'k-farm', nomes(farms));
-    kpi(farmsFora.length, t('k_farmfora'), t('k_farmfora_s'), 'k-farm' + (farmsFora.length ? ' warn' : ''), farmsFora.map((m) => m.nome + (m.dono ? ' (' + m.dono + ')' : '')).join(', '));
-    kpi(state.perf ? baixo.length : '—', t('k_baixo'), state.perf ? '' : t('k_login'), baixo.length ? 'warn' : '', nomes(baixo));
-    kpi(s20.length, t('k_s20'), '', s20.length ? 'warn' : '', nomes(s20));
-    kpi(outras, t('k_outras'), '', '', nomes(def.filter((m) => m.alianca !== 'DEDZ')));
-    kpi(pend, t('k_pend'), t('k_pend_s'), pend ? 'warn' : '', nomes(def.filter((m) => m.status !== 'vai')));
+    kpi(def.length, D.tier2 ? t('k_total_t', { t: D.tier2 }) : t('k_total'), D.tier2 ? t('k_de', { n: cap }) : t('k_vagas', { n: cap }), D.tier2 && def.length > cap ? 'warn' : '', '', 'total', null);
+    kpi(prin.length, t('k_prin'), t('k_prin_s'), '', nomes(prin), 'prin', prin);
+    ['Advanced', 'Intermediate', 'Regular'].forEach((tier) => { const n = tierN(tier); kpi(n, tier, t('k_de', { n: VAGAS[tier] }), (n > VAGAS[tier] ? 'warn' : (n === VAGAS[tier] ? 'ok' : '')) + (D.tier2 ? (D.tier2 === tier ? ' sel' : ' dim') : ''), nomes(all.filter((m) => m._tier === tier)), 'tier:' + tier, null); });
+    kpi(secs.length, t('k_sec'), '', 'k-sec', nomes(secs), 'sec', secs);
+    kpi(farms.length, t('k_farm'), '', 'k-farm', nomes(farms), 'farm', farms);
+    kpi(farmsFora.length, t('k_farmfora'), t('k_farmfora_s'), 'k-farm' + (farmsFora.length ? ' warn' : ''), farmsFora.map((m) => m.nome + (m.dono ? ' (' + m.dono + ')' : '')).join(', '), 'farmfora', farmsFora);
+    kpi(state.perf ? baixo.length : '—', t('k_baixo'), state.perf ? '' : t('k_login'), baixo.length ? 'warn' : '', nomes(baixo), state.perf ? 'baixo' : null, baixo);
+    kpi(s20.length, t('k_s20'), '', s20.length ? 'warn' : '', nomes(s20), 's20', s20);
+    kpi(outrasL.length, t('k_outras'), '', '', nomes(outrasL), 'outras', outrasL);
+    kpi(pendL.length, t('k_pend'), t('k_pend_s'), pendL.length ? 'warn' : '', nomes(pendL), 'pend', pendL);
+    if (D.kpi && !D.kpiIds) D.kpi = null;
   };
   const renderDefin = () => {
     if ($('v-defin').hidden) return;
@@ -1353,14 +1375,16 @@
     const cand = state.rows.filter((m) => m.definitiva !== true && m.status !== 'nao' && (!D.sit || m.status === D.sit) && (!D.tier || m._tier === D.tier)
       && (!q || String(m.nome || '').toLowerCase().includes(q) || String(m.dono || '').toLowerCase().includes(q))).sort(dSort(D.ord));
     fillList('d-cand', cand, 'd_empty_cand');
-    const defShown = D.tier2 ? def.filter((m) => m._tier === D.tier2) : def;
+    const defShown = def.filter((m) => (!D.tier2 || m._tier === D.tier2) && (!D.kpiIds || D.kpiIds.has(m.id)));
     fillList('d-def', defShown, 'd_empty_def');
+    const fb = $('d-kpi-filtro'); fb.hidden = !D.kpiIds;
+    if (D.kpiIds) $('d-kpi-nome').textContent = t('d_kpi_on', { k: D.kpiLabel, n: defShown.length });
     $('d-cand-n').textContent = t('d_n_cand', { n: cand.length });
     const nr = def.filter((m) => m._tier === 'Regular').length, ni = def.filter((m) => m._tier === 'Intermediate').length, na = def.filter((m) => m._tier === 'Advanced').length;
     const box = $('d-def-n'); box.replaceChildren();
     const b = document.createElement('b'); b.className = nr > VAGAS.Regular || ni > VAGAS.Intermediate || na > VAGAS.Advanced ? 'over' : 'ok';
     b.textContent = t('d_n_def', { n: def.length, a: na, ca: VAGAS.Advanced, r: nr, cr: VAGAS.Regular, i: ni, ci: VAGAS.Intermediate })
-      + (D.tier2 ? ' · ' + t('d_n_shown', { n: defShown.length }) : ''); box.appendChild(b);
+      + (D.tier2 || D.kpiIds ? ' · ' + t('d_n_shown', { n: defShown.length }) : ''); box.appendChild(b);
   };
   ['d-col-cand', 'd-col-def'].forEach((id) => {
     const col = $(id);
@@ -1372,6 +1396,7 @@
       if (m) setDef(m, col.dataset.side === 'def');
     });
   });
+  $('d-kpi-limpar').addEventListener('click', () => { D.kpi = null; renderDefin(); });
   $('d-q').addEventListener('input', (e) => { D.q = e.target.value; renderDefin(); });
   [['d-tier', 'tier'], ['d-sit', 'sit'], ['d-ord', 'ord'], ['d-ord2', 'ord2'], ['d-tier2', 'tier2']].forEach(([id, k]) => $(id).addEventListener('change', (e) => { D[k] = e.target.value; renderDefin(); }));
 
