@@ -465,6 +465,7 @@
         <div class="kfiltro" id="d-kpi-filtro" hidden><span id="d-kpi-nome"></span><button type="button" id="d-kpi-limpar" data-i18n="d_kpi_off">✕ Mostrar todos</button></div>
         <div class="btools">
           <select id="d-tier2" aria-label="Tier"><option value="" selected data-i18n="d_all_tiers">Todos os tiers</option><option value="Advanced">Advanced</option><option value="Intermediate">Intermediate</option><option value="Regular">Regular</option></select>
+          <button type="button" class="btn" id="d-xls" data-i18n="d_xls">Exportar para Excel</button>
           <select id="d-ord2" aria-label="Ordem"><option value="desemp" data-i18n="d_o_desemp">Melhor desempenho</option><option value="score" selected data-i18n="d_o_score">Maior score</option><option value="nome" data-i18n="d_o_nome">Nome</option></select>
         </div>
         <div class="blist" id="d-def"></div>
@@ -503,7 +504,7 @@
       d_intro: 'Arraste os cartões de uma coluna para a outra (ou use o botão do cartão). A lista definitiva fica salva para todos que abrirem a página. Vagas no {s}: Regular {r}, Intermediate {i}.', d_intro_perf: 'VS e doação da semana passada ({d} dias, até {a}), da dash de acompanhamento. VS na meta: até 6/9 dos dias é ruim (não deveria ir), acima é bom, a partir de 8/9 é ótimo e 9/9 é excelente.', d_intro_noperf: 'VS e doação só aparecem para quem entra com login.',
       d_intro_ro: 'Só quem pode editar a página move os cartões.', mk_sobe: 'Perspectiva de subir de classe', mk_avaliar: 'Avaliar ainda', lg_farm: 'Conta farm', lg_sec: 'Conta secundária',
       d_q_on: 'Busca "{q}": {a} em candidatos, {b} na definitiva (filtros ignorados)', d_q_none: 'Ninguém com esse nome na lista definitiva.',
-      d_alianca: 'Aliança {a}{z}', d_fraco: '⚠ Score baixo', d_fraco_t: 'Migration Score abaixo de 20M',
+      d_alianca: 'Aliança {a}{z}', d_xls: 'Exportar para Excel', d_fraco: '⚠ Score baixo', d_fraco_t: 'Migration Score abaixo de 20M',
       d_kpi_on: 'Filtro: {k} ({n})', d_kpi_off: '✕ Mostrar todos',
       k_total: 'Contas na lista', k_total_t: '{t} na lista', k_vagas: '{n} vagas no total', k_prin: 'Membros ativos', k_prin_s: 'sem farm e secundária', k_de: 'de {n} vagas',
       k_sec: 'Contas secundárias', k_farm: 'Contas farm', k_farmfora: 'Farms sem liderança', k_farmfora_s: 'dono não é R4/R5',
@@ -1381,6 +1382,7 @@
     fillList('d-cand', cand, 'd_empty_cand');
     const defShown = def.filter((m) => q ? achou(m) : (!D.tier2 || m._tier === D.tier2) && (!D.kpiIds || D.kpiIds.has(m.id)));
     fillList('d-def', defShown, q ? 'd_q_none' : 'd_empty_def');
+    D.shown = defShown;
     const fb = $('d-kpi-filtro'); fb.hidden = !D.kpiIds && !q;
     if (q) $('d-kpi-nome').textContent = t('d_q_on', { q: D.q.trim(), a: cand.length, b: defShown.length });
     else if (D.kpiIds) $('d-kpi-nome').textContent = t('d_kpi_on', { k: D.kpiLabel, n: defShown.length });
@@ -1400,6 +1402,28 @@
       const m = state.rows.find((r) => r.id === D.drag); D.drag = null;
       if (m) setDef(m, col.dataset.side === 'def');
     });
+  });
+  // exporta o que a coluna Lista definitiva está mostrando (com os filtros aplicados) em CSV que o Excel abre direto
+  $('d-xls').addEventListener('click', async () => {
+    if (!dl) { notice('dl_unavail'); return; }
+    const rows = D.shown || [];
+    const esc = (v) => { const s = String(v ?? ''); return /[";\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+    const num = (v, d) => v == null ? '' : (v / 1e6).toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d });
+    const contaTxt = { farm: 'Farm', secundaria: 'Secundária' };
+    const head = ['Jogador', 'Aliança', 'Zona', 'Cargo', 'Sede', 'Tier', 'Migration Score (M)', 'PC (M)', 'Herói (M)', 'Veículo (M)', 'T10 %', 'Tipo de conta', 'Dono', 'Situação',
+      'VS na meta (semana passada)', 'Doação %', 'Desempenho', 'Sinal', 'Marcação', 'Observação'];
+    const lines = [head.map(esc).join(';')];
+    rows.forEach((m) => {
+      const p = m._perf, pp = p && p.p;
+      lines.push([m.nome, m.alianca, m.zona || '', m.cargo || '', m.sede ?? '', m._tier || '', num(m._score, 1), num(m.poder, 1), num(m.heroi, 1), num(m.veiculo, 1),
+        m.t10 == null ? '' : Math.round(m.t10 * 100), contaTxt[m.conta] || 'Principal', m.dono || '', sitLabel(m.status),
+        pp && pp.d ? pp.m + '/' + pp.d : '', pp && pp.dm ? Math.round(pp.doa / pp.dm * 100) : '', p ? p.label : '', m._sinal ? m._sinal.label : '',
+        m.marca === 'sobe' ? t('mk_sobe') : m.marca === 'avaliar' ? t('mk_avaliar') : '', m.obs || ''].map(esc).join(';'));
+    });
+    const data = '﻿' + lines.join('\r\n');
+    const dia = new Date().toISOString().slice(0, 10);
+    try { await dl.save({ filename: 'lista_definitiva_' + dia + '.csv', data }); }
+    catch (e) { if (e && e.code !== 'declined') notice('dl_fail'); }
   });
   $('d-kpi-limpar').addEventListener('click', () => { if (D.q.trim()) { D.q = ''; $('d-q').value = ''; } else D.kpi = null; renderDefin(); });
   $('d-q').addEventListener('input', (e) => { D.q = e.target.value; renderDefin(); });
@@ -1656,7 +1680,7 @@
   (async () => {
     db = await claude.use('db');
     dl = await claude.use('downloads');
-    if (!dl) $('btn-csv').hidden = true;
+    if (!dl) { $('btn-csv').hidden = true; $('d-xls').hidden = true; }
     if (!db) {
       if (SNAP && LIMITS[SNAP.temporada]) season = SNAP.temporada;
       state.rows = SNAP && Array.isArray(SNAP.rows) ? SNAP.rows.map((r) => prep(Object.assign({}, r))) : []; refreshAliancas();
