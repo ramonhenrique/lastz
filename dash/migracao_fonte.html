@@ -500,7 +500,7 @@
       s_reg_over: 'Regular: {n} acima das vagas', s_reg_ok: 'Regular: dentro das vagas', s_int_left: 'Intermediário: {n} vagas livres', s_hidden: '{n} Regulares confirmados precisam de mais de 15M de herói e ficaram fora da lista.', s_none: 'Nenhum Regular confirmado com score calculado.',
       tab_defin: 'Lista definitiva', d_cand_t: 'Candidatos', d_def_t: 'Lista definitiva', d_q: 'Buscar nas duas colunas', d_sit_all: 'Vão + sem resposta',
       d_o_desemp: 'Melhor desempenho', d_o_score: 'Maior score', d_o_nome: 'Nome',
-      d_intro: 'Arraste os cartões de uma coluna para a outra (ou use o botão do cartão). A lista definitiva fica salva para todos que abrirem a página. Vagas no {s}: Regular {r}, Intermediate {i}.', d_intro_perf: 'VS e doação vêm da dash de acompanhamento ({d} dias fechados, até {a}).', d_intro_noperf: 'VS e doação só aparecem para quem entra com login.',
+      d_intro: 'Arraste os cartões de uma coluna para a outra (ou use o botão do cartão). A lista definitiva fica salva para todos que abrirem a página. Vagas no {s}: Regular {r}, Intermediate {i}.', d_intro_perf: 'VS e doação da semana passada ({d} dias, até {a}), da dash de acompanhamento. VS na meta: até 6/9 dos dias é ruim (não deveria ir), acima é bom, a partir de 8/9 é ótimo e 9/9 é excelente.', d_intro_noperf: 'VS e doação só aparecem para quem entra com login.',
       d_intro_ro: 'Só quem pode editar a página move os cartões.', mk_sobe: 'Perspectiva de subir de classe', mk_avaliar: 'Avaliar ainda', lg_farm: 'Conta farm', lg_sec: 'Conta secundária',
       d_q_on: 'Busca "{q}": {a} em candidatos, {b} na definitiva (filtros ignorados)', d_q_none: 'Ninguém com esse nome na lista definitiva.',
       d_alianca: 'Aliança {a}{z}', d_fraco: '⚠ Score baixo', d_fraco_t: 'Migration Score abaixo de 20M',
@@ -512,10 +512,10 @@
       d_empty_cand: 'Ninguém com esses filtros.', d_empty_def: 'Arraste para cá quem vai na migração.',
       d_farm: 'Farm de {d}', d_farm0: 'Farm', d_vs: 'VS {m}/{d} ({p})', d_doa: 'Doação {p}', d_t10: 'T10 {p}', d_pend: 'sem resposta', d_nao: 'não vai', d_nodata: 'sem VS/doação',
       tab_lista: 'Lista', tab_analise: 'Análise', all: 'Todos', sit_vai: 'Vão', sit_nao: 'Não vão', sit_pendente: 'Sem resposta',
-      c_desemp: 'Desempenho', c_sinal: 'Sinal', p_bom: 'Bom', p_atencao: 'Atenção', p_baixo: 'Baixo empenho', p_novato: 'Novato', p_fora: 'Outra aliança', p_semdados: 'Sem dados',
+      c_desemp: 'Desempenho', c_sinal: 'Sinal', p_bom: 'Bom', p_atencao: 'Atenção', p_baixo: 'Ruim', p_ruim: 'Ruim', p_otimo: 'Ótimo', p_excel: 'Excelente', p_novato: 'Novato', p_fora: 'Outra aliança', p_semdados: 'Sem dados',
       pt_vs: 'VS na meta em {m} de {d} dias ({p}), {z} zerado(s)', pt_doa: 'doação {a} de {b} ({p})', pt_ate: 'dados da dash de acompanhamento até {d}',
       pt_novato: 'Entrou em {e}: só {d} dia(s) de dados, ainda cedo para avaliar', pt_fora: 'Fora da DEDZ: não temos dados de VS e doação', pt_semdados: 'Sem leituras na dash de acompanhamento', pt_sec: 'conta secundária de {n}',
-      s_sai: 'Não deveria ir', s_cede: 'Pode ceder a vaga', s_lid: 'Liderança', st_sai: 'O {t} já tem {x} acima das vagas, e este jogador está entre os {x} de menor desempenho que vão', st_cede: 'Baixo empenho em VS ou doação: é candidato a dar a vaga para quem se empenha', st_lid: 'Liderança e organização da migração não são sinalizadas',
+      s_sai: 'Não deveria ir', s_cede: 'Pode ceder a vaga', s_lid: 'Liderança', st_sai: 'VS ruim na semana passada: até 6/9 dos dias na meta', st_cede: 'VS ok, mas doação abaixo de 50% do esperado na semana passada', st_lid: 'Liderança e organização da migração não são sinalizadas',
       clear_f: 'Limpar filtros', f_all: 'Todos', f_empty: '(vazio)', f_of: 'Filtrar {n}', f_count: '{n} de {t} jogadores',
       filter_aria: 'Filtrar por situação', search: 'Buscar jogador', btn_cols: 'Colunas', btn_pub: 'Atualizar versão pública',
       btn_pub_title: 'Grava a lista atual na página para quem abre sem login', btn_csv: 'Baixar CSV', btn_add: 'Adicionar membro',
@@ -537,7 +537,7 @@
       a_lim_t: 'Perto do limite de tier', a_lim_d: 'Jogadores a até {m} de um limite do Migration Score: os de baixo sobem de tier com pouco crescimento; os de cima caem se o score baixar.',
       h_dist: 'Distância', dist_up: 'faltam {n} para {t}', dist_down: '{n} acima do piso de {t}', lim_none: 'Ninguém está perto de um limite.',
       a_pend_t: 'Sem resposta: quem cobrar', a_pend_d: 'Quem ainda não respondeu, agrupado por aliança e com o maior score primeiro. Considera todos os membros.', pend_none: 'Todos já responderam.',
-      a_perf_t: 'Desempenho de quem vai', a_perf_d: 'Só quem está marcado "vai". VS e doação vêm da dash de acompanhamento ({d} dias fechados, até {a}). A faixa vermelha é baixo empenho (menos de 50% dos dias de VS na meta ou da doação esperada); as linhas tracejadas marcam 75% de VS e 80% de doação, abaixo disso fica em atenção.',
+      a_perf_t: 'Desempenho de quem vai', a_perf_d: 'Só quem está marcado "vai". VS e doação da semana passada ({d} dias, até {a}), da dash de acompanhamento. A faixa vermelha é VS ruim (até 6/9 dos dias na meta: não deveria ir); a linha tracejada vertical marca 8/9 (ótimo) e a horizontal, 50% da doação esperada.',
       a_perf_bar: 'Confirmados por desempenho em cada tier', a_perf_sc: 'VS na meta × doação (cada ponto é um jogador da DEDZ que vai)', a_perf_list: 'Quem vai e tem observação',
       ax_vs: 'dias de VS na meta', ax_doa: 'doação da meta', vagas_n: '{n} vagas', h_vs: 'VS na meta', h_doa: 'Doação', perf_none: 'Ninguém que vai tem observação de desempenho.', sc_cap: 'acima de 120% fica no topo',
       foot1: 'Poder e componentes lidos no jogo em 28/10/2026 (Detalhes > PC). Poder de arena da lista no modo "combate da arena" (atualizado em 29/10/2026), arredondado em 0,1M. T10 da lista manual da aliança.',
@@ -831,7 +831,7 @@
 
   // ---- desempenho (VS e doação) e sinal de quem não deveria ir
   // limites: baixo empenho abaixo de 50% dos dias de VS na meta ou de 50% da doação esperada; atenção abaixo de 75% / 80%
-  const PERF = { baixoVS: 0.5, baixoDoa: 0.5, atVS: 0.75, atDoa: 0.8, novatoDias: 5 };
+  const PERF = { ruim: 6 / 9, otimo: 8 / 9, cedeDoa: 0.5, novatoDias: 3 };
   // organização da migração (além de R4 e R5): Marcelo QAF, Mané 07, Vini²², C0r1nga²
   const ORGANIZA = ['m001', 'm002', 'm003', 'm071'];
   const pctTxt = (x) => Math.round(x * 100) + '%';
@@ -847,26 +847,23 @@
       + (p.sec ? ' · ' + t('pt_sec', { n: p.sec }) : '') + ' · ' + t('pt_ate', { d: dmy(P.ate) });
     const idx = (Math.min(vs, 1) + Math.min(doa, 1)) / 2;
     if (p.ent && p.d < PERF.novatoDias) return { k: 'novato', cls: '', label: t('p_novato'), tip: t('pt_novato', { e: dmy(p.ent), d: p.d }) + ' · ' + det, rank: 4, idx: null };
-    const k = vs < PERF.baixoVS || doa < PERF.baixoDoa ? 'baixo' : vs < PERF.atVS || doa < PERF.atDoa ? 'atencao' : 'bom';
-    return { k, cls: 'p-' + k, label: t('p_' + k), tip: det, rank: { baixo: 1, atencao: 2, bom: 3 }[k], idx, vs, doa, p };
+    // regra do Ramon (12/11/2026), só pelo VS da semana passada: até 6/9 dos dias na meta é ruim (não deveria ir),
+    // acima disso é bom, a partir de 8/9 é ótimo e 9/9 (todos os dias) é excelente
+    const nv = vs <= PERF.ruim + 1e-9 ? 'ruim' : vs < PERF.otimo - 1e-9 ? 'bom' : vs < 1 - 1e-9 ? 'otimo' : 'excel';
+    const k = nv === 'ruim' ? 'baixo' : 'bom';
+    return { k, nv, cls: nv === 'ruim' ? 'p-baixo' : 'p-bom', label: t('p_' + nv), tip: det, rank: { ruim: 1, bom: 2, otimo: 3, excel: 4 }[nv], idx, vs, doa, p };
   };
   const computePerf = () => {
     state.rows.forEach((m) => { m._perf = state.perf ? perfOf(m) : null; m._sinal = null; });
     if (!state.perf) return;
     const lid = (m) => ORGANIZA.includes(m.id) || m.cargo === 'R4' || m.cargo === 'R5';
-    TIERS.forEach((tier) => {
-      const going = state.rows.filter((m) => m.status === 'vai' && m._tier === tier);
-      const excess = VAGAS[tier] != null ? going.length - VAGAS[tier] : 0;
-      // quem pode ser avaliado: tem dados, não é novato e não é da liderança/organização
-      const cand = going.filter((m) => m._perf && m._perf.idx != null && !lid(m))
-        .sort((a, b) => a._perf.idx - b._perf.idx || (a._score ?? 0) - (b._score ?? 0));
-      const sai = excess > 0 ? cand.slice(0, excess) : [];
-      sai.forEach((m) => { m._sinal = { k: 'sai', cls: 's-sai', label: t('s_sai'), tip: t('st_sai', { t: tier, x: excess }) + ' · ' + m._perf.tip, rank: 1 }; });
-      going.forEach((m) => {
-        if (m._sinal) return;
-        if (lid(m)) { m._sinal = { k: 'lid', cls: '', label: t('s_lid'), tip: t('st_lid'), rank: 8 }; return; }
-        if (m._perf && m._perf.k === 'baixo') m._sinal = { k: 'cede', cls: 's-cede', label: t('s_cede'), tip: t('st_cede') + ' · ' + m._perf.tip, rank: 2 };
-      });
+    // "Não deveria ir": VS ruim na semana passada (até 6/9 dos dias na meta), fora a liderança.
+    // "Pode ceder a vaga": VS ok, mas doação abaixo de 50% do esperado na semana passada.
+    state.rows.filter((m) => m.status === 'vai' || m.definitiva === true).forEach((m) => {
+      if (lid(m)) { m._sinal = { k: 'lid', cls: '', label: t('s_lid'), tip: t('st_lid'), rank: 8 }; return; }
+      const p = m._perf; if (!p || p.idx == null) return;
+      if (p.nv === 'ruim') m._sinal = { k: 'sai', cls: 's-sai', label: t('s_sai'), tip: t('st_sai') + ' · ' + p.tip, rank: 1 };
+      else if (p.doa < PERF.cedeDoa) m._sinal = { k: 'cede', cls: 's-cede', label: t('s_cede'), tip: t('st_cede') + ' · ' + p.tip, rank: 2 };
     });
   };
   // filtro de uma coluna: as opções são os valores que existem na lista, ordenados como a coluna
@@ -1133,8 +1130,7 @@
     const px = (v) => ML + v * (SW - ML - MR), py = (v) => MT + (1 - Math.min(v, YMAX) / YMAX) * (SH - MT - MB);
     const sc = $('a-perf-sc'); sc.replaceChildren(); sc.setAttribute('viewBox', `0 0 ${SW} ${SH}`);
     sc.setAttribute('aria-label', t('a_perf_sc'));
-    svgEl('rect', { x: px(0), y: py(YMAX), width: px(PERF.baixoVS) - px(0), height: py(0) - py(YMAX), class: 'zone' }, sc);
-    svgEl('rect', { x: px(PERF.baixoVS), y: py(PERF.baixoDoa), width: px(1) - px(PERF.baixoVS), height: py(0) - py(PERF.baixoDoa), class: 'zone' }, sc);
+    svgEl('rect', { x: px(0), y: py(YMAX), width: px(PERF.ruim) - px(0), height: py(0) - py(YMAX), class: 'zone' }, sc);
     [0, 0.25, 0.5, 0.75, 1].forEach((v) => {
       svgEl('line', { x1: px(v), x2: px(v), y1: py(0), y2: py(YMAX), class: 'grid' }, sc);
       svgEl('text', { x: px(v), y: py(0) + 16, 'text-anchor': 'middle', class: 'ax' }, sc, pctTxt(v));
@@ -1143,8 +1139,8 @@
       svgEl('line', { x1: px(0), x2: px(1), y1: py(v), y2: py(v), class: 'grid' }, sc);
       svgEl('text', { x: ML - 6, y: py(v) + 4, 'text-anchor': 'end', class: 'ax' }, sc, pctTxt(v));
     });
-    svgEl('line', { x1: px(PERF.atVS), x2: px(PERF.atVS), y1: py(0), y2: py(YMAX), class: 'lim' }, sc);
-    svgEl('line', { x1: px(0), x2: px(1), y1: py(PERF.atDoa), y2: py(PERF.atDoa), class: 'lim' }, sc);
+    svgEl('line', { x1: px(PERF.otimo), x2: px(PERF.otimo), y1: py(0), y2: py(YMAX), class: 'lim' }, sc);
+    svgEl('line', { x1: px(0), x2: px(1), y1: py(PERF.cedeDoa), y2: py(PERF.cedeDoa), class: 'lim' }, sc);
     svgEl('text', { x: px(0.5), y: SH - 6, 'text-anchor': 'middle', class: 'ax' }, sc, t('ax_vs') + ' →');
     svgEl('text', { x: 12, y: py(0.6), 'text-anchor': 'middle', class: 'ax', transform: `rotate(-90 12 ${py(0.6)})` }, sc, t('ax_doa') + ' →');
     svgEl('text', { x: ML, y: 12, class: 'ax' }, sc, '↑ ' + t('sc_cap'));

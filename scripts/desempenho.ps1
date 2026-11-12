@@ -9,12 +9,16 @@
 #   d  = dias de VS com leitura      m = dias em que bateu a meta    z = dias zerados
 #   doa = doação somada               dm = doação esperada (20 mil por dia fechado)
 #   ent = data de entrada (se houver)   sec = nome da conta principal, se for conta secundária
-param([string]$Dir = 'C:\lz', [string]$Hoje = (Get-Date -Format 'yyyy-MM-dd'), [string]$Out = 'C:\lz\desempenho.json')
+#
+# Regra do Ramon (12/11/2026): o desempenho olha só a SEMANA PASSADA (segunda a sábado fechados).
+# -Semana muda a segunda-feira da semana usada; sem ele, é a segunda da semana anterior a -Hoje.
+param([string]$Dir = 'C:\lz', [string]$Hoje = (Get-Date -Format 'yyyy-MM-dd'), [string]$Out = 'C:\lz\desempenho.json', [string]$Semana = '')
 . (Join-Path $PSScriptRoot 'comum.ps1')
 
 $metas = 4.5e6, 5e6, 3.3e6, 6e6, 7e6, 6e6     # mesmas metas diárias do VS do relatorio.ps1 (seg a sáb)
 $doaDia = 20000
 $hojeD = [datetime]::ParseExact($Hoje, 'yyyy-MM-dd', $null)
+if (-not $Semana) { $seg = $hojeD.AddDays(-(([int]$hojeD.DayOfWeek + 6) % 7)); $Semana = $seg.AddDays(-7).ToString('yyyy-MM-dd') }
 $est = Join-Path $Dir 'estado'
 $cad = @{}; foreach ($m in (LerLista (Join-Path $est 'membros.json'))) { $cad[$m.id] = $m }
 $sec = @{}
@@ -25,6 +29,7 @@ $acc = @{}
 $ultimo = $null
 foreach ($r in (LerLista (Join-Path $est 'registros.json'))) {
   $mb = $cad[$r.membro]; if (-not $mb -or $mb.saiu) { continue }
+  if ([string]$r.semana -ne $Semana) { continue }
   $sem = [datetime]::ParseExact($r.semana, 'yyyy-MM-dd', $null)
   $ent = if ($mb.entrou) { [datetime]::ParseExact([string]$mb.entrou, 'yyyy-MM-dd', $null) } else { [datetime]::MinValue }
   if (-not $acc.ContainsKey($r.membro)) { $acc[$r.membro] = [ordered]@{ d = 0; m = 0; z = 0; doa = 0; dm = 0 } }
@@ -60,6 +65,6 @@ foreach ($id in ($acc.Keys | Sort-Object)) {
   if ($sec.ContainsKey($id)) { $o.sec = $sec[$id] }
   $saida[$id] = $o
 }
-$doc = [ordered]@{ at = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ'); ate = if ($ultimo) { $ultimo.ToString('yyyy-MM-dd') } else { $null }; metaDoaDia = $doaDia; membros = $saida }
+$doc = [ordered]@{ at = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ'); ate = if ($ultimo) { $ultimo.ToString('yyyy-MM-dd') } else { $null }; semana = $Semana; metaDoaDia = $doaDia; membros = $saida }
 SalvarJson $Out $doc
 "desempenho de $($saida.Count) membros até $($doc.ate) -> $Out"
