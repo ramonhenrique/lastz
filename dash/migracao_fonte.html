@@ -146,6 +146,13 @@
     :root:not([data-theme="light"]) .card .cm .ct-farm { background: #4a3f12; color: #f2d36b; } :root:not([data-theme="light"]) .card .cm .ct-sec { background: #1f3350; color: #9cc2f2; } }
   :root[data-theme="dark"] .card.ct-farm { background: #2a2614; } :root[data-theme="dark"] .card.ct-sec { background: #16212f; }
   :root[data-theme="dark"] .card .cm .ct-farm { background: #4a3f12; color: #f2d36b; } :root[data-theme="dark"] .card .cm .ct-sec { background: #1f3350; color: #9cc2f2; }
+  .kpis { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); }
+  .kpi { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 10px 12px; display: grid; gap: 2px; align-content: start; }
+  .kpi b { font-family: var(--f-display); font-weight: 600; font-size: 30px; line-height: 1.05; font-variant-numeric: tabular-nums; }
+  .kpi span { font-size: 13px; color: var(--muted); line-height: 1.3; }
+  .kpi small { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .kpi.warn b { color: var(--no); } .kpi.ok b { color: var(--go); }
+  .kpi.k-farm { border-left: 4px solid #e0b830; } .kpi.k-sec { border-left: 4px solid #4a86d4; }
   .blegend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--muted); }
   .blegend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
   .blegend .l-farm::before { background: #e0b830; } .blegend .l-sec::before { background: #4a86d4; } .blegend .l-sobe::before { background: var(--go); } .blegend .l-avaliar::before { border: 1px dashed var(--wait); width: 8px; height: 8px; } .card .cm .pend { background: var(--no-bg); color: var(--no); }
@@ -430,6 +437,7 @@
 
   <div class="view" id="v-defin" role="tabpanel" aria-labelledby="tab-defin" hidden>
     <p class="msg" id="d-intro"></p>
+    <div class="kpis" id="d-kpis" aria-label="Indicadores da lista definitiva"></div>
     <div class="blegend"><span class="l-farm" data-i18n="lg_farm">Conta farm</span><span class="l-sec" data-i18n="lg_sec">Conta secundária</span><span class="l-sobe" data-i18n="mk_sobe">Perspectiva de subir de classe</span><span class="l-avaliar" data-i18n="mk_avaliar">Avaliar ainda</span></div>
     <div class="board">
       <section class="bcol" id="d-col-cand" data-side="cand" aria-labelledby="d-cand-t">
@@ -482,7 +490,10 @@
       tab_defin: 'Lista definitiva', d_cand_t: 'Candidatos', d_def_t: 'Lista definitiva', d_q: 'Buscar jogador', d_sit_all: 'Vão + sem resposta',
       d_o_desemp: 'Melhor desempenho', d_o_score: 'Maior score', d_o_nome: 'Nome',
       d_intro: 'Arraste os cartões de uma coluna para a outra (ou use o botão do cartão). A lista definitiva fica salva para todos que abrirem a página. Vagas no {s}: Regular {r}, Intermediate {i}.', d_intro_perf: 'VS e doação vêm da dash de acompanhamento ({d} dias fechados, até {a}).', d_intro_noperf: 'VS e doação só aparecem para quem entra com login.',
-      d_intro_ro: 'Só quem pode editar a página move os cartões.', mk_sobe: 'Perspectiva de subir de classe', mk_avaliar: 'Avaliar ainda', lg_farm: 'Conta farm', lg_sec: 'Conta secundária', d_sec: 'Secundária de {d}', d_sec0: 'Secundária',
+      d_intro_ro: 'Só quem pode editar a página move os cartões.', mk_sobe: 'Perspectiva de subir de classe', mk_avaliar: 'Avaliar ainda', lg_farm: 'Conta farm', lg_sec: 'Conta secundária',
+      k_total: 'Contas na lista definitiva', k_vagas: '{n} vagas no total', k_prin: 'Membros ativos', k_prin_s: 'sem farm e sem secundária', k_de: 'de {n} vagas',
+      k_sec: 'Contas secundárias', k_farm: 'Contas farm', k_farmfora: 'Farms fora da liderança', k_farmfora_s: 'dono não é R4, R5 nem organizador',
+      k_baixo: 'Baixo desempenho na lista', k_login: 'só com login', k_s20: 'Migration Score abaixo de 20M', k_outras: 'De outras alianças', k_pend: 'Na lista sem confirmar', k_pend_s: 'situação diferente de "vai"', d_sec: 'Secundária de {d}', d_sec0: 'Secundária',
       d_n_cand: '{n} na coluna', d_n_def: '{n} na lista · Advanced {a} de {ca} · Intermediate {i} de {ci} · Regular {r} de {cr}', d_all_tiers: 'Todos os tiers', d_n_shown: 'mostrando {n}', d_add: 'Definitiva →', d_rem: '← Tirar',
       d_empty_cand: 'Ninguém com esses filtros.', d_empty_def: 'Arraste para cá quem vai na migração.',
       d_farm: 'Farm de {d}', d_farm0: 'Farm', d_vs: 'VS {m}/{d} ({p})', d_doa: 'Doação {p}', d_t10: 'T10 {p}', d_pend: 'sem resposta', d_nao: 'não vai', d_nodata: 'sem VS/doação',
@@ -1289,8 +1300,41 @@
     if (!rows.length) { const e = document.createElement('div'); e.className = 'bempty'; e.textContent = state.loaded ? t(emptyKey) : t('loading'); box.appendChild(e); return; }
     const isDef = id === 'd-def'; rows.forEach((m) => box.appendChild(dCard(m, isDef)));
   };
+  // indicadores do topo da aba: sempre sobre a lista definitiva inteira (o filtro de tier não muda)
+  const renderKpis = (def) => {
+    const box = $('d-kpis'); box.replaceChildren();
+    const lidDe = (nome) => { const o = state.rows.find((r) => r.nome === nome); return !!o && (ORGANIZA.includes(o.id) || o.cargo === 'R4' || o.cargo === 'R5'); };
+    const prin = def.filter((m) => m.conta !== 'farm' && m.conta !== 'secundaria');
+    const farms = def.filter((m) => m.conta === 'farm'), secs = def.filter((m) => m.conta === 'secundaria');
+    const farmsFora = farms.filter((m) => !m.dono || !lidDe(m.dono));
+    const tierN = (tier) => def.filter((m) => m._tier === tier).length;
+    const baixo = def.filter((m) => m._perf && m._perf.k === 'baixo');
+    const s20 = def.filter((m) => m._score != null && m._score < 20e6);
+    const outras = def.filter((m) => m.alianca !== 'DEDZ').length;
+    const pend = def.filter((m) => m.status !== 'vai').length;
+    const kpi = (n, label, sub, cls, tip) => {
+      const d = document.createElement('div'); d.className = 'kpi' + (cls ? ' ' + cls : '');
+      const b = document.createElement('b'); b.textContent = state.loaded ? String(n) : '—';
+      const s = document.createElement('span'); s.textContent = label; d.append(b, s);
+      if (sub) { const sm = document.createElement('small'); sm.textContent = sub; d.appendChild(sm); }
+      if (tip) d.title = tip;
+      box.appendChild(d);
+    };
+    const nomes = (g) => g.map((m) => m.nome).join(', ');
+    kpi(def.length, t('k_total'), t('k_vagas', { n: VAGAS.Advanced + VAGAS.Intermediate + VAGAS.Regular }));
+    kpi(prin.length, t('k_prin'), t('k_prin_s'));
+    ['Advanced', 'Intermediate', 'Regular'].forEach((tier) => { const n = tierN(tier); kpi(n, tier, t('k_de', { n: VAGAS[tier] }), n > VAGAS[tier] ? 'warn' : (n === VAGAS[tier] ? 'ok' : ''), nomes(def.filter((m) => m._tier === tier))); });
+    kpi(secs.length, t('k_sec'), '', 'k-sec', nomes(secs));
+    kpi(farms.length, t('k_farm'), '', 'k-farm', nomes(farms));
+    kpi(farmsFora.length, t('k_farmfora'), t('k_farmfora_s'), 'k-farm' + (farmsFora.length ? ' warn' : ''), farmsFora.map((m) => m.nome + (m.dono ? ' (' + m.dono + ')' : '')).join(', '));
+    kpi(state.perf ? baixo.length : '—', t('k_baixo'), state.perf ? '' : t('k_login'), baixo.length ? 'warn' : '', nomes(baixo));
+    kpi(s20.length, t('k_s20'), '', s20.length ? 'warn' : '', nomes(s20));
+    kpi(outras, t('k_outras'), '', '', nomes(def.filter((m) => m.alianca !== 'DEDZ')));
+    kpi(pend, t('k_pend'), t('k_pend_s'), pend ? 'warn' : '', nomes(def.filter((m) => m.status !== 'vai')));
+  };
   const renderDefin = () => {
     if ($('v-defin').hidden) return;
+    renderKpis(state.rows.filter((m) => m.definitiva === true));
     const P = state.perf;
     $('d-intro').textContent = t('d_intro', { s: DESTINO, r: VAGAS.Regular, i: VAGAS.Intermediate }) + ' '
       + (P ? t('d_intro_perf', { d: Math.max(0, ...state.rows.map((m) => (m._perf && m._perf.p && m._perf.p.d) || 0)), a: P.ate ? dmy(P.ate) : '—' }) : t('d_intro_noperf'))
