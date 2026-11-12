@@ -445,6 +445,7 @@
       <section class="bcol" id="d-col-def" data-side="def" aria-labelledby="d-def-t">
         <div class="bhead"><h3 id="d-def-t" data-i18n="d_def_t">Lista definitiva</h3><span class="bcount" id="d-def-n"></span></div>
         <div class="btools">
+          <select id="d-tier2" aria-label="Tier"><option value="" selected data-i18n="d_all_tiers">Todos os tiers</option><option value="Advanced">Advanced</option><option value="Intermediate">Intermediate</option><option value="Regular">Regular</option></select>
           <select id="d-ord2" aria-label="Ordem"><option value="desemp" data-i18n="d_o_desemp">Melhor desempenho</option><option value="score" selected data-i18n="d_o_score">Maior score</option><option value="nome" data-i18n="d_o_nome">Nome</option></select>
         </div>
         <div class="blist" id="d-def"></div>
@@ -482,7 +483,7 @@
       d_o_desemp: 'Melhor desempenho', d_o_score: 'Maior score', d_o_nome: 'Nome',
       d_intro: 'Arraste os cartões de uma coluna para a outra (ou use o botão do cartão). A lista definitiva fica salva para todos que abrirem a página. Vagas no {s}: Regular {r}, Intermediate {i}.', d_intro_perf: 'VS e doação vêm da dash de acompanhamento ({d} dias fechados, até {a}).', d_intro_noperf: 'VS e doação só aparecem para quem entra com login.',
       d_intro_ro: 'Só quem pode editar a página move os cartões.', mk_sobe: 'Perspectiva de subir de classe', mk_avaliar: 'Avaliar ainda', lg_farm: 'Conta farm', lg_sec: 'Conta secundária', d_sec: 'Secundária de {d}', d_sec0: 'Secundária',
-      d_n_cand: '{n} na coluna', d_n_def: '{n} na lista · Regular {r} de {cr} · Intermediate {i} de {ci}', d_add: 'Definitiva →', d_rem: '← Tirar',
+      d_n_cand: '{n} na coluna', d_n_def: '{n} na lista · Advanced {a} de {ca} · Intermediate {i} de {ci} · Regular {r} de {cr}', d_all_tiers: 'Todos os tiers', d_n_shown: 'mostrando {n}', d_add: 'Definitiva →', d_rem: '← Tirar',
       d_empty_cand: 'Ninguém com esses filtros.', d_empty_def: 'Arraste para cá quem vai na migração.',
       d_farm: 'Farm de {d}', d_farm0: 'Farm', d_vs: 'VS {m}/{d} ({p})', d_doa: 'Doação {p}', d_t10: 'T10 {p}', d_pend: 'sem resposta', d_nao: 'não vai', d_nodata: 'sem VS/doação',
       tab_lista: 'Lista', tab_analise: 'Análise', all: 'Todos', sit_vai: 'Vão', sit_nao: 'Não vão', sit_pendente: 'Sem resposta',
@@ -1236,7 +1237,7 @@
   const VAGAS = { Advanced: 3, Intermediate: 30, Regular: 30 };
 
   // ---- aba "Lista definitiva": duas colunas; o campo definitiva (true) fica em cada membro do banco
-  const D = { q: '', tier: 'Regular', sit: 'vai', ord: 'desemp', ord2: 'score', drag: null };
+  const D = { q: '', tier: 'Regular', sit: 'vai', ord: 'desemp', ord2: 'score', tier2: '', drag: null };
   const dSort = (k) => (a, b) => k === 'nome' ? String(a.nome).localeCompare(String(b.nome))
     : k === 'score' ? (b._score ?? -1) - (a._score ?? -1)
     : ((b._perf && b._perf.idx != null ? b._perf.idx : -1) - (a._perf && a._perf.idx != null ? a._perf.idx : -1)) || (b._score ?? -1) - (a._score ?? -1);
@@ -1299,12 +1300,14 @@
     const cand = state.rows.filter((m) => m.definitiva !== true && m.status !== 'nao' && (!D.sit || m.status === D.sit) && (!D.tier || m._tier === D.tier)
       && (!q || String(m.nome || '').toLowerCase().includes(q) || String(m.dono || '').toLowerCase().includes(q))).sort(dSort(D.ord));
     fillList('d-cand', cand, 'd_empty_cand');
-    fillList('d-def', def, 'd_empty_def');
+    const defShown = D.tier2 ? def.filter((m) => m._tier === D.tier2) : def;
+    fillList('d-def', defShown, 'd_empty_def');
     $('d-cand-n').textContent = t('d_n_cand', { n: cand.length });
-    const nr = def.filter((m) => m._tier === 'Regular').length, ni = def.filter((m) => m._tier === 'Intermediate').length;
+    const nr = def.filter((m) => m._tier === 'Regular').length, ni = def.filter((m) => m._tier === 'Intermediate').length, na = def.filter((m) => m._tier === 'Advanced').length;
     const box = $('d-def-n'); box.replaceChildren();
-    const b = document.createElement('b'); b.className = nr > VAGAS.Regular || ni > VAGAS.Intermediate ? 'over' : 'ok';
-    b.textContent = t('d_n_def', { n: def.length, r: nr, cr: VAGAS.Regular, i: ni, ci: VAGAS.Intermediate }); box.appendChild(b);
+    const b = document.createElement('b'); b.className = nr > VAGAS.Regular || ni > VAGAS.Intermediate || na > VAGAS.Advanced ? 'over' : 'ok';
+    b.textContent = t('d_n_def', { n: def.length, a: na, ca: VAGAS.Advanced, r: nr, cr: VAGAS.Regular, i: ni, ci: VAGAS.Intermediate })
+      + (D.tier2 ? ' · ' + t('d_n_shown', { n: defShown.length }) : ''); box.appendChild(b);
   };
   ['d-col-cand', 'd-col-def'].forEach((id) => {
     const col = $(id);
@@ -1317,7 +1320,7 @@
     });
   });
   $('d-q').addEventListener('input', (e) => { D.q = e.target.value; renderDefin(); });
-  [['d-tier', 'tier'], ['d-sit', 'sit'], ['d-ord', 'ord'], ['d-ord2', 'ord2']].forEach(([id, k]) => $(id).addEventListener('change', (e) => { D[k] = e.target.value; renderDefin(); }));
+  [['d-tier', 'tier'], ['d-sit', 'sit'], ['d-ord', 'ord'], ['d-ord2', 'ord2'], ['d-tier2', 'tier2']].forEach(([id, k]) => $(id).addEventListener('change', (e) => { D[k] = e.target.value; renderDefin(); }));
 
   // ---- aba "Subir de tier": Regulares confirmados mais perto do limite do Intermediário
   const renderSubir = () => {
