@@ -498,10 +498,11 @@
       s_cand_t: 'Regulares confirmados mais perto de virar Intermediário ({n})', s_cand_d: 'Quem vai e é Regular, do mais perto para o mais longe de {l}. "Só herói" é quanto de poder de herói falta (cada 1M de herói vale 1,2M de score). "Com T10" é o score se liberar a T10; depois dela, cada 1M de herói vale 1,97M. Fácil: até 3,5M de herói. Possível: até 7M de herói, ou a T10 mais até 1,5M de herói. Não aparece quem precisa de mais de 15M de herói.',
       h_falta: 'Falta', h_soheroi: 'Só herói', h_comt10: 'Com T10', h_heroit10: 'Herói após T10', h_chance: 'Em 15 dias', ch_facil: 'Fácil', ch_poss: 'Possível', ch_longe: 'Longe', ch_ja: 'Já liberou T10',
       s_reg_over: 'Regular: {n} acima das vagas', s_reg_ok: 'Regular: dentro das vagas', s_int_left: 'Intermediário: {n} vagas livres', s_hidden: '{n} Regulares confirmados precisam de mais de 15M de herói e ficaram fora da lista.', s_none: 'Nenhum Regular confirmado com score calculado.',
-      tab_defin: 'Lista definitiva', d_cand_t: 'Candidatos', d_def_t: 'Lista definitiva', d_q: 'Buscar jogador', d_sit_all: 'Vão + sem resposta',
+      tab_defin: 'Lista definitiva', d_cand_t: 'Candidatos', d_def_t: 'Lista definitiva', d_q: 'Buscar nas duas colunas', d_sit_all: 'Vão + sem resposta',
       d_o_desemp: 'Melhor desempenho', d_o_score: 'Maior score', d_o_nome: 'Nome',
       d_intro: 'Arraste os cartões de uma coluna para a outra (ou use o botão do cartão). A lista definitiva fica salva para todos que abrirem a página. Vagas no {s}: Regular {r}, Intermediate {i}.', d_intro_perf: 'VS e doação vêm da dash de acompanhamento ({d} dias fechados, até {a}).', d_intro_noperf: 'VS e doação só aparecem para quem entra com login.',
       d_intro_ro: 'Só quem pode editar a página move os cartões.', mk_sobe: 'Perspectiva de subir de classe', mk_avaliar: 'Avaliar ainda', lg_farm: 'Conta farm', lg_sec: 'Conta secundária',
+      d_q_on: 'Busca "{q}": {a} em candidatos, {b} na definitiva (filtros ignorados)', d_q_none: 'Ninguém com esse nome na lista definitiva.',
       d_kpi_on: 'Filtro: {k} ({n})', d_kpi_off: '✕ Mostrar todos',
       k_total: 'Contas na lista', k_total_t: '{t} na lista', k_vagas: '{n} vagas no total', k_prin: 'Membros ativos', k_prin_s: 'sem farm e secundária', k_de: 'de {n} vagas',
       k_sec: 'Contas secundárias', k_farm: 'Contas farm', k_farmfora: 'Farms sem liderança', k_farmfora_s: 'dono não é R4/R5',
@@ -1371,14 +1372,17 @@
       + (P ? t('d_intro_perf', { d: Math.max(0, ...state.rows.map((m) => (m._perf && m._perf.p && m._perf.p.d) || 0)), a: P.ate ? dmy(P.ate) : '—' }) : t('d_intro_noperf'))
       + (state.readOnly ? ' ' + t('d_intro_ro') : '');
     const def = state.rows.filter((m) => m.definitiva === true).sort(dSort(D.ord2));
+    // a busca vale para as duas colunas e passa por cima dos filtros de tier, situação e indicador: mostra onde o jogador está
     const q = D.q.trim().toLowerCase();
-    const cand = state.rows.filter((m) => m.definitiva !== true && m.status !== 'nao' && (!D.sit || m.status === D.sit) && (!D.tier || m._tier === D.tier)
-      && (!q || String(m.nome || '').toLowerCase().includes(q) || String(m.dono || '').toLowerCase().includes(q))).sort(dSort(D.ord));
+    const achou = (m) => String(m.nome || '').toLowerCase().includes(q) || String(m.dono || '').toLowerCase().includes(q);
+    const cand = state.rows.filter((m) => m.definitiva !== true && (q ? achou(m)
+      : m.status !== 'nao' && (!D.sit || m.status === D.sit) && (!D.tier || m._tier === D.tier))).sort(dSort(D.ord));
     fillList('d-cand', cand, 'd_empty_cand');
-    const defShown = def.filter((m) => (!D.tier2 || m._tier === D.tier2) && (!D.kpiIds || D.kpiIds.has(m.id)));
-    fillList('d-def', defShown, 'd_empty_def');
-    const fb = $('d-kpi-filtro'); fb.hidden = !D.kpiIds;
-    if (D.kpiIds) $('d-kpi-nome').textContent = t('d_kpi_on', { k: D.kpiLabel, n: defShown.length });
+    const defShown = def.filter((m) => q ? achou(m) : (!D.tier2 || m._tier === D.tier2) && (!D.kpiIds || D.kpiIds.has(m.id)));
+    fillList('d-def', defShown, q ? 'd_q_none' : 'd_empty_def');
+    const fb = $('d-kpi-filtro'); fb.hidden = !D.kpiIds && !q;
+    if (q) $('d-kpi-nome').textContent = t('d_q_on', { q: D.q.trim(), a: cand.length, b: defShown.length });
+    else if (D.kpiIds) $('d-kpi-nome').textContent = t('d_kpi_on', { k: D.kpiLabel, n: defShown.length });
     $('d-cand-n').textContent = t('d_n_cand', { n: cand.length });
     const nr = def.filter((m) => m._tier === 'Regular').length, ni = def.filter((m) => m._tier === 'Intermediate').length, na = def.filter((m) => m._tier === 'Advanced').length;
     const box = $('d-def-n'); box.replaceChildren();
@@ -1396,7 +1400,7 @@
       if (m) setDef(m, col.dataset.side === 'def');
     });
   });
-  $('d-kpi-limpar').addEventListener('click', () => { D.kpi = null; renderDefin(); });
+  $('d-kpi-limpar').addEventListener('click', () => { if (D.q.trim()) { D.q = ''; $('d-q').value = ''; } else D.kpi = null; renderDefin(); });
   $('d-q').addEventListener('input', (e) => { D.q = e.target.value; renderDefin(); });
   [['d-tier', 'tier'], ['d-sit', 'sit'], ['d-ord', 'ord'], ['d-ord2', 'ord2'], ['d-tier2', 'tier2']].forEach(([id, k]) => $(id).addEventListener('change', (e) => { D[k] = e.target.value; renderDefin(); }));
 
