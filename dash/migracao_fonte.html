@@ -137,7 +137,12 @@
   .card .cm { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px; font-variant-numeric: tabular-nums; }
   .card .cm span { background: var(--soft); border-radius: 999px; padding: 1px 8px; }
   .card .cm .p-baixo { background: var(--no-bg); color: var(--no); font-weight: 600; } .card .cm .p-atencao { background: var(--wait-bg); color: var(--wait); font-weight: 600; } .card .cm .p-bom { background: var(--go-bg); color: var(--go); font-weight: 600; }
-  .card .cm .farm { background: var(--wait-bg); color: var(--wait); } .card .cm .pend { background: var(--no-bg); color: var(--no); }
+  .card .cm .farm { background: var(--soft); color: var(--muted); font-weight: 600; }
+  .card .cm .mk-sobe { background: var(--go-bg); color: var(--go); font-weight: 600; } .card .cm .mk-avaliar { background: var(--wait-bg); color: var(--wait); font-weight: 600; }
+  .card.mk-sobe { border-left: 4px solid var(--go); } .card.mk-avaliar { border-left: 4px solid var(--wait); }
+  .blegend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--muted); }
+  .blegend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+  .blegend .l-sobe::before { background: var(--go); } .blegend .l-avaliar::before { background: var(--wait); } .card .cm .pend { background: var(--no-bg); color: var(--no); }
   .card .co { grid-column: 1 / -1; color: var(--muted); font-size: 12px; }
   .card button { font: inherit; font-size: 13px; font-weight: 600; padding: 3px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--fg); cursor: pointer; align-self: start; white-space: nowrap; }
   .card button:hover { border-color: var(--accent); }
@@ -419,6 +424,7 @@
 
   <div class="view" id="v-defin" role="tabpanel" aria-labelledby="tab-defin" hidden>
     <p class="msg" id="d-intro"></p>
+    <div class="blegend"><span class="l-sobe" data-i18n="mk_sobe">Perspectiva de subir de classe</span><span class="l-avaliar" data-i18n="mk_avaliar">Farm secundária: avaliar ainda</span></div>
     <div class="board">
       <section class="bcol" id="d-col-cand" data-side="cand" aria-labelledby="d-cand-t">
         <div class="bhead"><h3 id="d-cand-t" data-i18n="d_cand_t">Candidatos</h3><span class="bcount" id="d-cand-n"></span></div>
@@ -469,7 +475,7 @@
       tab_defin: 'Lista definitiva', d_cand_t: 'Candidatos', d_def_t: 'Lista definitiva', d_q: 'Buscar jogador', d_sit_all: 'Vão + sem resposta',
       d_o_desemp: 'Melhor desempenho', d_o_score: 'Maior score', d_o_nome: 'Nome',
       d_intro: 'Arraste os cartões de uma coluna para a outra (ou use o botão do cartão). A lista definitiva fica salva para todos que abrirem a página. Vagas no {s}: Regular {r}, Intermediate {i}.', d_intro_perf: 'VS e doação vêm da dash de acompanhamento ({d} dias fechados, até {a}).', d_intro_noperf: 'VS e doação só aparecem para quem entra com login.',
-      d_intro_ro: 'Só quem pode editar a página move os cartões.',
+      d_intro_ro: 'Só quem pode editar a página move os cartões.', mk_sobe: 'Perspectiva de subir de classe', mk_avaliar: 'Farm secundária: avaliar ainda',
       d_n_cand: '{n} na coluna', d_n_def: '{n} na lista · Regular {r} de {cr} · Intermediate {i} de {ci}', d_add: 'Definitiva →', d_rem: '← Tirar',
       d_empty_cand: 'Ninguém com esses filtros.', d_empty_def: 'Arraste para cá quem vai na migração.',
       d_farm: 'Farm de {d}', d_farm0: 'Farm', d_vs: 'VS {m}/{d} ({p})', d_doa: 'Doação {p}', d_t10: 'T10 {p}', d_pend: 'sem resposta', d_nao: 'não vai', d_nodata: 'sem VS/doação',
@@ -1235,7 +1241,8 @@
     catch (e) { m.definitiva = prev; render(); fail(e); }
   };
   const dCard = (m, isDef) => {
-    const el = document.createElement('div'); el.className = 'card'; el.dataset.id = m.id;
+    const mk = m.marca === 'sobe' || m.marca === 'avaliar' ? m.marca : '';
+    const el = document.createElement('div'); el.className = 'card' + (mk ? ' mk-' + mk : ''); el.dataset.id = m.id;
     const nm = document.createElement('div'); nm.className = 'cn';
     const n1 = document.createElement('span'); n1.textContent = m.nome || m.id; nm.appendChild(n1);
     const meta = [m.alianca !== 'DEDZ' ? m.alianca : '', m.cargo || '', m.sede ? 'Sede ' + m.sede : ''].filter(Boolean).join(' · ');
@@ -1250,6 +1257,7 @@
     } else el.appendChild(document.createElement('span'));
     const cm = document.createElement('div'); cm.className = 'cm';
     const chip = (txt, cls) => { const s = document.createElement('span'); s.textContent = txt; if (cls) s.className = cls; cm.appendChild(s); return s; };
+    if (mk) chip(t('mk_' + mk), 'mk-' + mk);
     if (m.conta === 'farm') chip(m.dono ? t('d_farm', { d: m.dono }) : t('d_farm0'), 'farm');
     if (m._tier) chip(m._tier + ' · ' + mi(m._score), 'tier-' + m._tier); else chip(t('no_score'));
     if (m.poder) chip('PC ' + mi(m.poder));
