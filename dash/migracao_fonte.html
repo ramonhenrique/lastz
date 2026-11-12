@@ -1418,29 +1418,28 @@
     const contaTxt = { farm: 'Farm', secundaria: 'Secundária' };
     const head = ['Jogador', 'Aliança', 'Zona', 'Cargo', 'Sede', 'Tier', 'Migration Score (M)', 'PC (M)', 'Herói (M)', 'Veículo (M)', 'T10 %', 'Tipo de conta', 'Dono', 'Situação',
       'VS na meta (semana passada)', 'Doação %', 'Desempenho', 'Sinal', 'Marcação', 'Observação'];
-    const lines = [head.map(esc).join(';')];
+    const vals = [];
     rows.forEach((m) => {
       const p = m._perf, pp = p && p.p;
-      lines.push([m.nome, m.alianca, m.zona || '', m.cargo || '', m.sede ?? '', m._tier || '', num(m._score, 1), num(m.poder, 1), num(m.heroi, 1), num(m.veiculo, 1),
+      vals.push([m.nome, m.alianca, m.zona || '', m.cargo || '', m.sede ?? '', m._tier || '', num(m._score, 1), num(m.poder, 1), num(m.heroi, 1), num(m.veiculo, 1),
         m.t10 == null ? '' : Math.round(m.t10 * 100), contaTxt[m.conta] || 'Principal', m.dono || '', sitLabel(m.status),
         pp && pp.d ? pp.m + '/' + pp.d : '', pp && pp.dm ? Math.round(pp.doa / pp.dm * 100) : '', p ? p.label : '', m._sinal ? m._sinal.label : '',
-        m.marca === 'sobe' ? t('mk_sobe') : m.marca === 'avaliar' ? t('mk_avaliar') : '', m.obs || ''].map(esc).join(';'));
+        m.marca === 'sobe' ? t('mk_sobe') : m.marca === 'avaliar' ? t('mk_avaliar') : '', m.obs || '']);
     });
-    const data = '﻿' + lines.join('\r\n');
+    const data = '﻿' + [head].concat(vals).map((r) => r.map(esc).join(';')).join('\r\n');
     const dia = new Date().toISOString().slice(0, 10), filename = 'lista_definitiva_' + dia + '.csv';
     if (dl) {
       try { await dl.save({ filename, data }); return; }
       catch (e) { if (e && e.code === 'declined') return; }   // outro erro (ex.: fora da organização): cai no copiar e colar
     }
     // versão pública: a plataforma não deixa baixar para quem é de fora, então mostra a tabela pronta para copiar e colar no Excel
-    const tsv = lines.map((l) => l.split(';').join('\t')).join('\r\n');
+    const cel = (v) => String(v ?? '').replace(/[\t\r\n]+/g, ' ');
     const box = $('d-xls-box'), ta = $('d-xls-txt');
-    ta.value = [head.join('\t')].concat(rows.map((m, i) => lines[i + 1].replace(/;/g, '\t'))).join('\r\n');
+    ta.value = [head].concat(vals).map((r) => r.map(cel).join('\t')).join('\r\n');
     box.hidden = false; ta.focus(); ta.select();
     let ok = false;
     try { await navigator.clipboard.writeText(ta.value); ok = true; } catch (_) { try { ok = document.execCommand('copy'); } catch (_) {} }
     $('d-xls-msg').textContent = ok ? t('d_xls_ok', { n: rows.length }) : t('d_xls_man');
-    void tsv;
   });
   $('d-xls-fechar').addEventListener('click', () => { $('d-xls-box').hidden = true; });
   $('d-xls-copiar').addEventListener('click', async () => {
