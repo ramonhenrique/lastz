@@ -112,6 +112,8 @@ $foraGrupo = New-Object System.Collections.ArrayList
 foreach ($id in @($docs.Keys | Sort-Object)) {
   if ($ORGANIZA -contains $id -or $nosGrupos.ContainsKey($id) -or $jaMudou.ContainsKey($id)) { continue }
   if ($docs[$id].status -ne 'vai') { continue }
+  # farms cadastradas à mão como "vai" a pedido do Ramon (origem manual) não dependem dos grupos
+  if ($docs[$id].origem -eq 'manual' -and $docs[$id].conta -eq 'farm') { continue }
   Mudar $id 'pendente' "não está nos grupos de migração ($Hoje)"; [void]$foraGrupo.Add("$($docs[$id].nome): vai -> sem resposta")
 }
 
