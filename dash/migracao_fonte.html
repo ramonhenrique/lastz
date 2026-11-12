@@ -118,6 +118,30 @@
   .tscroll { overflow-x: auto; }
   .tscroll.tall { max-height: 380px; overflow-y: auto; }
   .agrid .full { grid-column: 1 / -1; }
+  /* aba Lista definitiva: duas colunas, arrastar de uma para a outra */
+  .board { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); align-items: start; }
+  .bcol { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 12px; display: grid; gap: 10px; align-content: start; min-height: 240px; }
+  .bcol.drop { outline: 2px dashed var(--accent); outline-offset: -4px; background: var(--soft); }
+  .bhead { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: baseline; justify-content: space-between; }
+  .bhead h3 { margin: 0; font-family: var(--f-display); font-weight: 600; font-size: 19px; }
+  .bcount { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .bcount b.over { color: var(--no); } .bcount b.ok { color: var(--go); }
+  .btools { display: flex; flex-wrap: wrap; gap: 6px; }
+  .btools input, .btools select { font: inherit; font-size: 14px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); min-width: 0; }
+  .btools input { flex: 1 1 140px; }
+  .blist { display: grid; gap: 8px; max-height: 70vh; overflow: auto; padding-right: 2px; }
+  .card { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--bg); display: grid; grid-template-columns: 1fr auto; gap: 4px 8px; font-size: 13px; }
+  .card[draggable="true"] { cursor: grab; } .card.dragging { opacity: .45; }
+  .card .cn { font-weight: 600; font-size: 15px; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; }
+  .card .cn small { font-weight: 500; color: var(--muted); font-size: 12px; }
+  .card .cm { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px; font-variant-numeric: tabular-nums; }
+  .card .cm span { background: var(--soft); border-radius: 999px; padding: 1px 8px; }
+  .card .cm .p-baixo { background: var(--no-bg); color: var(--no); font-weight: 600; } .card .cm .p-atencao { background: var(--wait-bg); color: var(--wait); font-weight: 600; } .card .cm .p-bom { background: var(--go-bg); color: var(--go); font-weight: 600; }
+  .card .cm .farm { background: var(--wait-bg); color: var(--wait); } .card .cm .pend { background: var(--no-bg); color: var(--no); }
+  .card .co { grid-column: 1 / -1; color: var(--muted); font-size: 12px; }
+  .card button { font: inherit; font-size: 13px; font-weight: 600; padding: 3px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--fg); cursor: pointer; align-self: start; white-space: nowrap; }
+  .card button:hover { border-color: var(--accent); }
+  .bempty { color: var(--muted); font-size: 14px; padding: 18px 4px; text-align: center; }
   .atable td.neg { color: var(--no); font-weight: 600; } .atable td.pos { color: var(--go); }
   #a-limite td:last-child { white-space: normal; min-width: 120px; }
   .pchip { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--soft); color: var(--muted); cursor: help; }
@@ -240,6 +264,7 @@
     <button type="button" role="tab" id="tab-lista" data-view="lista" aria-selected="true" aria-controls="v-lista" data-i18n="tab_lista">Lista</button>
     <button type="button" role="tab" id="tab-analise" data-view="analise" aria-selected="false" aria-controls="v-analise" data-i18n="tab_analise">Análise</button>
     <button type="button" role="tab" id="tab-subir" data-view="subir" aria-selected="false" aria-controls="v-subir" data-i18n="tab_subir">Subir de tier</button>
+    <button type="button" role="tab" id="tab-defin" data-view="defin" aria-selected="false" aria-controls="v-defin" data-i18n="tab_defin">Lista definitiva</button>
   </nav>
 
   <div class="view" id="v-lista" role="tabpanel" aria-labelledby="tab-lista">
@@ -392,6 +417,29 @@
     </div>
   </div>
 
+  <div class="view" id="v-defin" role="tabpanel" aria-labelledby="tab-defin" hidden>
+    <p class="msg" id="d-intro"></p>
+    <div class="board">
+      <section class="bcol" id="d-col-cand" data-side="cand" aria-labelledby="d-cand-t">
+        <div class="bhead"><h3 id="d-cand-t" data-i18n="d_cand_t">Candidatos</h3><span class="bcount" id="d-cand-n"></span></div>
+        <div class="btools">
+          <input type="search" id="d-q" data-i18n-ph="d_q" placeholder="Buscar jogador">
+          <select id="d-tier" aria-label="Tier"><option value="Regular" selected>Regular</option><option value="Intermediate">Intermediate</option><option value="">Todos os tiers</option></select>
+          <select id="d-sit" aria-label="Situação"><option value="vai" selected data-i18n="sit_vai">Vão</option><option value="pendente" data-i18n="sit_pendente">Sem resposta</option><option value="" data-i18n="d_sit_all">Vão + sem resposta</option></select>
+          <select id="d-ord" aria-label="Ordem"><option value="desemp" selected data-i18n="d_o_desemp">Melhor desempenho</option><option value="score" data-i18n="d_o_score">Maior score</option><option value="nome" data-i18n="d_o_nome">Nome</option></select>
+        </div>
+        <div class="blist" id="d-cand"></div>
+      </section>
+      <section class="bcol" id="d-col-def" data-side="def" aria-labelledby="d-def-t">
+        <div class="bhead"><h3 id="d-def-t" data-i18n="d_def_t">Lista definitiva</h3><span class="bcount" id="d-def-n"></span></div>
+        <div class="btools">
+          <select id="d-ord2" aria-label="Ordem"><option value="desemp" data-i18n="d_o_desemp">Melhor desempenho</option><option value="score" selected data-i18n="d_o_score">Maior score</option><option value="nome" data-i18n="d_o_nome">Nome</option></select>
+        </div>
+        <div class="blist" id="d-def"></div>
+      </section>
+    </div>
+  </div>
+
   <footer>
     <p id="pub-at"></p>
     <p data-i18n="foot1">Poder e componentes lidos no jogo em 28/10/2026 (Detalhes &gt; PC). Poder de arena da lista no modo "combate da arena" (atualizado em 29/10/2026), arredondado em 0,1M. T10 da lista manual da aliança.</p>
@@ -418,6 +466,13 @@
       s_cand_t: 'Regulares confirmados mais perto de virar Intermediário ({n})', s_cand_d: 'Quem vai e é Regular, do mais perto para o mais longe de {l}. "Só herói" é quanto de poder de herói falta (cada 1M de herói vale 1,2M de score). "Com T10" é o score se liberar a T10; depois dela, cada 1M de herói vale 1,97M. Fácil: até 3,5M de herói. Possível: até 7M de herói, ou a T10 mais até 1,5M de herói. Não aparece quem precisa de mais de 15M de herói.',
       h_falta: 'Falta', h_soheroi: 'Só herói', h_comt10: 'Com T10', h_heroit10: 'Herói após T10', h_chance: 'Em 15 dias', ch_facil: 'Fácil', ch_poss: 'Possível', ch_longe: 'Longe', ch_ja: 'Já liberou T10',
       s_reg_over: 'Regular: {n} acima das vagas', s_reg_ok: 'Regular: dentro das vagas', s_int_left: 'Intermediário: {n} vagas livres', s_hidden: '{n} Regulares confirmados precisam de mais de 15M de herói e ficaram fora da lista.', s_none: 'Nenhum Regular confirmado com score calculado.',
+      tab_defin: 'Lista definitiva', d_cand_t: 'Candidatos', d_def_t: 'Lista definitiva', d_q: 'Buscar jogador', d_sit_all: 'Vão + sem resposta',
+      d_o_desemp: 'Melhor desempenho', d_o_score: 'Maior score', d_o_nome: 'Nome',
+      d_intro: 'Arraste os cartões de uma coluna para a outra (ou use o botão do cartão). A lista definitiva fica salva para todos que abrirem a página. Vagas no {s}: Regular {r}, Intermediate {i}.', d_intro_perf: 'VS e doação vêm da dash de acompanhamento ({d} dias fechados, até {a}).', d_intro_noperf: 'VS e doação só aparecem para quem entra com login.',
+      d_intro_ro: 'Só quem pode editar a página move os cartões.',
+      d_n_cand: '{n} na coluna', d_n_def: '{n} na lista · Regular {r} de {cr} · Intermediate {i} de {ci}', d_add: 'Definitiva →', d_rem: '← Tirar',
+      d_empty_cand: 'Ninguém com esses filtros.', d_empty_def: 'Arraste para cá quem vai na migração.',
+      d_farm: 'Farm de {d}', d_farm0: 'Farm', d_vs: 'VS {m}/{d} ({p})', d_doa: 'Doação {p}', d_t10: 'T10 {p}', d_pend: 'sem resposta', d_nao: 'não vai', d_nodata: 'sem VS/doação',
       tab_lista: 'Lista', tab_analise: 'Análise', all: 'Todos', sit_vai: 'Vão', sit_nao: 'Não vão', sit_pendente: 'Sem resposta',
       c_desemp: 'Desempenho', c_sinal: 'Sinal', p_bom: 'Bom', p_atencao: 'Atenção', p_baixo: 'Baixo empenho', p_novato: 'Novato', p_fora: 'Outra aliança', p_semdados: 'Sem dados',
       pt_vs: 'VS na meta em {m} de {d} dias ({p}), {z} zerado(s)', pt_doa: 'doação {a} de {b} ({p})', pt_ate: 'dados da dash de acompanhamento até {d}',
@@ -1168,6 +1223,86 @@
   const DESTINO = 609;
   const VAGAS = { Advanced: 3, Intermediate: 30, Regular: 30 };
 
+  // ---- aba "Lista definitiva": duas colunas; o campo definitiva (true) fica em cada membro do banco
+  const D = { q: '', tier: 'Regular', sit: 'vai', ord: 'desemp', ord2: 'score', drag: null };
+  const dSort = (k) => (a, b) => k === 'nome' ? String(a.nome).localeCompare(String(b.nome))
+    : k === 'score' ? (b._score ?? -1) - (a._score ?? -1)
+    : ((b._perf && b._perf.idx != null ? b._perf.idx : -1) - (a._perf && a._perf.idx != null ? a._perf.idx : -1)) || (b._score ?? -1) - (a._score ?? -1);
+  const setDef = async (m, v) => {
+    if (state.readOnly || !db || (m.definitiva === true) === v) return;
+    const prev = m.definitiva; m.definitiva = v; render();
+    try { await db.doc('membros/' + m.id).update({ definitiva: v }); }
+    catch (e) { m.definitiva = prev; render(); fail(e); }
+  };
+  const dCard = (m, isDef) => {
+    const el = document.createElement('div'); el.className = 'card'; el.dataset.id = m.id;
+    const nm = document.createElement('div'); nm.className = 'cn';
+    const n1 = document.createElement('span'); n1.textContent = m.nome || m.id; nm.appendChild(n1);
+    const meta = [m.alianca !== 'DEDZ' ? m.alianca : '', m.cargo || '', m.sede ? 'Sede ' + m.sede : ''].filter(Boolean).join(' · ');
+    if (meta) { const s = document.createElement('small'); s.textContent = meta; nm.appendChild(s); }
+    el.appendChild(nm);
+    if (!state.readOnly && db) {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = isDef ? t('d_rem') : t('d_add');
+      b.addEventListener('click', () => setDef(m, !isDef)); el.appendChild(b);
+      el.draggable = true;
+      el.addEventListener('dragstart', (e) => { D.drag = m.id; el.classList.add('dragging'); try { e.dataTransfer.setData('text/plain', m.id); e.dataTransfer.effectAllowed = 'move'; } catch (_) {} });
+      el.addEventListener('dragend', () => { D.drag = null; el.classList.remove('dragging'); document.querySelectorAll('.bcol.drop').forEach((c) => c.classList.remove('drop')); });
+    } else el.appendChild(document.createElement('span'));
+    const cm = document.createElement('div'); cm.className = 'cm';
+    const chip = (txt, cls) => { const s = document.createElement('span'); s.textContent = txt; if (cls) s.className = cls; cm.appendChild(s); return s; };
+    if (m.conta === 'farm') chip(m.dono ? t('d_farm', { d: m.dono }) : t('d_farm0'), 'farm');
+    if (m._tier) chip(m._tier + ' · ' + mi(m._score), 'tier-' + m._tier); else chip(t('no_score'));
+    if (m.poder) chip('PC ' + mi(m.poder));
+    const p = m._perf;
+    if (p && p.p) {
+      chip(t('d_vs', { m: p.p.m, d: p.p.d, p: pctTxt(p.vs) }));
+      if (p.p.dm) chip(t('d_doa', { p: pctTxt(p.doa) }));
+      chip(p.label, p.cls).title = p.tip;
+    } else if (p) chip(p.label).title = p.tip || '';
+    else if (state.perf == null && m.alianca === 'DEDZ') chip(t('d_nodata'));
+    if (m.t10 != null) chip(t('d_t10', { p: Math.round(m.t10 * 100) + '%' }));
+    if (m.status !== 'vai') chip(m.status === 'nao' ? t('d_nao') : t('d_pend'), 'pend');
+    if (m._sinal && m._sinal.k !== 'lid') chip(m._sinal.label, m._sinal.cls).title = m._sinal.tip;
+    el.appendChild(cm);
+    if (m.obs) { const o = document.createElement('div'); o.className = 'co'; o.textContent = m.obs; el.appendChild(o); }
+    return el;
+  };
+  const fillList = (id, rows, emptyKey) => {
+    const box = $(id); box.replaceChildren();
+    if (!rows.length) { const e = document.createElement('div'); e.className = 'bempty'; e.textContent = state.loaded ? t(emptyKey) : t('loading'); box.appendChild(e); return; }
+    const isDef = id === 'd-def'; rows.forEach((m) => box.appendChild(dCard(m, isDef)));
+  };
+  const renderDefin = () => {
+    if ($('v-defin').hidden) return;
+    const P = state.perf;
+    $('d-intro').textContent = t('d_intro', { s: DESTINO, r: VAGAS.Regular, i: VAGAS.Intermediate }) + ' '
+      + (P ? t('d_intro_perf', { d: Math.max(0, ...state.rows.map((m) => (m._perf && m._perf.p && m._perf.p.d) || 0)), a: P.ate ? dmy(P.ate) : '—' }) : t('d_intro_noperf'))
+      + (state.readOnly ? ' ' + t('d_intro_ro') : '');
+    const def = state.rows.filter((m) => m.definitiva === true).sort(dSort(D.ord2));
+    const q = D.q.trim().toLowerCase();
+    const cand = state.rows.filter((m) => m.definitiva !== true && m.status !== 'nao' && (!D.sit || m.status === D.sit) && (!D.tier || m._tier === D.tier)
+      && (!q || String(m.nome || '').toLowerCase().includes(q) || String(m.dono || '').toLowerCase().includes(q))).sort(dSort(D.ord));
+    fillList('d-cand', cand, 'd_empty_cand');
+    fillList('d-def', def, 'd_empty_def');
+    $('d-cand-n').textContent = t('d_n_cand', { n: cand.length });
+    const nr = def.filter((m) => m._tier === 'Regular').length, ni = def.filter((m) => m._tier === 'Intermediate').length;
+    const box = $('d-def-n'); box.replaceChildren();
+    const b = document.createElement('b'); b.className = nr > VAGAS.Regular || ni > VAGAS.Intermediate ? 'over' : 'ok';
+    b.textContent = t('d_n_def', { n: def.length, r: nr, cr: VAGAS.Regular, i: ni, ci: VAGAS.Intermediate }); box.appendChild(b);
+  };
+  ['d-col-cand', 'd-col-def'].forEach((id) => {
+    const col = $(id);
+    col.addEventListener('dragover', (e) => { if (!D.drag) return; e.preventDefault(); col.classList.add('drop'); });
+    col.addEventListener('dragleave', (e) => { if (!col.contains(e.relatedTarget)) col.classList.remove('drop'); });
+    col.addEventListener('drop', (e) => {
+      e.preventDefault(); col.classList.remove('drop');
+      const m = state.rows.find((r) => r.id === D.drag); D.drag = null;
+      if (m) setDef(m, col.dataset.side === 'def');
+    });
+  });
+  $('d-q').addEventListener('input', (e) => { D.q = e.target.value; renderDefin(); });
+  [['d-tier', 'tier'], ['d-sit', 'sit'], ['d-ord', 'ord'], ['d-ord2', 'ord2']].forEach(([id, k]) => $(id).addEventListener('change', (e) => { D[k] = e.target.value; renderDefin(); }));
+
   // ---- aba "Subir de tier": Regulares confirmados mais perto do limite do Intermediário
   const renderSubir = () => {
     if ($('v-subir').hidden) return;
@@ -1238,14 +1373,14 @@
   };
   document.querySelectorAll('[data-season]').forEach((b) => b.addEventListener('click', () => { if (b.dataset.season !== season) setSeason(b.dataset.season, true); }));
 
-  const render = () => { computePerf(); renderStrip(); renderSlots(); renderSeason(); renderHead(); renderBody(); renderAnalise(); renderSubir(); };
+  const render = () => { computePerf(); renderStrip(); renderSlots(); renderSeason(); renderHead(); renderBody(); renderAnalise(); renderSubir(); renderDefin(); };
 
   const showView = (v) => {
-    const views = { lista: 'v-lista', analise: 'v-analise', subir: 'v-subir' };
+    const views = { lista: 'v-lista', analise: 'v-analise', subir: 'v-subir', defin: 'v-defin' };
     if (!views[v]) v = 'lista';
     Object.entries(views).forEach(([k, id]) => { $(id).hidden = k !== v; $('tab-' + k).setAttribute('aria-selected', String(k === v)); });
     try { history.replaceState(null, '', '#' + v); } catch (_) {}
-    renderAnalise(); renderSubir();
+    renderAnalise(); renderSubir(); renderDefin();
   };
   document.querySelectorAll('.tabs [data-view]').forEach((b) => b.addEventListener('click', () => showView(b.dataset.view)));
   document.querySelectorAll('[data-scope]').forEach((b) => b.addEventListener('click', () => {
