@@ -1357,7 +1357,9 @@
     const cap = D.tier2 ? VAGAS[D.tier2] : VAGAS.Advanced + VAGAS.Intermediate + VAGAS.Regular;
     kpi(def.length, D.tier2 ? t('k_total_t', { t: D.tier2 }) : t('k_total'), D.tier2 ? t('k_de', { n: cap }) : t('k_vagas', { n: cap }), D.tier2 && def.length > cap ? 'warn' : '', '', 'total', null);
     kpi(prin.length, t('k_prin'), t('k_prin_s'), '', nomes(prin), 'prin', prin);
-    ['Advanced', 'Intermediate', 'Regular'].forEach((tier) => { const n = tierN(tier); kpi(n, tier, t('k_de', { n: VAGAS[tier] }), (n > VAGAS[tier] ? 'warn' : (n === VAGAS[tier] ? 'ok' : '')) + (D.tier2 ? (D.tier2 === tier ? ' sel' : ' dim') : ''), nomes(all.filter((m) => m._tier === tier)), 'tier:' + tier, null); });
+    const sai = def.filter((m) => m._sinal && m._sinal.k === 'sai');
+    kpi(state.perf ? sai.length : '—', t('s_sai'), state.perf ? '' : t('k_login'), sai.length ? 'warn' : '', nomes(sai), state.perf ? 'sai' : null, sai);
+    ['Intermediate', 'Regular'].forEach((tier) => { const n = tierN(tier); kpi(n, tier, t('k_de', { n: VAGAS[tier] }), (n > VAGAS[tier] ? 'warn' : (n === VAGAS[tier] ? 'ok' : '')) + (D.tier2 ? (D.tier2 === tier ? ' sel' : ' dim') : ''), nomes(all.filter((m) => m._tier === tier)), 'tier:' + tier, null); });
     kpi(secs.length, t('k_sec'), '', 'k-sec', nomes(secs), 'sec', secs);
     kpi(farms.length, t('k_farm'), '', 'k-farm', nomes(farms), 'farm', farms);
     kpi(farmsFora.length, t('k_farmfora'), t('k_farmfora_s'), 'k-farm' + (farmsFora.length ? ' warn' : ''), farmsFora.map((m) => m.nome + (m.dono ? ' (' + m.dono + ')' : '')).join(', '), 'farmfora', farmsFora);
