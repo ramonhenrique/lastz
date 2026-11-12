@@ -34,6 +34,8 @@
   .eyebrow { font-family: var(--f-mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
   h1 { font-family: var(--f-display); font-weight: 700; font-size: clamp(28px, 4vw, 40px); line-height: 1.05; margin: 0; letter-spacing: .01em; text-wrap: balance; }
   .lede { margin: 0; color: var(--muted); max-width: 70ch; }
+  .aprov { padding: 10px 14px; border-radius: var(--r); background: var(--no-bg); color: var(--fg); border: 1px solid var(--no); border-left-width: 5px; font-size: 14px; }
+  .aprov b { color: var(--no); margin-right: 4px; }
   .notice { padding: 10px 14px; border-radius: var(--r); background: var(--wait-bg); color: var(--fg); border: 1px solid var(--line); }
 
   .strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 12px; }
@@ -254,6 +256,7 @@
 
   <div class="notice" id="notice" hidden></div>
 
+  <div class="aprov" role="note"><b data-i18n="aprov_t">⚠ Lista ainda não aprovada</b> <span data-i18n="aprov_d">Os números abaixo contam quem marcou "vai" e ainda não são a lista final. A lista definitiva precisa ser aprovada pela liderança para consolidar a migração.</span></div>
   <section class="strip" data-i18n-aria="summary" aria-label="Resumo">
     <div class="stat go">
       <h2><span class="dot"></span><span data-i18n="st_vai">Vão migrar</span></h2>
@@ -505,6 +508,7 @@
       s_cand_t: 'Regulares confirmados mais perto de virar Intermediário ({n})', s_cand_d: 'Quem vai e é Regular, do mais perto para o mais longe de {l}. "Só herói" é quanto de poder de herói falta (cada 1M de herói vale 1,2M de score). "Com T10" é o score se liberar a T10; depois dela, cada 1M de herói vale 1,97M. Fácil: até 3,5M de herói. Possível: até 7M de herói, ou a T10 mais até 1,5M de herói. Não aparece quem precisa de mais de 15M de herói.',
       h_falta: 'Falta', h_soheroi: 'Só herói', h_comt10: 'Com T10', h_heroit10: 'Herói após T10', h_chance: 'Em 15 dias', ch_facil: 'Fácil', ch_poss: 'Possível', ch_longe: 'Longe', ch_ja: 'Já liberou T10',
       s_reg_over: 'Regular: {n} acima das vagas', s_reg_ok: 'Regular: dentro das vagas', s_int_left: 'Intermediário: {n} vagas livres', s_hidden: '{n} Regulares confirmados precisam de mais de 15M de herói e ficaram fora da lista.', s_none: 'Nenhum Regular confirmado com score calculado.',
+      aprov_t: '⚠ Lista ainda não aprovada', aprov_d: 'Os números abaixo contam quem marcou "vai" e ainda não são a lista final. A lista definitiva precisa ser aprovada pela liderança para consolidar a migração.',
       tab_defin: 'Lista definitiva', d_cand_t: 'Candidatos', d_def_t: 'Lista definitiva', d_q: 'Buscar nas duas colunas', d_sit_all: 'Vão + sem resposta',
       d_o_desemp: 'Melhor desempenho', d_o_score: 'Maior score', d_o_nome: 'Nome',
       d_intro: 'Arraste os cartões de uma coluna para a outra (ou use o botão do cartão). A lista definitiva fica salva para todos que abrirem a página. Vagas no {s}: Regular {r}, Intermediate {i}.', d_intro_perf: 'VS e doação da semana passada ({d} dias, até {a}), da dash de acompanhamento. VS na meta: até 6/9 dos dias é ruim (não deveria ir), acima é bom, a partir de 8/9 é ótimo e 9/9 é excelente.', d_intro_noperf: 'VS e doação só aparecem para quem entra com login.',
@@ -579,6 +583,7 @@
       eyebrow: 'New Deadz [DEDZ] · Zona de guerra #614', title: 'Relevamiento de migración',
       lede: 'Marca quién va a migrar de servidor, agrega jugadores que no están en la lista, corrige los datos de cualquier miembro en "Editar" y elige las columnas que aparecen en la tabla. Las marcas quedan guardadas para todos los que abran esta página.',
       summary: 'Resumen', sections: 'Secciones', st_vai: 'Van a migrar', st_nao: 'No van', st_pendente: 'Sin respuesta',
+      aprov_t: '⚠ Lista aún no aprobada', aprov_d: 'Los números de abajo cuentan a quien marcó "va" y todavía no son la lista final. La lista definitiva debe ser aprobada por el liderazgo para consolidar la migración.',
       tab_subir: 'Subir de tier', s_vag_t: 'Plazas para quien suba', s_vag_d: 'Con {r} plazas de Regular, quien pasa a Intermediate libera una plaza de Regular y ocupa una de las {i} de Intermediate. Cuenta solo a quien está marcado "va".',
       s_cand_t: 'Regulares confirmados más cerca de Intermediate ({n})', s_cand_d: 'Quien va y es Regular, del más cerca al más lejos de {l}. "Solo héroe" es cuánto poder de héroe falta (cada 1M de héroe vale 1,2M de score). "Con T10" es el score al desbloquear T10; después, cada 1M de héroe vale 1,97M. Fácil: hasta 3,5M de héroe. Posible: hasta 7M, o T10 más hasta 1,5M de héroe. No aparece quien necesita más de 15M de héroe.',
       h_falta: 'Falta', h_soheroi: 'Solo héroe', h_comt10: 'Con T10', h_heroit10: 'Héroe tras T10', h_chance: 'En 15 días', ch_facil: 'Fácil', ch_poss: 'Posible', ch_longe: 'Lejos', ch_ja: 'Ya desbloqueó T10',
@@ -643,6 +648,7 @@
       eyebrow: 'New Deadz [DEDZ] · War zone #614', title: 'Migration roster',
       lede: 'Mark who is migrating to the new server, add players who are not on the list, fix any member\'s data with "Edit" and choose which columns the table shows. Your marks are saved for everyone who opens this page.',
       summary: 'Summary', sections: 'Sections', st_vai: 'Migrating', st_nao: 'Not going', st_pendente: 'No answer',
+      aprov_t: '⚠ List not approved yet', aprov_d: 'The numbers below count who marked "going" and are not the final list yet. The final list must be approved by the leadership to lock in the migration.',
       tab_subir: 'Tier up', s_vag_t: 'Slots for players who move up', s_vag_d: 'With {r} Regular slots, whoever reaches Intermediate frees a Regular slot and takes one of the {i} Intermediate slots. Counts only players marked "going".',
       s_cand_t: 'Confirmed Regulars closest to Intermediate ({n})', s_cand_d: 'Going and Regular, from closest to farthest from {l}. "Hero only" is how much hero power is missing (each 1M of hero is 1.2M of score). "With T10" is the score once T10 is unlocked; after that each 1M of hero is worth 1.97M. Easy: up to 3.5M of hero. Possible: up to 7M, or T10 plus up to 1.5M of hero. Players who need more than 15M of hero are left out.',
       h_falta: 'Missing', h_soheroi: 'Hero only', h_comt10: 'With T10', h_heroit10: 'Hero after T10', h_chance: 'In 15 days', ch_facil: 'Easy', ch_poss: 'Possible', ch_longe: 'Far', ch_ja: 'T10 already unlocked',
