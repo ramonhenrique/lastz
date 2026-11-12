@@ -503,7 +503,7 @@
       d_intro: 'Arraste os cartões de uma coluna para a outra (ou use o botão do cartão). A lista definitiva fica salva para todos que abrirem a página. Vagas no {s}: Regular {r}, Intermediate {i}.', d_intro_perf: 'VS e doação vêm da dash de acompanhamento ({d} dias fechados, até {a}).', d_intro_noperf: 'VS e doação só aparecem para quem entra com login.',
       d_intro_ro: 'Só quem pode editar a página move os cartões.', mk_sobe: 'Perspectiva de subir de classe', mk_avaliar: 'Avaliar ainda', lg_farm: 'Conta farm', lg_sec: 'Conta secundária',
       d_q_on: 'Busca "{q}": {a} em candidatos, {b} na definitiva (filtros ignorados)', d_q_none: 'Ninguém com esse nome na lista definitiva.',
-      d_alianca: 'Aliança {a}{z}',
+      d_alianca: 'Aliança {a}{z}', d_fraco: '⚠ Score baixo', d_fraco_t: 'Migration Score abaixo de 20M',
       d_kpi_on: 'Filtro: {k} ({n})', d_kpi_off: '✕ Mostrar todos',
       k_total: 'Contas na lista', k_total_t: '{t} na lista', k_vagas: '{n} vagas no total', k_prin: 'Membros ativos', k_prin_s: 'sem farm e secundária', k_de: 'de {n} vagas',
       k_sec: 'Contas secundárias', k_farm: 'Contas farm', k_farmfora: 'Farms sem liderança', k_farmfora_s: 'dono não é R4/R5',
@@ -1294,6 +1294,7 @@
     if (ct === 'sec') chip(m.dono ? t('d_sec', { d: m.dono }) : t('d_sec0'), 'ct-sec');
     if (mk) chip(t('mk_' + mk), 'mk-' + mk);
     if (m._tier) chip(m._tier + ' · ' + mi(m._score), 'tier-' + m._tier); else chip(t('no_score'));
+    if (m._score != null && m._score < 20e6) chip(t('d_fraco'), 'p-baixo').title = t('d_fraco_t');
     if (m.poder) chip('PC ' + mi(m.poder));
     const p = m._perf;
     if (p && p.p) {
