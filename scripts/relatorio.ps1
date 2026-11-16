@@ -359,10 +359,10 @@ function AnaliseGeral {
   $l.Add("- Previsão no ritmo atual: a aliança fecha a semana com ~$(EmMil $projTime) de $(EmMil $metaTimeSemana) ($(Pct $projTime $metaTimeSemana)).")
   $l.Add("- Só $vaoBater de $total chegam aos 140 mil nesse ritmo; $abaixo100 ficam abaixo de 100 mil.")
   if ($nivel -ne 'NO CAMINHO') {
-    if ($pctProj -lt 1) {
-      $falta = [math]::Max($metaTimeSemana - $somaDoa, 0); $diasRest = [math]::Max(7 - $diasCorridos, 0.5)
+    if ($pctProj -lt 1 -and $diasCorridos -lt 7) {
+      $falta = [math]::Max($metaTimeSemana - $somaDoa, 0); $diasRest = [math]::Max([double](7 - $diasCorridos), 0.5)
       $l.Add("- Para fechar a meta, a aliança precisa doar ~$(EmMil ($falta / $diasRest)) $(if ($refDia -eq 6) { 'até o fim de hoje' } else { 'por dia até domingo' }), contra ~$(EmMil ($somaDoa / $diasCorridos)) por dia até agora.")
-    } else {
+    } elseif ($pctProj -ge 1) {
       $l.Add("- O total só está acima porque uma parte doa bem mais que a meta. Isso não cobre os $($total - $okDoa) atrasados: a meta de 20 mil por dia vale para cada um.")
     }
     $l.Add('- Sem doação a loja da aliança não é reabastecida, e todo mundo perde. Quem está atrasado, coloque em dia hoje.')
@@ -422,10 +422,10 @@ if ($Turno -eq 'alerta') {
   $geral.Add("DOAÇÃO: $(if ($pctNaMeta -lt 0.6 -or $pctProjA -lt 0.8) { 'CRÍTICO' } elseif ($pctNaMeta -lt 0.8 -or $pctProjA -lt 0.95) { 'ATENÇÃO' } else { 'NO CAMINHO' })")
   $geral.Add("- $atrasados de $total estão ATRASADOS na doação (meta de $(EmMil $metaDoa) até hoje)$(if ($abaixoMetadeDoa) { ", e $abaixoMetadeDoa não chegaram nem à metade" }).")
   $geral.Add("- Previsão: a aliança fecha a semana com ~$(EmMil $projTime) de $(EmMil $metaTimeSemana) ($(Pct $projTime $metaTimeSemana)). Só $vaoBater de $total chegam aos 140 mil nesse ritmo.")
-  if ($pctProjA -lt 1) {
-    $faltaD = [math]::Max($metaTimeSemana - $somaDoa, 0); $diasRestD = [math]::Max(7 - $diasCorridos, 0.5)
+  if ($pctProjA -lt 1 -and $diasCorridos -lt 7) {
+    $faltaD = [math]::Max($metaTimeSemana - $somaDoa, 0); $diasRestD = [math]::Max([double](7 - $diasCorridos), 0.5)
     $geral.Add("- Para fechar a meta, a aliança precisa doar ~$(EmMil ($faltaD / $diasRestD)) $(if ($refDia -eq 6) { 'até o fim de hoje' } else { 'por dia até domingo' }), contra ~$(EmMil ($somaDoa / $diasCorridos)) por dia até agora.")
-  } elseif ($atrasados) {
+  } elseif ($pctProjA -ge 1 -and $atrasados) {
     $geral.Add("- O total só está acima porque poucos doam muito. Isso não cobre os $atrasados atrasados: a meta de 20 mil por dia vale para cada um.")
   }
   $geral.Add('- Sem doação a loja da aliança não é reabastecida, e todo mundo perde.')
