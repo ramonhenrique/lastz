@@ -256,7 +256,6 @@
 
   <div class="notice" id="notice" hidden></div>
 
-  <div class="aprov" role="note"><b data-i18n="aprov_t">⚠ Lista ainda não aprovada</b> <span data-i18n="aprov_d">Os números abaixo contam quem marcou "vai" e ainda não são a lista final. A lista definitiva precisa ser aprovada pela liderança para consolidar a migração.</span></div>
   <section class="strip" data-i18n-aria="summary" aria-label="Resumo">
     <div class="stat go">
       <h2><span class="dot"></span><span data-i18n="st_vai">Vão migrar</span></h2>
@@ -459,8 +458,8 @@
         <div class="bhead"><h3 id="d-cand-t" data-i18n="d_cand_t">Candidatos</h3><span class="bcount" id="d-cand-n"></span></div>
         <div class="btools">
           <input type="search" id="d-q" data-i18n-ph="d_q" placeholder="Buscar jogador">
-          <select id="d-tier" aria-label="Tier"><option value="Regular" selected>Regular</option><option value="Intermediate">Intermediate</option><option value="">Todos os tiers</option></select>
-          <select id="d-sit" aria-label="Situação"><option value="vai" selected data-i18n="sit_vai">Vão</option><option value="pendente" data-i18n="sit_pendente">Sem resposta</option><option value="" data-i18n="d_sit_all">Vão + sem resposta</option></select>
+          <select id="d-tier" aria-label="Tier"><option value="" selected data-i18n="d_all_tiers">Todos os tiers</option><option value="Elite">Elite</option><option value="Advanced">Advanced</option><option value="Intermediate">Intermediate</option><option value="Regular">Regular</option></select>
+          <select id="d-sit" aria-label="Situação"><option value="" selected data-i18n="d_sit_all">Todas as situações</option><option value="nao" data-i18n="sit_nao">Não vão</option><option value="vai" data-i18n="sit_vai">Vão</option><option value="pendente" data-i18n="sit_pendente">Sem resposta</option></select>
           <select id="d-ord" aria-label="Ordem"><option value="desemp" selected data-i18n="d_o_desemp">Melhor desempenho</option><option value="score" data-i18n="d_o_score">Maior score</option><option value="nome" data-i18n="d_o_nome">Nome</option></select>
         </div>
         <div class="blist" id="d-cand"></div>
@@ -509,7 +508,7 @@
       h_falta: 'Falta', h_soheroi: 'Só herói', h_comt10: 'Com T10', h_heroit10: 'Herói após T10', h_chance: 'Em 15 dias', ch_facil: 'Fácil', ch_poss: 'Possível', ch_longe: 'Longe', ch_ja: 'Já liberou T10',
       s_reg_over: 'Regular: {n} acima das vagas', s_reg_ok: 'Regular: dentro das vagas', s_int_left: 'Intermediário: {n} vagas livres', s_hidden: '{n} Regulares confirmados precisam de mais de 15M de herói e ficaram fora da lista.', s_none: 'Nenhum Regular confirmado com score calculado.',
       aprov_t: '⚠ Lista ainda não aprovada', aprov_d: 'Os números abaixo contam quem marcou "vai" e ainda não são a lista final. A lista definitiva precisa ser aprovada pela liderança para consolidar a migração.',
-      tab_defin: 'Lista definitiva', d_cand_t: 'Candidatos', d_def_t: 'Lista definitiva', d_q: 'Buscar nas duas colunas', d_sit_all: 'Vão + sem resposta',
+      tab_defin: 'Lista definitiva', d_cand_t: 'Candidatos', d_def_t: 'Lista definitiva', d_q: 'Buscar nas duas colunas', d_sit_all: 'Todas as situações',
       d_o_desemp: 'Melhor desempenho', d_o_score: 'Maior score', d_o_nome: 'Nome',
       d_intro: 'Arraste os cartões de uma coluna para a outra (ou use o botão do cartão). A lista definitiva fica salva para todos que abrirem a página. Vagas no {s}: Regular {r}, Intermediate {i}.', d_intro_perf: 'VS e doação da semana passada ({d} dias, até {a}), da dash de acompanhamento. VS na meta: até 6/9 dos dias é ruim (não deveria ir), acima é bom, a partir de 8/9 é ótimo e 9/9 é excelente.', d_intro_noperf: 'VS e doação só aparecem para quem entra com login.',
       d_intro_ro: 'Só quem pode editar a página move os cartões.', mk_sobe: 'Perspectiva de subir de classe', mk_avaliar: 'Avaliar ainda', lg_farm: 'Conta farm', lg_sec: 'Conta secundária',
@@ -1273,15 +1272,16 @@
   const VAGAS = { Elite: 1, Advanced: 5, Intermediate: 30, Regular: 30 };
 
   // ---- aba "Lista definitiva": duas colunas; o campo definitiva (true) fica em cada membro do banco
-  const D = { q: '', tier: 'Regular', sit: 'vai', ord: 'desemp', ord2: 'score', tier2: '', kpi: null, kpiIds: null, kpiLabel: '', drag: null };
+  const D = { q: '', tier: '', sit: '', ord: 'desemp', ord2: 'score', tier2: '', kpi: null, kpiIds: null, kpiLabel: '', drag: null };
   const dSort = (k) => (a, b) => k === 'nome' ? String(a.nome).localeCompare(String(b.nome))
     : k === 'score' ? (b._score ?? -1) - (a._score ?? -1)
     : ((b._perf && b._perf.idx != null ? b._perf.idx : -1) - (a._perf && a._perf.idx != null ? a._perf.idx : -1)) || (b._score ?? -1) - (a._score ?? -1);
   const setDef = async (m, v) => {
     if (state.readOnly || !db || (m.definitiva === true) === v) return;
-    const prev = m.definitiva; m.definitiva = v; render();
-    try { await db.doc('membros/' + m.id).update({ definitiva: v }); }
-    catch (e) { m.definitiva = prev; render(); fail(e); }
+    // lista aprovada: entrar na definitiva marca "vai", sair marca "não vai"
+    const prev = m.definitiva, prevSt = m.status; m.definitiva = v; m.status = v ? 'vai' : 'nao'; render();
+    try { await db.doc('membros/' + m.id).update({ definitiva: v, status: m.status }); }
+    catch (e) { m.definitiva = prev; m.status = prevSt; render(); fail(e); }
   };
   const dCard = (m, isDef) => {
     const mk = m.marca === 'sobe' || m.marca === 'avaliar' ? m.marca : '';
@@ -1392,7 +1392,7 @@
     const q = D.q.trim().toLowerCase();
     const achou = (m) => String(m.nome || '').toLowerCase().includes(q) || String(m.dono || '').toLowerCase().includes(q);
     const cand = state.rows.filter((m) => m.definitiva !== true && (q ? achou(m)
-      : m.status !== 'nao' && (!D.sit || m.status === D.sit) && (!D.tier || m._tier === D.tier))).sort(dSort(D.ord));
+      : (!D.sit || m.status === D.sit) && (!D.tier || m._tier === D.tier))).sort(dSort(D.ord));
     fillList('d-cand', cand, 'd_empty_cand');
     const defShown = def.filter((m) => q ? achou(m) : (!D.tier2 || m._tier === D.tier2) && (!D.kpiIds || D.kpiIds.has(m.id)));
     fillList('d-def', defShown, q ? 'd_q_none' : 'd_empty_def');
