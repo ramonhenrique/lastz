@@ -730,8 +730,7 @@
   const LIMIT = new Proxy({}, { get: (_, k) => LIMITS[season][k] });
   const STATUS = [['vai', 'b_vai', 't_vai'], ['nao', 'b_nao', 't_nao'], ['pendente', 'b_pend', 't_pend']];
 
-  // quando há o Poder de Migração do jogo (campo migracao, lido no perfil / lastz-servers), ele vale no lugar da estimativa
-  const score = (m) => typeof m.migracao === 'number' ? m.migracao : ['edificio', 'tecnologia', 'heroi', 'veiculo'].every((k) => typeof m[k] === 'number')
+  const score = (m) => ['edificio', 'tecnologia', 'heroi', 'veiculo'].every((k) => typeof m[k] === 'number')
     ? Math.max(0, W.edificio * m.edificio + W.tecnologia * m.tecnologia + W.heroi * m.heroi + W.veiculo * m.veiculo + W.base + (VBONUS[m.veiculoTipo] || 0)
       + (m.t10ok === true ? W.t10 + (season === 's3' ? W.s3t10heroi * m.heroi + W.s3t10base : 0) : 0)) : null;
   const tierOf = (s) => s == null ? null : s <= 0 ? 'Regular' : s > LIMIT.elite ? 'Elite' : s >= LIMIT.advanced ? 'Advanced' : s >= LIMIT.intermediate ? 'Intermediate' : 'Regular';
