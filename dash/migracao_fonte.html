@@ -1269,7 +1269,7 @@
 
   // ---- slots on the destination server (given by the alliance leadership)
   const DESTINO = 609;
-  const VAGAS = { Advanced: 3, Intermediate: 30, Regular: 30 };
+  const VAGAS = { Elite: 1, Advanced: 5, Intermediate: 30, Regular: 30 };
 
   // ---- aba "Lista definitiva": duas colunas; o campo definitiva (true) fica em cada membro do banco
   const D = { q: '', tier: 'Regular', sit: 'vai', ord: 'desemp', ord2: 'score', tier2: '', kpi: null, kpiIds: null, kpiLabel: '', drag: null };
@@ -1364,7 +1364,7 @@
       box.appendChild(d);
     };
     const nomes = (g) => g.map((m) => m.nome).join(', ');
-    const cap = D.tier2 ? VAGAS[D.tier2] : VAGAS.Advanced + VAGAS.Intermediate + VAGAS.Regular;
+    const cap = D.tier2 ? VAGAS[D.tier2] : VAGAS.Elite + VAGAS.Advanced + VAGAS.Intermediate + VAGAS.Regular;
     kpi(def.length, D.tier2 ? t('k_total_t', { t: D.tier2 }) : t('k_total'), D.tier2 ? t('k_de', { n: cap }) : t('k_vagas', { n: cap }), D.tier2 && def.length > cap ? 'warn' : '', '', 'total', null);
     kpi(prin.length, t('k_prin'), t('k_prin_s'), '', nomes(prin), 'prin', prin);
     const sai = def.filter((m) => m._sinal && m._sinal.k === 'sai');
@@ -1400,10 +1400,10 @@
     if (q) $('d-kpi-nome').textContent = t('d_q_on', { q: D.q.trim(), a: cand.length, b: defShown.length });
     else if (D.kpiIds) $('d-kpi-nome').textContent = t('d_kpi_on', { k: D.kpiLabel, n: defShown.length });
     $('d-cand-n').textContent = t('d_n_cand', { n: cand.length });
-    const nr = def.filter((m) => m._tier === 'Regular').length, ni = def.filter((m) => m._tier === 'Intermediate').length, na = def.filter((m) => m._tier === 'Advanced').length;
+    const nr = def.filter((m) => m._tier === 'Regular').length, ni = def.filter((m) => m._tier === 'Intermediate').length, na = def.filter((m) => m._tier === 'Advanced').length, ne = def.filter((m) => m._tier === 'Elite').length;
     const box = $('d-def-n'); box.replaceChildren();
-    const b = document.createElement('b'); b.className = nr > VAGAS.Regular || ni > VAGAS.Intermediate || na > VAGAS.Advanced ? 'over' : 'ok';
-    b.textContent = t('d_n_def', { n: def.length, a: na, ca: VAGAS.Advanced, r: nr, cr: VAGAS.Regular, i: ni, ci: VAGAS.Intermediate })
+    const b = document.createElement('b'); b.className = nr > VAGAS.Regular || ni > VAGAS.Intermediate || na > VAGAS.Advanced || ne > VAGAS.Elite ? 'over' : 'ok';
+    b.textContent = t('d_n_def', { n: def.length, a: na, ca: VAGAS.Advanced, r: nr, cr: VAGAS.Regular, i: ni, ci: VAGAS.Intermediate }) + ' · Elite ' + ne + '/' + VAGAS.Elite
       + (D.tier2 || D.kpiIds ? ' · ' + t('d_n_shown', { n: defShown.length }) : ''); box.appendChild(b);
   };
   ['d-col-cand', 'd-col-def'].forEach((id) => {
